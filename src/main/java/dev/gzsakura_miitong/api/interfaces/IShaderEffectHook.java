@@ -1,0 +1,14 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.client.gl.Framebuffer
+ */
+package dev.gzsakura_miitong.api.interfaces;
+
+import net.minecraft.client.gl.Framebuffer;
+
+public interface IShaderEffectHook {
+    public void alienClient$addHook(String var1, Framebuffer var2);
+}
+
