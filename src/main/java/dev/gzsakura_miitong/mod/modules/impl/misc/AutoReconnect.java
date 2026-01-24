@@ -30,10 +30,14 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import java.util.HashMap;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 
 public class AutoReconnect
@@ -48,7 +52,9 @@ extends Module {
     final StringSetting password = this.add(new StringSetting("password", "123456"));
     public final BooleanSetting autoAnswer = this.add(new BooleanSetting("AutoAnswer", true));
     public static boolean inQueueServer;
+    private boolean queueingByMessage;
     private final Timer queueTimer = new Timer();
+    private final Timer queueMenuTimer = new Timer();
     private final Timer timer = new Timer();
     public Pair<ServerAddress, ServerInfo> lastServerConnection;
     private boolean login = false;
@@ -68,14 +74,29 @@ extends Module {
             mc.getNetworkHandler().sendChatCommand("login " + this.password.getValue());
             this.login = false;
         }
-        if (this.autoQueue.getValue() && InventoryUtil.findItem(Items.COMPASS) != -1 && this.queueTimer.passedS(this.joinQueueDelay.getValue())) {
+        if (this.autoQueue.getValue() && !this.queueingByMessage && InventoryUtil.findItem(Items.COMPASS) != -1 && this.queueTimer.passedS(this.joinQueueDelay.getValue())) {
             InventoryUtil.switchToSlot(InventoryUtil.findItem(Items.COMPASS));
             AutoReconnect.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, Alien.ROTATION.getLastYaw(), Alien.ROTATION.getLastPitch()));
             this.queueTimer.reset();
         }
         if (AutoReconnect.nullCheck()) {
             inQueueServer = false;
+            this.queueingByMessage = false;
             return;
+        }
+        if (this.autoQueue.getValue() && !this.queueingByMessage && mc.currentScreen instanceof GenericContainerScreen && this.queueMenuTimer.passedS(this.joinQueueDelay.getValue())) {
+            GenericContainerScreenHandler container = (GenericContainerScreenHandler)((GenericContainerScreen)mc.currentScreen).getScreenHandler();
+            if (container != null && mc.player.currentScreenHandler.getCursorStack().isEmpty()) {
+                int size = container.getInventory().size();
+                int targetSlot = size == 9 ? 4 : (size == 5 ? 2 : -1);
+                if (targetSlot != -1) {
+                    ItemStack stack = container.getInventory().getStack(targetSlot);
+                    if (stack != null && stack.getItem() == Items.COMPASS) {
+                        mc.interactionManager.clickSlot(container.syncId, targetSlot, 0, SlotActionType.PICKUP, mc.player);
+                        this.queueMenuTimer.reset();
+                    }
+                }
+            }
         }
         inQueueServer = InventoryUtil.findItem(Items.COMPASS) != -1;
     }
@@ -95,11 +116,13 @@ extends Module {
     @Override
     public void onLogout() {
         inQueueServer = false;
+        this.queueingByMessage = false;
     }
 
     @Override
     public void onDisable() {
         inQueueServer = false;
+        this.queueingByMessage = false;
     }
 
     @EventListener
@@ -107,19 +130,26 @@ extends Module {
         if (AutoReconnect.nullCheck()) {
             return;
         }
+        Packet<?> packet = e.getPacket();
+        String content = null;
+        if (packet instanceof GameMessageS2CPacket) {
+            GameMessageS2CPacket packet2 = (GameMessageS2CPacket)packet;
+            content = packet2.content().getString();
+            if (content.toLowerCase().contains("position in queue")) {
+                this.queueingByMessage = true;
+            }
+        }
         if (!this.autoAnswer.getValue()) {
             return;
         }
         if (!inQueueServer) {
             return;
         }
-        Packet<?> packet = e.getPacket();
-        if (packet instanceof GameMessageS2CPacket) {
-            GameMessageS2CPacket packet2 = (GameMessageS2CPacket)packet;
+        if (content != null) {
             for (String key : asks.keySet()) {
-                if (!packet2.content().getString().contains(key)) continue;
+                if (!content.contains(key)) continue;
                 for (String s : this.abc) {
-                    if (!packet2.content().getString().contains(s + "." + asks.get(key))) continue;
+                    if (!content.contains(s + "." + asks.get(key))) continue;
                     mc.getNetworkHandler().sendChatMessage(s.toLowerCase());
                     return;
                 }
