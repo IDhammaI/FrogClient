@@ -44,10 +44,29 @@ extends Manager {
     private final Hashtable<String, String> settings = new Hashtable();
 
     public ConfigManager() {
-        this.read();
     }
 
     public void load() {
+        this.settings.clear();
+        Splitter COLON_SPLITTER = Splitter.on((char)':');
+        try {
+            if (options.exists()) {
+                List<String> list = IOUtils.readLines((InputStream)new FileInputStream(options), (Charset)StandardCharsets.UTF_8);
+                for (String s : list) {
+                    try {
+                        Iterator iterator = COLON_SPLITTER.limit(2).split((CharSequence)s).iterator();
+                        this.settings.put((String)iterator.next(), (String)iterator.next());
+                    }
+                    catch (Exception var10) {
+                        System.out.println("Skipping bad option: " + s);
+                    }
+                }
+            }
+        }
+        catch (Exception exception) {
+            exception.printStackTrace();
+            System.out.println("[Vitality] Failed to load settings");
+        }
         for (Module module : Alien.MODULE.getModules()) {
             for (Setting setting : module.getSettings()) {
                 String line = module.getName() + "_" + setting.getName();
@@ -82,6 +101,10 @@ extends Manager {
     }
 
     public void read() {
+        this.load();
+    }
+
+    public void save() {
         PrintWriter printwriter = null;
         try {
             printwriter = new PrintWriter(new OutputStreamWriter((OutputStream)new FileOutputStream(options), StandardCharsets.UTF_8));
@@ -124,29 +147,6 @@ extends Manager {
         }
         finally {
             IOUtils.closeQuietly(printwriter);
-        }
-    }
-
-    public void save() {
-        Splitter COLON_SPLITTER = Splitter.on((char)':');
-        try {
-            if (!options.exists()) {
-                return;
-            }
-            List<String> list = IOUtils.readLines((InputStream)new FileInputStream(options), (Charset)StandardCharsets.UTF_8);
-            for (String s : list) {
-                try {
-                    Iterator iterator = COLON_SPLITTER.limit(2).split((CharSequence)s).iterator();
-                    this.settings.put((String)iterator.next(), (String)iterator.next());
-                }
-                catch (Exception var10) {
-                    System.out.println("Skipping bad option: " + s);
-                }
-            }
-        }
-        catch (Exception exception) {
-            exception.printStackTrace();
-            System.out.println("[Vitality] Failed to load settings");
         }
     }
 
