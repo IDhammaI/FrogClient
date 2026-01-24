@@ -339,7 +339,7 @@ extends Mod {
 
             @Override
             public String getIcon() {
-                return "1";
+                return "b";
             }
         }
         ,
@@ -355,7 +355,7 @@ extends Mod {
 
             @Override
             public String getIcon() {
-                return "2";
+                return "a";
             }
         }
         ,
