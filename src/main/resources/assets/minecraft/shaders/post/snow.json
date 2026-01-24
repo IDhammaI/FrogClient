@@ -9,7 +9,15 @@
       "name": "snow",
       "intarget": "bufIn",
       "outtarget": "swap",
-      "uniforms": []
+      "uniforms": [
+        { "name": "color", "values": [ 1.0, 1.0, 1.0, 1.0 ] },
+        { "name": "radius", "values": [ 1.0 ] },
+        { "name": "divider", "values": [ 1.0 ] },
+        { "name": "maxSample", "values": [ 1.0 ] },
+        { "name": "quality", "values": [ 1.0 ] },
+        { "name": "resolution", "values": [ 1.0, 1.0 ] },
+        { "name": "time", "values": [ 1.0 ] }
+      ]
     },
     {
       "name": "blit",
