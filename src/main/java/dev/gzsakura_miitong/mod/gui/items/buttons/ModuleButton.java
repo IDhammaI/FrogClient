@@ -10,6 +10,7 @@ import dev.gzsakura_miitong.api.utils.math.Animation;
 import dev.gzsakura_miitong.api.utils.math.Easing;
 import dev.gzsakura_miitong.api.utils.render.ColorUtil;
 import dev.gzsakura_miitong.api.utils.render.Render2DUtil;
+import dev.gzsakura_miitong.core.impl.FontManager;
 import dev.gzsakura_miitong.mod.gui.ClickGuiScreen;
 import dev.gzsakura_miitong.mod.gui.items.Item;
 import dev.gzsakura_miitong.mod.modules.Module;
@@ -25,6 +26,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.RotationAxis;
 
 public class ModuleButton
 extends Button {
@@ -100,7 +102,30 @@ extends Button {
         }
         this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)(this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
         if (ClickGui.getInstance().gear.booleanValue) {
-            this.drawString(this.subOpen ? "-" : "+", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
+            boolean expanded = this.subOpen || this.itemHeight > 0.0;
+            switch (ClickGui.getInstance().expandIcon.getValue()) {
+                case PlusMinus -> this.drawString(this.subOpen ? "-" : "+", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
+                case Chevron -> this.drawString(this.subOpen ? "v" : ">", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
+                case Gear -> {
+                    float gearX = this.x + (float)this.width - 10.0f;
+                    float gearY = this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset();
+                    int gearColor = ClickGui.getInstance().gear.getValue().getRGB();
+                    if (expanded) {
+                        float gearW = (float)FontManager.icon.getWidth("d");
+                        float gearH = (float)FontManager.icon.getFontHeight();
+                        float centerX = gearX + gearW / 2.0f;
+                        float centerY = gearY + gearH / 2.0f - 2.5f;
+                        float angle = (float)(System.currentTimeMillis() % 2000L) / 2000.0f * 360.0f;
+                        context.getMatrices().push();
+                        context.getMatrices().translate(centerX, centerY, 0.0f);
+                        context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
+                        FontManager.icon.drawString(context.getMatrices(), "d", (double)(-gearW / 2.0f), (double)(-gearH / 2.0f + 2.5f), gearColor);
+                        context.getMatrices().pop();
+                    } else {
+                        FontManager.icon.drawString(context.getMatrices(), "d", (double)gearX, (double)gearY, gearColor);
+                    }
+                }
+            }
         }
         if (this.subOpen || this.itemHeight > 0.0) {
             if (ClickGui.getInstance().line.getValue()) {

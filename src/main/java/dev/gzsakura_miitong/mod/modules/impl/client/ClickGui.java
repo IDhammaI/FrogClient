@@ -61,6 +61,7 @@ extends Module {
     public final BooleanSetting elements = this.add(new BooleanSetting("Elements", false).setParent().injectTask(this::keyCodec));
     public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
+    public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
     public final BooleanSetting colors = this.add(new BooleanSetting("Colors", false).setParent().injectTask(this::elementCodec));
     public final ColorSetting color = this.add(new ColorSetting("Color", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting activeColor = this.add(new ColorSetting("ActiveColor", new Color(0, 120, 212), this.colors::isOpen));
@@ -184,6 +185,12 @@ extends Module {
     public enum Style {
         Default,
         Dark
+    }
+
+    public enum ExpandIcon {
+        PlusMinus,
+        Chevron,
+        Gear
     }
 
     static {
