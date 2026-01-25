@@ -110,12 +110,14 @@ extends Button {
                     float gearX = this.x + (float)this.width - 10.0f;
                     float gearY = this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset();
                     int gearColor = ClickGui.getInstance().gear.getValue().getRGB();
-                    if (expanded) {
-                        float gearW = (float)FontManager.icon.getWidth("d");
-                        float gearH = (float)FontManager.icon.getFontHeight();
+                    float gearW = (float)FontManager.icon.getWidth("d");
+                    float gearH = (float)FontManager.icon.getFontHeight();
+                    int totalItemHeight = this.getItemHeight();
+                    float expandProgress = totalItemHeight <= 0 ? 0.0f : (float)Math.min(1.0, Math.max(0.0, this.itemHeight / (double)totalItemHeight));
+                    if (expandProgress > 0.001f) {
                         float centerX = gearX + gearW / 2.0f;
                         float centerY = gearY + gearH / 2.0f - 2.5f;
-                        float angle = (float)(System.currentTimeMillis() % 2000L) / 2000.0f * 360.0f;
+                        float angle = (float)(System.currentTimeMillis() % 2000L) / 2000.0f * 360.0f * expandProgress;
                         context.getMatrices().push();
                         context.getMatrices().translate(centerX, centerY, 0.0f);
                         context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
