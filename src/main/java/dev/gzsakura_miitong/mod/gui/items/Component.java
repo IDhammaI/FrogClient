@@ -89,7 +89,11 @@ extends Mod {
                 item.setLocation((float)this.x + 2.0f, y);
                 item.setWidth(this.getWidth() - 4);
                 if (item.itemHeight > 0.0 || item.subOpen) {
-                    context.enableScissor((int)item.x, (int)item.y, mc.getWindow().getScaledWidth(), (int)((double)(y + (float)item.getButtonHeight() + 1.5f) + item.itemHeight));
+                    int scissorX1 = (int)item.x - 1;
+                    int scissorY1 = (int)item.y - 1;
+                    int scissorX2 = (int)(item.x + (float)item.getWidth() + 1.0f);
+                    int scissorY2 = (int)((double)(y + (float)item.getButtonHeight() + 1.5f) + item.itemHeight) + 1;
+                    context.enableScissor(scissorX1, scissorY1, scissorX2, scissorY2);
                     item.drawScreen(context, mouseX, mouseY, partialTicks);
                     context.disableScissor();
                 } else {
