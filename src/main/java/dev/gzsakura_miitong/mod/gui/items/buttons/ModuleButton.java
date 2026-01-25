@@ -93,13 +93,7 @@ extends Button {
         Color hoverFill = new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), ClickGui.getInstance().hoverAlpha.getValueInt());
         Color animatedFill = ColorUtil.fadeColor(idleFill, hoverFill, hoverProgress);
         Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), Math.min(230, ClickGui.getInstance().hoverAlpha.getValueInt())) : animatedFill;
-        Color outline = pressed ? new Color(255, 255, 255, 200) : ColorUtil.fadeColor(new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), 60), new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), 180), hoverProgress);
         Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 0.5f, baseFill);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 0.5f, new Color(0, 0, 0, 0), outline);
-        if (hoverProgress > 0.01) {
-            Color accentOutline = ColorUtil.fadeColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0), new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 160), hoverProgress);
-            Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x - 0.5f, this.y - 0.5f, (float)this.width + 1.0f, (float)this.height + 1.0f, new Color(0, 0, 0, 0), accentOutline);
-        }
         this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)(this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
         if (ClickGui.getInstance().gear.booleanValue) {
             boolean expanded = this.subOpen || this.itemHeight > 0.0;
