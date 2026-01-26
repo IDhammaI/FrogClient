@@ -158,32 +158,17 @@ extends Module {
     }
 
     public void updateStyle() {
-        switch (this.style.getValue()) {
-            case Default -> {
-                this.color.setValue(new Color(0, 120, 212));
-                this.hoverColor.setValue(new Color(230, 242, 251, 200));
-                this.defaultColor.setValue(new Color(255, 255, 255, 236));
-                this.defaultTextColor.setValue(new Color(30, 30, 30));
-                this.enableTextColor.setValue(new Color(24, 24, 24));
-                this.backGround.setValue(new Color(255, 255, 255, 236));
-                this.tint.setValue(new Color(0, 120, 212, 36));
-                this.endColor.setValue(new Color(0, 120, 212, 18));
-            }
-            case Dark -> {
-                this.color.setValue(new Color(0, 120, 212));
-                this.hoverColor.setValue(new Color(50, 50, 50, 200));
-                this.defaultColor.setValue(new Color(30, 30, 30, 236));
-                this.defaultTextColor.setValue(new Color(220, 220, 220));
-                this.enableTextColor.setValue(new Color(255, 255, 255));
-                this.backGround.setValue(new Color(30, 30, 30, 236));
-                this.tint.setValue(new Color(0, 120, 212, 36));
-                this.endColor.setValue(new Color(0, 120, 212, 18));
-            }
-        }
+        this.color.setValue(new Color(0, 120, 212));
+        this.hoverColor.setValue(new Color(50, 50, 50, 200));
+        this.defaultColor.setValue(new Color(30, 30, 30, 236));
+        this.defaultTextColor.setValue(new Color(220, 220, 220));
+        this.enableTextColor.setValue(new Color(255, 255, 255));
+        this.backGround.setValue(new Color(30, 30, 30, 236));
+        this.tint.setValue(new Color(0, 120, 212, 36));
+        this.endColor.setValue(new Color(0, 120, 212, 18));
     }
 
     public enum Style {
-        Default,
         Dark
     }
 

@@ -90,10 +90,30 @@ extends Button {
         Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
         Color idleFill = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), defaultColor.getAlpha());
-        Color hoverFill = new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), ClickGui.getInstance().hoverAlpha.getValueInt());
-        Color animatedFill = ColorUtil.fadeColor(idleFill, hoverFill, hoverProgress);
-        Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), Math.min(230, ClickGui.getInstance().hoverAlpha.getValueInt())) : animatedFill;
-        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 0.5f, baseFill);
+        Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), Math.min(230, ClickGui.getInstance().hoverAlpha.getValueInt())) : idleFill;
+        float h = (float)this.height - 0.5f;
+        float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
+        float bodyWidth = Math.max(0.0f, this.width - radius);
+        float rightX = this.x + bodyWidth;
+        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, bodyWidth, h, baseFill);
+        Render2DUtil.drawRect(context.getMatrices(), rightX, this.y + radius, radius, Math.max(0.0f, h - radius * 2.0f), baseFill);
+        Render2DUtil.drawCircle(context.getMatrices(), rightX, this.y + radius, radius, baseFill, 64);
+        Render2DUtil.drawCircle(context.getMatrices(), rightX, this.y + h - radius, radius, baseFill, 64);
+        if (!pressed && hoverProgress > 0.01) {
+            int glowAlpha = (int)Math.min(240.0, (double)ClickGui.getInstance().hoverAlpha.getValueInt() * hoverProgress);
+            float centerX = (float)mouseX;
+            float centerY = (float)mouseY;
+            float baseRadius = 11.0f * (0.7f + 0.3f * (float)hoverProgress);
+            context.enableScissor((int)this.x, (int)this.y, (int)(this.x + (float)this.width), (int)(this.y + (float)this.height - 0.5f));
+            int steps = 36;
+            for (int i = 0; i < steps; ++i) {
+                float t = (float)i / (float)(steps - 1);
+                float r = baseRadius + baseRadius * 3.0f * t;
+                int alpha = (int)((double)glowAlpha * (1.0 - (double)t) * (1.0 - (double)t) * 0.6);
+                Render2DUtil.drawCircle(context.getMatrices(), centerX, centerY, r, ColorUtil.injectAlpha(hoverColor, alpha), 64);
+            }
+            context.disableScissor();
+        }
         this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)(this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
         if (ClickGui.getInstance().gear.booleanValue) {
             boolean expanded = this.subOpen || this.itemHeight > 0.0;
