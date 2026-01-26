@@ -6,7 +6,6 @@ package dev.gzsakura_miitong.mod.commands.impl;
 import dev.gzsakura_miitong.Alien;
 import dev.gzsakura_miitong.mod.commands.Command;
 import dev.gzsakura_miitong.mod.modules.Module;
-import java.lang.invoke.CallSite;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,12 +18,12 @@ extends Command {
 
     @Override
     public void runCommand(String[] parameters) {
-        ArrayList<CallSite> list = new ArrayList<CallSite>();
+        ArrayList<String> list = new ArrayList<String>();
         for (Module x : Alien.MODULE.getModules()) {
             if (x.getBindSetting().getValue() == -1) continue;
-            list.add((CallSite)((Object)("\u00a7f" + x.getDisplayName() + " \u00a77- \u00a7r" + x.getBindSetting().getKeyString())));
+            list.add("\u00a7f" + x.getDisplayName() + " \u00a77- \u00a7r" + x.getBindSetting().getKeyString());
         }
-        Iterator temp = list.iterator();
+        Iterator<String> temp = list.iterator();
         int i = 0;
         StringBuilder string = new StringBuilder();
         while (temp.hasNext()) {
