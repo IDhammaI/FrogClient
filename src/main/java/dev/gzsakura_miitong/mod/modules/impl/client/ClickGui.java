@@ -68,10 +68,10 @@ extends Module {
     public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 4.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
     public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 130.0, 1.0, 255.0, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
     public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 350, 0, 1000, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final ColorSetting color = this.add(new ColorSetting("FirstColor", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting secondColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
     public final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
     public final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
-    public final ColorSetting color = this.add(new ColorSetting("Color", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting activeColor = this.add(new ColorSetting("ActiveColor", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting hoverColor = this.add(new ColorSetting("HoverColor", new Color(50, 50, 50, 200), this.colors::isOpen));
     public final ColorSetting defaultColor = this.add(new ColorSetting("DefaultColor", new Color(30, 30, 30, 236), this.colors::isOpen));
