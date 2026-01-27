@@ -90,7 +90,10 @@ extends Button {
         Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
         Color idleFill = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), defaultColor.getAlpha());
-        Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), Math.min(230, ClickGui.getInstance().hoverAlpha.getValueInt())) : idleFill;
+        int baseA = ClickGui.getInstance().alpha.getValueInt();
+        int hoverA = ClickGui.getInstance().hoverAlpha.getValueInt();
+        int accentA = Math.max(0, Math.min(255, (int)Math.round((double)baseA + (double)(hoverA - baseA) * hoverProgress)));
+        Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA) : idleFill;
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
         float bodyWidth = Math.max(0.0f, this.width - radius);

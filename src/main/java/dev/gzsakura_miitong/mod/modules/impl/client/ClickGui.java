@@ -45,14 +45,14 @@ extends Module {
     public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
     public final BooleanSetting sound = this.add(new BooleanSetting("Sound", true).setParent());
-    public final BooleanSetting guiSound = this.add(new BooleanSetting("GuiSound", true));
     public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.0, 0.0, 2.0, 0.1, this.sound::isOpen));
-    public final SliderSetting height = this.add(new SliderSetting("Height", 3, 0, 7));
+    public final BooleanSetting guiSound = this.add(new BooleanSetting("GuiSound", true));
+    public final SliderSetting height = this.add(new SliderSetting("Height", 3, 0, 7).injectTask(this::applyHeights));
     public final SliderSetting textOffset = this.add(new SliderSetting("TextOffset", 0.0, -5.0, 5.0, 1.0));
     public final SliderSetting titleOffset = this.add(new SliderSetting("TitleOffset", -1.0, -5.0, 5.0, 1.0));
-    public final SliderSetting alpha = this.add(new SliderSetting("Alpha", 220, 0, 255));
-    public final SliderSetting hoverAlpha = this.add(new SliderSetting("HoverAlpha", 255, 0, 255));
-    public final SliderSetting topAlpha = this.add(new SliderSetting("TopAlpha", 180, 0, 255));
+    public final SliderSetting alpha = this.add(new SliderSetting("Alpha", 150, 0, 255));
+    public final SliderSetting hoverAlpha = this.add(new SliderSetting("HoverAlpha", 220, 0, 255));
+    public final SliderSetting topAlpha = this.add(new SliderSetting("TopAlpha", 128, 0, 255));
     public final SliderSetting backgroundAlpha = this.add(new SliderSetting("BackgroundAlpha", 236, 0, 255));
     public final BooleanSetting fade = this.add(new BooleanSetting("Fade", true).setParent());
     public final SliderSetting length = this.add(new SliderSetting("Length", 250, 0, 1000, this.fade::isOpen));
@@ -106,6 +106,15 @@ extends Module {
         this.colors.setOpen(!this.colors.isOpen());
     }
 
+    private void applyHeights() {
+        for (Component component : ClickGuiScreen.getInstance().getComponents()) {
+            component.setHeight(18);
+            for (Item item : component.getItems()) {
+                item.setHeight(10 + this.height.getValueInt());
+            }
+        }
+    }
+
     @Override
     public void onEnable() {
         if (ClickGui.nullCheck()) {
@@ -124,12 +133,7 @@ extends Module {
         if (this.guiSound.getValue() && mc.getSoundManager() != null) {
             mc.getSoundManager().play((SoundInstance)PositionedSoundInstance.master((RegistryEntry)SoundEvents.UI_BUTTON_CLICK, (float)this.soundPitch.getValueFloat()));
         }
-        for (Component component : ClickGuiScreen.getInstance().getComponents()) {
-            component.setHeight(18);
-            for (Item item : component.getItems()) {
-                item.setHeight(10 + this.height.getValueInt());
-            }
-        }
+        this.applyHeights();
         mc.setScreen((Screen)ClickGuiScreen.getInstance());
     }
 

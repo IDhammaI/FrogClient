@@ -60,7 +60,7 @@ extends Mod {
     }
 
     protected double getColorDelay() {
-        return ((double)this.x + (double)this.y) / 20.0;
+        return (double)this.y / 10.0;
     }
 
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
