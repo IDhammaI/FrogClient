@@ -30,7 +30,7 @@ extends Item {
 
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        Color color = ClickGui.getInstance().activeColor.getValue();
+        Color color = ClickGui.getInstance().getActiveColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
         this.drawString(this.getName(), (double)(this.x + 2.3f), (double)(this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
     }

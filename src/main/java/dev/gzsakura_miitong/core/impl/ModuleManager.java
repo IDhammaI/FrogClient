@@ -29,7 +29,6 @@ import dev.gzsakura_miitong.mod.modules.impl.client.AntiCheat;
 import dev.gzsakura_miitong.mod.modules.impl.client.BaritoneModule;
 import dev.gzsakura_miitong.mod.modules.impl.client.ClickGui;
 import dev.gzsakura_miitong.mod.modules.impl.client.ClientSetting;
-import dev.gzsakura_miitong.mod.modules.impl.client.ColorsModule;
 import dev.gzsakura_miitong.mod.modules.impl.client.Fonts;
 import dev.gzsakura_miitong.mod.modules.impl.client.HUD;
 import dev.gzsakura_miitong.mod.modules.impl.client.IRC;
@@ -238,7 +237,6 @@ implements Wrapper {
         this.addModule(new ChatAppend());
         this.addModule(new ClickGui());
         this.addModule(new InfiniteTrident());
-        this.addModule(new ColorsModule());
         this.addModule(new AutoRegear());
         this.addModule(new LavaFiller());
         this.addModule(new AntiPhase());

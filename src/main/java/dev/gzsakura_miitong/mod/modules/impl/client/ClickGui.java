@@ -17,6 +17,7 @@ import dev.gzsakura_miitong.api.events.impl.UpdateEvent;
 import dev.gzsakura_miitong.api.utils.Wrapper;
 import dev.gzsakura_miitong.api.utils.math.Animation;
 import dev.gzsakura_miitong.api.utils.math.Easing;
+import dev.gzsakura_miitong.api.utils.render.ColorUtil;
 import dev.gzsakura_miitong.mod.gui.ClickGuiScreen;
 import dev.gzsakura_miitong.mod.gui.items.Component;
 import dev.gzsakura_miitong.mod.gui.items.Item;
@@ -63,6 +64,13 @@ extends Module {
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
     public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
     public final BooleanSetting colors = this.add(new BooleanSetting("Colors", false).setParent().injectTask(this::elementCodec));
+    public final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Custom, this.colors::isOpen));
+    public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 4.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 130.0, 1.0, 255.0, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 350, 0, 1000, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final ColorSetting secondColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
+    public final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
+    public final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
     public final ColorSetting color = this.add(new ColorSetting("Color", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting activeColor = this.add(new ColorSetting("ActiveColor", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting hoverColor = this.add(new ColorSetting("HoverColor", new Color(50, 50, 50, 200), this.colors::isOpen));
@@ -157,6 +165,43 @@ extends Module {
         Button.enableTextColor = this.enableTextColor.getValue().getRGB();
     }
 
+    public Color getColor() {
+        return this.getColor(0.0);
+    }
+
+    public Color getColor(double delay) {
+        return this.getModeColor(this.color.getValue(), delay);
+    }
+
+    public Color getActiveColor() {
+        return this.getActiveColor(0.0);
+    }
+
+    public Color getActiveColor(double delay) {
+        return this.getModeColor(this.activeColor.getValue(), delay);
+    }
+
+    private Color getModeColor(Color customColor, double delay) {
+        if (this.colorMode.getValue() == ColorMode.Custom) {
+            return customColor;
+        }
+        return this.dynamicColor(delay);
+    }
+
+    private Color dynamicColor(double delay) {
+        if (this.colorMode.getValue() == ColorMode.Pulse) {
+            if (this.secondColor.booleanValue) {
+                return ColorUtil.pulseColor(this.color.getValue(), this.secondColor.getValue(), delay, this.pulseCounter.getValueInt(), this.pulseSpeed.getValue());
+            }
+            return ColorUtil.pulseColor(this.color.getValue(), delay, this.pulseCounter.getValueInt(), this.pulseSpeed.getValue());
+        }
+        if (this.colorMode.getValue() == ColorMode.Rainbow) {
+            double rainbowState = Math.ceil(((double)System.currentTimeMillis() * this.rainbowSpeed.getValue() + delay * this.rainbowDelay.getValue()) / 20.0);
+            return Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), this.saturation.getValueFloat() / 255.0f, 1.0f);
+        }
+        return this.color.getValue();
+    }
+
     public void updateStyle() {
         this.color.setValue(new Color(0, 120, 212));
         this.hoverColor.setValue(new Color(50, 50, 50, 200));
@@ -168,8 +213,18 @@ extends Module {
         this.endColor.setValue(new Color(0, 120, 212, 18));
     }
 
+    public Color dynamicColor(int delay) {
+        return this.dynamicColor((double)delay);
+    }
+
     public enum Style {
         Dark
+    }
+
+    public enum ColorMode {
+        Custom,
+        Pulse,
+        Rainbow
     }
 
     public enum ExpandIcon {

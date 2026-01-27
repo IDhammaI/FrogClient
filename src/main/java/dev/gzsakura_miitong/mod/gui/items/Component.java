@@ -59,11 +59,15 @@ extends Mod {
         this.y = this.y2 + mouseY;
     }
 
+    protected double getColorDelay() {
+        return ((double)this.x + (double)this.y) / 20.0;
+    }
+
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         this.context = context;
         this.drag(mouseX, mouseY);
         float totalItemHeight = this.open ? this.getTotalItemHeight() - 2.0f : 0.0f;
-        Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().color.getValue(), ClickGui.getInstance().topAlpha.getValueInt());
+        Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()), ClickGui.getInstance().topAlpha.getValueInt());
         Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, topColor);
         Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
         if (this.open) {
@@ -75,9 +79,10 @@ extends Mod {
                 Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, (float)this.y + (float)this.height - 5.0f, this.width, (float)(this.y + this.height) + totalItemHeight - ((float)this.y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
             }
             if (ClickGui.getInstance().line.getValue()) {
-                Render2DUtil.drawLine(context.getMatrices(), (float)this.x + 0.2f, (float)(this.y + this.height) + totalItemHeight, (float)this.x + 0.2f, (float)this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(ClickGui.getInstance().color.getValue().getRGB(), ClickGui.getInstance().topAlpha.getValueInt()));
-                Render2DUtil.drawLine(context.getMatrices(), this.x + this.width, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(ClickGui.getInstance().color.getValue().getRGB(), ClickGui.getInstance().topAlpha.getValueInt()));
-                Render2DUtil.drawLine(context.getMatrices(), this.x, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)(this.y + this.height) + totalItemHeight, ColorUtil.injectAlpha(ClickGui.getInstance().color.getValue().getRGB(), ClickGui.getInstance().topAlpha.getValueInt()));
+                int lineColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()).getRGB(), ClickGui.getInstance().topAlpha.getValueInt());
+                Render2DUtil.drawLine(context.getMatrices(), (float)this.x + 0.2f, (float)(this.y + this.height) + totalItemHeight, (float)this.x + 0.2f, (float)this.y + (float)this.height - 5.0f, lineColor);
+                Render2DUtil.drawLine(context.getMatrices(), this.x + this.width, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)this.y + (float)this.height - 5.0f, lineColor);
+                Render2DUtil.drawLine(context.getMatrices(), this.x, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)(this.y + this.height) + totalItemHeight, lineColor);
             }
         }
         FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)this.x + 6.0f), (double)((float)this.y + 4.0f), Button.enableTextColor);

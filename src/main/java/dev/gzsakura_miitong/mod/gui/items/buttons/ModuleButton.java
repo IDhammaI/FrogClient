@@ -86,7 +86,7 @@ extends Button {
         boolean hovered = this.isHovering(mouseX, mouseY);
         boolean pressed = this.getState();
         double hoverProgress = this.hoverAnimation.get(hovered ? 1.0 : 0.0, 100L, Easing.CubicInOut);
-        Color accent = ClickGui.getInstance().activeColor.getValue();
+        Color accent = ClickGui.getInstance().getActiveColor(this.getColorDelay());
         Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
         Color idleFill = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), defaultColor.getAlpha());

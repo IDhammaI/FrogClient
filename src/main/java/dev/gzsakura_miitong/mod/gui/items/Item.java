@@ -95,6 +95,10 @@ extends Mod {
         this.hidden = hidden;
     }
 
+    protected double getColorDelay() {
+        return (double)this.y / 10.0;
+    }
+
     protected void drawString(String text, double x, double y, Color color) {
         this.drawString(text, x, y, color.hashCode());
     }
