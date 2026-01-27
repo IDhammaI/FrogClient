@@ -96,12 +96,7 @@ extends Button {
         Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA) : idleFill;
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
-        float bodyWidth = Math.max(0.0f, this.width - radius);
-        float rightX = this.x + bodyWidth;
-        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, bodyWidth, h, baseFill);
-        Render2DUtil.drawRect(context.getMatrices(), rightX, this.y + radius, radius, Math.max(0.0f, h - radius * 2.0f), baseFill);
-        Render2DUtil.drawCircle(context.getMatrices(), rightX, this.y + radius, radius, baseFill, 64);
-        Render2DUtil.drawCircle(context.getMatrices(), rightX, this.y + h - radius, radius, baseFill, 64);
+        Render2DUtil.drawRightRoundedRect(context.getMatrices(), this.x, this.y, this.width, h, radius, baseFill);
         if (!pressed && hoverProgress > 0.01) {
             int glowAlpha = (int)Math.min(240.0, (double)ClickGui.getInstance().hoverAlpha.getValueInt() * hoverProgress);
             float centerX = (float)mouseX;

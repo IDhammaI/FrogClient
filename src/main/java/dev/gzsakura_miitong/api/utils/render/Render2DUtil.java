@@ -408,6 +408,50 @@ implements Wrapper {
         RenderSystem.disableBlend();
     }
 
+    public static void drawRightRoundedRect(MatrixStack matrices, float x, float y, float width, float height, float radius, Color c) {
+        if (width <= 0.0f || height <= 0.0f) {
+            return;
+        }
+        if (radius <= 0.0f) {
+            Render2DUtil.drawRect(matrices, x, y, width, height, c);
+            return;
+        }
+        float r = Math.min(radius, Math.min(width, height) / 2.0f);
+        int capR = Math.max(0, Math.min(255, (int)Math.round((double)c.getRed() * 0.85)));
+        int capG = Math.max(0, Math.min(255, (int)Math.round((double)c.getGreen() * 0.85)));
+        int capB = Math.max(0, Math.min(255, (int)Math.round((double)c.getBlue() * 0.85)));
+        Render2DUtil.drawCircle(matrices, x + width - r, y + height / 2.0f, r, new Color(capR, capG, capB, c.getAlpha()), 64);
+        Render2DUtil.drawRect(matrices, x, y, width - r, height, c);
+        if (height > 2.0f * r) {
+            Render2DUtil.drawRect(matrices, x + width - r, y + r, r, height - 2.0f * r, c);
+        }
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        int seg = 48;
+        float cx = x + width - r;
+        float cy = y + r;
+        BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+        buffer.vertex(matrix, cx, cy, 0.0f).color(c.getRGB());
+        for (int i = 0; i <= seg; ++i) {
+            double a = 4.71238898038469 + (double)i * 1.5707963267948966 / (double)seg;
+            buffer.vertex(matrix, (float)((double)cx + Math.cos(a) * (double)r), (float)((double)cy + Math.sin(a) * (double)r), 0.0f).color(c.getRGB());
+        }
+        BufferRenderer.drawWithGlobalProgram((BuiltBuffer)buffer.end());
+        cx = x + width - r;
+        cy = y + height - r;
+        buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+        buffer.vertex(matrix, cx, cy, 0.0f).color(c.getRGB());
+        for (int i = 0; i <= seg; ++i) {
+            double a = 0.0 + (double)i * 1.5707963267948966 / (double)seg;
+            buffer.vertex(matrix, (float)((double)cx + Math.cos(a) * (double)r), (float)((double)cy + Math.sin(a) * (double)r), 0.0f).color(c.getRGB());
+        }
+        BufferRenderer.drawWithGlobalProgram((BuiltBuffer)buffer.end());
+        RenderSystem.enableCull();
+        RenderSystem.disableBlend();
+    }
+
     public static void drawDropShadow(MatrixStack matrices, float x, float y, float width, float height, float radius) {
     }
 }
