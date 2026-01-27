@@ -119,21 +119,22 @@ extends Button {
                 case PlusMinus -> this.drawString(this.subOpen ? "-" : "+", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
                 case Chevron -> this.drawString(this.subOpen ? "v" : ">", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
                 case Gear -> {
-                    float gearX = this.x + (float)this.width - 10.0f;
-                    float gearY = this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset();
                     int gearColor = ClickGui.getInstance().gear.getValue().getRGB();
                     float gearW = (float)FontManager.icon.getWidth("d");
-                    float gearH = (float)FontManager.icon.getFontHeight();
+                    float gearH = (float)FontManager.icon.getFontHeight("d");
+                    float centerX = this.x + (float)this.width - radius;
+                    float centerY = this.y + h / 2.0f;
+                    float baselineFix = 2.2f;
+                    float gearX = centerX - gearW / 2.0f;
+                    float gearY = centerY - gearH / 2.0f + baselineFix;
                     int totalItemHeight = this.getItemHeight();
                     float expandProgress = totalItemHeight <= 0 ? 0.0f : (float)Math.min(1.0, Math.max(0.0, this.itemHeight / (double)totalItemHeight));
                     if (expandProgress > 0.001f) {
-                        float centerX = gearX + gearW / 2.0f;
-                        float centerY = gearY + gearH / 2.0f - 2.5f;
                         float angle = (float)(System.currentTimeMillis() % 2000L) / 2000.0f * 360.0f * expandProgress;
                         context.getMatrices().push();
                         context.getMatrices().translate(centerX, centerY, 0.0f);
                         context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
-                        FontManager.icon.drawString(context.getMatrices(), "d", (double)(-gearW / 2.0f), (double)(-gearH / 2.0f + 2.5f), gearColor);
+                        FontManager.icon.drawString(context.getMatrices(), "d", (double)(-gearW / 2.0f), (double)(-gearH / 2.0f + baselineFix), gearColor);
                         context.getMatrices().pop();
                     } else {
                         FontManager.icon.drawString(context.getMatrices(), "d", (double)gearX, (double)gearY, gearColor);
