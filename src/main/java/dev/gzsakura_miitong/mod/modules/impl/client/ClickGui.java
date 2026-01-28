@@ -65,6 +65,11 @@ extends Module {
     public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", false).setParent());
     public final SliderSetting mouseMoveStrength = this.add(new SliderSetting("MouseMoveStrength", 6.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
     public final SliderSetting mouseMoveSmooth = this.add(new SliderSetting("MouseMoveSmooth", 10.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
+    public final BooleanSetting walkShake = this.add(new BooleanSetting("WalkShake", false).setParent());
+    public final SliderSetting walkShakeStrength = this.add(new SliderSetting("WalkShakeStrength", 8.0, 0.0, 20.0, 0.5, this.walkShake::isOpen));
+    public final SliderSetting walkShakeSpeed = this.add(new SliderSetting("WalkShakeSpeed", 12.0, 0.0, 30.0, 0.5, this.walkShake::isOpen));
+    public final SliderSetting walkShakeSmooth = this.add(new SliderSetting("WalkShakeSmooth", 14.0, 0.0, 30.0, 0.5, this.walkShake::isOpen));
+    public final SliderSetting walkShakeMax = this.add(new SliderSetting("WalkShakeMax", 8.0, 0.0, 30.0, 0.5, this.walkShake::isOpen));
     public final BooleanSetting blur = this.add(new BooleanSetting("Blur", true).setParent());
     public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
     public final SliderSetting radius = this.add(new SliderSetting("Radius", 5.0, 0.0, 100.0, this.blur::isOpen));

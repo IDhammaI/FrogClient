@@ -29,6 +29,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.Vec3d;
 
 public class ClickGuiScreen
 extends Screen {
@@ -36,6 +37,9 @@ extends Screen {
     private final ArrayList<Component> components = new ArrayList();
     private float mouseMoveOffsetX;
     private float mouseMoveOffsetY;
+    private float walkShakeOffsetX;
+    private float walkShakeOffsetY;
+    private float walkShakeTime;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Vitality"));
@@ -112,7 +116,50 @@ extends Screen {
             this.mouseMoveOffsetX += (targetOffsetX - this.mouseMoveOffsetX) * a;
             this.mouseMoveOffsetY += (targetOffsetY - this.mouseMoveOffsetY) * a;
         }
-        this.components.forEach(c -> c.setMouseMoveOffset(this.mouseMoveOffsetX, this.mouseMoveOffsetY));
+
+        float targetWalkX = 0.0f;
+        float targetWalkY = 0.0f;
+        float maxWalk = 0.0f;
+        if (ClickGui.getInstance().walkShake.getValue() && !dragging && Wrapper.mc.player != null) {
+            Vec3d v = Wrapper.mc.player.getVelocity();
+            float horizontalSpeed = (float)Math.sqrt(v.x * v.x + v.z * v.z);
+            float moving = horizontalSpeed > 0.003f ? Math.min(1.0f, horizontalSpeed * 18.0f) : 0.0f;
+            float dt = AnimateUtil.deltaTime();
+            if (moving > 0.0f) {
+                float speed = ClickGui.getInstance().walkShakeSpeed.getValueFloat();
+                this.walkShakeTime += dt * speed * (0.4f + 0.6f * moving);
+            }
+            float strength = ClickGui.getInstance().walkShakeStrength.getValueFloat() * moving * (float)ClickGui.getInstance().alphaValue;
+            maxWalk = ClickGui.getInstance().walkShakeMax.getValueFloat() * (float)ClickGui.getInstance().alphaValue;
+            targetWalkX = (float)Math.sin((double)this.walkShakeTime) * strength;
+            targetWalkY = (float)Math.cos((double)(this.walkShakeTime * 2.0f)) * strength * 0.35f;
+            targetWalkX = Math.max(-maxWalk, Math.min(maxWalk, targetWalkX));
+            targetWalkY = Math.max(-maxWalk, Math.min(maxWalk, targetWalkY));
+        }
+
+        float walkSmooth = ClickGui.getInstance().walkShakeSmooth.getValueFloat();
+        if (walkSmooth <= 0.0f) {
+            this.walkShakeOffsetX = targetWalkX;
+            this.walkShakeOffsetY = targetWalkY;
+        } else {
+            float a = AnimateUtil.deltaTime() * walkSmooth;
+            if (a < 0.0f) {
+                a = 0.0f;
+            }
+            if (a > 0.35f) {
+                a = 0.35f;
+            }
+            this.walkShakeOffsetX += (targetWalkX - this.walkShakeOffsetX) * a;
+            this.walkShakeOffsetY += (targetWalkY - this.walkShakeOffsetY) * a;
+        }
+        if (maxWalk > 0.0f) {
+            this.walkShakeOffsetX = Math.max(-maxWalk, Math.min(maxWalk, this.walkShakeOffsetX));
+            this.walkShakeOffsetY = Math.max(-maxWalk, Math.min(maxWalk, this.walkShakeOffsetY));
+        }
+
+        float totalOffsetX = this.mouseMoveOffsetX + this.walkShakeOffsetX;
+        float totalOffsetY = this.mouseMoveOffsetY + this.walkShakeOffsetY;
+        this.components.forEach(c -> c.setMouseMoveOffset(totalOffsetX, totalOffsetY));
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
