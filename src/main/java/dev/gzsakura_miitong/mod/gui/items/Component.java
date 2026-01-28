@@ -37,6 +37,7 @@ extends Mod {
     private float mouseMoveOffsetY;
     private final Animation xAnimation = new Animation();
     private final Animation yAnimation = new Animation();
+    private final Animation openAnimation = new Animation();
     private int x2;
     private int y2;
     private int width;
@@ -101,11 +102,13 @@ extends Mod {
         this.updatePosition();
         int x = this.getX();
         int y = this.getY();
-        float totalItemHeight = this.open ? this.getTotalItemHeight() - 2.0f : 0.0f;
+        float targetItemHeight = this.getTotalItemHeight() - 2.0f;
+        double openProgress = this.openAnimation.get(this.open ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+        float totalItemHeight = (float)(targetItemHeight * openProgress);
         Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()), ClickGui.getInstance().topAlpha.getValueInt());
         Render2DUtil.drawRect(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, topColor);
         Render2DUtil.drawRectWithOutline(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
-        if (this.open) {
+        if (openProgress > 0.01) {
             if (ClickGui.getInstance().backGround.booleanValue) {
                 Render2DUtil.drawRect(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));
                 Render2DUtil.drawRectWithOutline(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
@@ -123,7 +126,12 @@ extends Mod {
         float nameFontHeight = ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : 9.0f;
         float nameY = (float)y + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
         this.drawString(this.getName(), (double)((float)x + 20.0f), (double)nameY, Button.enableTextColor);
-        if (this.open) {
+        if (openProgress > 0.01) {
+            int panelX1 = x - 1;
+            int panelY1 = (int)((float)y + (float)this.height - 6.0f);
+            int panelX2 = x + this.width + 1;
+            int panelY2 = (int)Math.round((double)(y + this.height) + (double)totalItemHeight) + 1;
+            context.enableScissor(panelX1, panelY1, panelX2, panelY2);
             float yOff = (float)(this.getY() + this.getHeight()) - 3.0f;
             for (ModuleButton item : this.getItems()) {
                 if (item.isHidden()) continue;
@@ -142,6 +150,7 @@ extends Mod {
                 }
                 yOff += (float)item.getButtonHeight() + 1.5f + (float)item.itemHeight;
             }
+            context.disableScissor();
         }
     }
 
