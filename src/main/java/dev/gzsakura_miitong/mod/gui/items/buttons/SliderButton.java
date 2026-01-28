@@ -52,6 +52,8 @@ extends Button {
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isListening) {
             this.drawString(this.currentString + StringButton.getIdleSign(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
+        } else if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
         } else {
             this.drawString(this.getName() + " " + String.valueOf(Formatting.GRAY) + this.setting.getValueFloat() + this.setting.getSuffix(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
         }
@@ -59,6 +61,14 @@ extends Button {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton == 0 && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.drag = false;
+            this.isListening = false;
+            this.currentString = "";
+            this.setting.setValue(this.setting.getDefaultValue());
+            SliderButton.sound();
+            return;
+        }
         if (this.isHovering(mouseX, mouseY)) {
             SliderButton.sound();
             if (mouseButton == 0) {

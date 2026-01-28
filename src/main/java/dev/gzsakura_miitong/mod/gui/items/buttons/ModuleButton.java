@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.RotationAxis;
 
 public class ModuleButton
@@ -113,7 +114,11 @@ extends Button {
             context.disableScissor();
         }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
-        this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
+        if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+        } else {
+            this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
+        }
         if (ClickGui.getInstance().gear.booleanValue) {
             boolean expanded = this.subOpen || this.itemHeight > 0.0;
             switch (ClickGui.getInstance().expandIcon.getValue()) {
@@ -180,6 +185,11 @@ extends Button {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton == 0 && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.resetSettingsToDefault();
+            ModuleButton.sound();
+            return;
+        }
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (!this.items.isEmpty()) {
             if (mouseButton == 1 && this.isHovering(mouseX, mouseY)) {
@@ -233,6 +243,106 @@ extends Button {
 
     public int getItemHeight() {
         return (int)Math.round(this.getVisibleItemHeight());
+    }
+
+    private void resetSettingsToDefault() {
+        for (Setting setting : this.module.getSettings()) {
+            this.resetSettingToDefault(setting);
+        }
+    }
+
+    public void resetChildSettingsToDefault(BooleanSetting parent) {
+        boolean originalOpen = parent.isOpen();
+        for (Setting setting : this.module.getSettings()) {
+            if (setting == parent) continue;
+            parent.setOpen(true);
+            boolean visibleWhenOpen = setting.isVisible();
+            parent.setOpen(false);
+            boolean visibleWhenClosed = setting.isVisible();
+            parent.setOpen(originalOpen);
+            if (visibleWhenOpen && !visibleWhenClosed) {
+                if (setting instanceof BooleanSetting) {
+                    BooleanSetting s = (BooleanSetting)setting;
+                    if (s.hasParent()) {
+                        this.resetChildSettingsToDefault(s);
+                    }
+                }
+                this.resetSettingToDefault(setting);
+            }
+        }
+    }
+
+    public void resetPageSettingsToDefault(EnumSetting<?> page) {
+        Enum current = (Enum)page.getValue();
+        Enum[] values = (Enum[])current.getDeclaringClass().getEnumConstants();
+        String originalName = current.name();
+        page.setEnumValue(originalName);
+        for (Setting setting : this.module.getSettings()) {
+            if (setting == page) continue;
+            page.setEnumValue(originalName);
+            boolean visibleInCurrent = setting.isVisible();
+            if (!visibleInCurrent) continue;
+            boolean visibleInAll = true;
+            for (Enum e : values) {
+                page.setEnumValue(e.name());
+                if (setting.isVisible()) continue;
+                visibleInAll = false;
+                break;
+            }
+            page.setEnumValue(originalName);
+            if (visibleInAll) continue;
+            if (setting instanceof BooleanSetting) {
+                BooleanSetting s = (BooleanSetting)setting;
+                if (s.hasParent()) {
+                    this.resetChildSettingsToDefault(s);
+                }
+            }
+            this.resetSettingToDefault(setting);
+        }
+        page.setEnumValue(originalName);
+    }
+
+    private void resetSettingToDefault(Setting setting) {
+        if (setting instanceof BooleanSetting) {
+            BooleanSetting s = (BooleanSetting)setting;
+            s.setValue(s.getDefaultValue());
+            if (s.hasParent()) {
+                s.setOpen(false);
+            }
+            return;
+        }
+        if (setting instanceof SliderSetting) {
+            SliderSetting s = (SliderSetting)setting;
+            s.setValue(s.getDefaultValue());
+            return;
+        }
+        if (setting instanceof StringSetting) {
+            StringSetting s = (StringSetting)setting;
+            s.setValue(s.getDefaultValue());
+            return;
+        }
+        if (setting instanceof BindSetting) {
+            BindSetting s = (BindSetting)setting;
+            s.setValue(s.getDefaultValue());
+            s.setHoldEnable(false);
+            s.setPressed(false);
+            s.holding = false;
+            return;
+        }
+        if (setting instanceof EnumSetting) {
+            EnumSetting<?> s = (EnumSetting<?>)setting;
+            Enum defaultValue = (Enum)s.getDefaultValue();
+            s.setEnumValue(defaultValue.name());
+            return;
+        }
+        if (setting instanceof ColorSetting) {
+            ColorSetting s = (ColorSetting)setting;
+            s.setValue(s.getDefaultValue());
+            s.sync = s.getDefaultSync();
+            if (s.injectBoolean) {
+                s.booleanValue = s.getDefaultBooleanValue();
+            }
+        }
     }
 
     @Override

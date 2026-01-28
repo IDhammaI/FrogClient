@@ -14,6 +14,7 @@ import dev.gzsakura_miitong.mod.modules.impl.client.ClickGui;
 import dev.gzsakura_miitong.mod.modules.settings.impl.EnumSetting;
 import java.awt.Color;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Formatting;
 
 public class EnumButton
@@ -31,7 +32,11 @@ extends Button {
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
-        this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + (((Enum)this.setting.getValue()).name().equalsIgnoreCase("ABC") ? "ABC" : ((Enum)this.setting.getValue()).name()), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
+        if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.drawString(this.setting.getName().equalsIgnoreCase("Page") ? "Reset Page" : "Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+        } else {
+            this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + (((Enum)this.setting.getValue()).name().equalsIgnoreCase("ABC") ? "ABC" : ((Enum)this.setting.getValue()).name()), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
+        }
         if (this.open) {
             int y = (int)this.y;
             for (Enum e : (Enum[])((Enum)this.setting.getValue()).getDeclaringClass().getEnumConstants()) {
@@ -50,6 +55,27 @@ extends Button {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton == 0 && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            if (this.setting.getName().equalsIgnoreCase("Page")) {
+                boolean resetPage = false;
+                for (dev.gzsakura_miitong.mod.gui.items.Component component : ClickGuiScreen.getInstance().getComponents()) {
+                    for (ModuleButton moduleButton : component.getItems()) {
+                        if (!moduleButton.getModule().getSettings().contains(this.setting)) continue;
+                        moduleButton.resetPageSettingsToDefault(this.setting);
+                        resetPage = true;
+                        break;
+                    }
+                    if (!resetPage) continue;
+                    break;
+                }
+                EnumButton.sound();
+                return;
+            }
+            Enum defaultValue = (Enum)this.setting.getDefaultValue();
+            this.setting.setEnumValue(defaultValue.name());
+            EnumButton.sound();
+            return;
+        }
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (mouseButton == 1 && this.isHovering(mouseX, mouseY)) {
             this.open = !this.open;

@@ -40,6 +40,7 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -196,7 +197,11 @@ extends Button {
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
         Render2DUtil.rect(matrixStack, this.x - 1.5f + (float)this.width + 0.6f - 0.5f, this.y + 4.0f, this.x + (float)this.width + 7.0f - 2.5f, this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(this.setting.getValue(), 255).getRGB());
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
-        this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
+        if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+        } else {
+            this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
+        }
         double openProgress = this.openAnimation.get(this.open ? 1.0 : 0.0, 200L, Easing.CubicInOut);
         if (openProgress > 0.01) {
             int scissorX1 = (int)this.x - 1;
@@ -224,6 +229,18 @@ extends Button {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton == 0 && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+            this.pickingColor = false;
+            this.pickingHue = false;
+            this.pickingAlpha = false;
+            this.setting.setValue(this.setting.getDefaultValue());
+            this.setting.sync = this.setting.getDefaultSync();
+            if (this.setting.injectBoolean) {
+                this.setting.booleanValue = this.setting.getDefaultBooleanValue();
+            }
+            PickerButton.sound();
+            return;
+        }
         if (mouseButton == 0) {
             int pickerX = (int)this.x;
             int pickerY = (int)(this.y + (float)this.height);
