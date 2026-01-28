@@ -17,6 +17,8 @@
 package dev.gzsakura_miitong.mod.gui.items.buttons;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.gzsakura_miitong.api.utils.math.Animation;
+import dev.gzsakura_miitong.api.utils.math.Easing;
 import dev.gzsakura_miitong.api.utils.render.ColorUtil;
 import dev.gzsakura_miitong.api.utils.render.Render2DUtil;
 import dev.gzsakura_miitong.core.impl.CommandManager;
@@ -49,6 +51,7 @@ extends Button {
     boolean pickingHue;
     boolean pickingAlpha;
     boolean open;
+    private final Animation openAnimation = new Animation();
     float[] hsb = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 
     public PickerButton(ColorSetting setting) {
@@ -194,7 +197,13 @@ extends Button {
         Render2DUtil.rect(matrixStack, this.x - 1.5f + (float)this.width + 0.6f - 0.5f, this.y + 4.0f, this.x + (float)this.width + 7.0f - 2.5f, this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(this.setting.getValue(), 255).getRGB());
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
-        if (this.open) {
+        double openProgress = this.openAnimation.get(this.open ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+        if (openProgress > 0.01) {
+            int scissorX1 = (int)this.x - 1;
+            int scissorY1 = (int)this.y - 1;
+            int scissorX2 = (int)(this.x + (float)this.width + 7.0f) + 1;
+            int scissorY2 = (int)Math.round((double)(this.y + (float)this.height) + 119.0 * openProgress) + 1;
+            context.enableScissor(scissorX1, scissorY1, scissorX2, scissorY2);
             int pickerX = (int)this.x;
             int pickerY = (int)(this.y + (float)this.height);
             int pickerWidth = (int)((float)this.width + 7.4f);
@@ -209,6 +218,7 @@ extends Button {
             float syncRowTopY = actionsRowTopY + (float)this.getFontHeight();
             float syncTextY = this.getCenteredTextY(syncRowTopY, (float)this.getFontHeight());
             this.drawString("sync", (double)(this.x + 2.3f), (double)syncTextY, this.setting.sync ? ColorUtil.injectAlpha(color, 255).getRGB() : (this.isInsideRainbow(mouseX, mouseY) ? enableTextColor : defaultTextColor));
+            context.disableScissor();
         }
     }
 

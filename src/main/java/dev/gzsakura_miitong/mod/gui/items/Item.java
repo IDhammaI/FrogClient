@@ -10,6 +10,8 @@
  */
 package dev.gzsakura_miitong.mod.gui.items;
 
+import dev.gzsakura_miitong.api.utils.math.Animation;
+import dev.gzsakura_miitong.api.utils.math.Easing;
 import dev.gzsakura_miitong.core.impl.FontManager;
 import dev.gzsakura_miitong.mod.Mod;
 import dev.gzsakura_miitong.mod.modules.impl.client.ClickGui;
@@ -29,6 +31,7 @@ extends Mod {
     protected int width;
     protected int height;
     private boolean hidden;
+    private final Animation visibleHeightAnimation = new Animation();
 
     public Item(String name) {
         super(name);
@@ -93,6 +96,11 @@ extends Mod {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    public double getVisibleHeight() {
+        double target = this.hidden ? 0.0 : (double)this.getHeight();
+        return this.visibleHeightAnimation.get(target, 200L, Easing.CubicInOut);
     }
 
     protected double getColorDelay() {

@@ -275,7 +275,8 @@ extends Mod {
         float height = 0.0f;
         for (ModuleButton item : this.getItems()) {
             item.update();
-            item.itemHeight = item.animation.get(item.subOpen ? (double)item.getItemHeight() : 0.0, 200L, Easing.CubicInOut);
+            double openProgress = item.animation.get(item.subOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+            item.itemHeight = item.getVisibleItemHeight() * openProgress;
             height += (float)item.getButtonHeight() + 1.5f + (float)item.itemHeight;
         }
         return height;

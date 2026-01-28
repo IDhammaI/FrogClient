@@ -145,7 +145,7 @@ extends Button {
             }
         }
         if (this.subOpen || this.itemHeight > 0.0) {
-            double totalItemHeight = (double)this.getItemHeight();
+            double totalItemHeight = this.getVisibleItemHeight();
             double visibleItemHeight = Math.max(0.0, Math.min(this.itemHeight, totalItemHeight));
             float expandProgress = totalItemHeight <= 0.0 ? 0.0f : (float)(visibleItemHeight / totalItemHeight);
             float slide = (1.0f - expandProgress) * 6.0f;
@@ -157,12 +157,23 @@ extends Button {
             }
             float height = this.height + 2;
             for (Item item : this.items) {
-                if (item.isHidden()) continue;
                 item.setHeight(this.height);
+                double visibleH = item.getVisibleHeight();
+                if (visibleH <= 0.01 && item.isHidden()) continue;
                 item.setLocation(this.x + 1.0f, this.y + height + slide);
                 item.setWidth(this.width - 9);
-                item.drawScreen(context, mouseX, mouseY, partialTicks);
-                height += (float)(item.getHeight() + 2);
+                if (visibleH < (double)item.getHeight() - 0.01) {
+                    int scissorX1 = (int)item.getX() - 1;
+                    int scissorY1 = (int)item.getY() - 1;
+                    int scissorX2 = (int)(item.getX() + (float)item.getWidth() + 7.0f) + 1;
+                    int scissorY2 = (int)((double)item.getY() + visibleH) + 1;
+                    context.enableScissor(scissorX1, scissorY1, scissorX2, scissorY2);
+                    item.drawScreen(context, mouseX, mouseY, partialTicks);
+                    context.disableScissor();
+                } else {
+                    item.drawScreen(context, mouseX, mouseY, partialTicks);
+                }
+                height += (float)(visibleH + 2.0);
             }
         }
     }
@@ -210,13 +221,18 @@ extends Button {
         return super.getHeight();
     }
 
-    public int getItemHeight() {
-        int height = 3;
+    public double getVisibleItemHeight() {
+        double height = 3.0;
         for (Item item : this.items) {
-            if (item.isHidden()) continue;
-            height += item.getHeight() + 2;
+            double visibleH = item.getVisibleHeight();
+            if (visibleH <= 0.01 && item.isHidden()) continue;
+            height += visibleH + 2.0;
         }
         return height;
+    }
+
+    public int getItemHeight() {
+        return (int)Math.round(this.getVisibleItemHeight());
     }
 
     @Override
