@@ -33,6 +33,8 @@ extends Mod {
     private int y;
     private float animX;
     private float animY;
+    private float mouseMoveOffsetX;
+    private float mouseMoveOffsetY;
     private final Animation xAnimation = new Animation();
     private final Animation yAnimation = new Animation();
     private int x2;
@@ -145,6 +147,16 @@ extends Mod {
 
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 0 && this.isHovering(mouseX, mouseY)) {
+            if (ClickGui.getInstance().mouseMove.getValue()) {
+                this.setX(this.getX());
+                this.setY(this.getY());
+                this.animX = this.x;
+                this.animY = this.y;
+                this.xAnimation.from = this.x;
+                this.xAnimation.to = this.x;
+                this.yAnimation.from = this.y;
+                this.yAnimation.to = this.y;
+            }
             this.x2 = this.getX() - mouseX;
             this.y2 = this.getY() - mouseY;
             ClickGuiScreen.getInstance().getComponents().forEach(component -> {
@@ -195,7 +207,7 @@ extends Mod {
     }
 
     public int getX() {
-        return (int)this.animX;
+        return (int)(this.animX + this.mouseMoveOffsetX);
     }
 
     public int getTargetX() {
@@ -207,7 +219,7 @@ extends Mod {
     }
 
     public int getY() {
-        return (int)this.animY;
+        return (int)(this.animY + this.mouseMoveOffsetY);
     }
 
     public int getTargetY() {
@@ -248,6 +260,11 @@ extends Mod {
 
     public final List<ModuleButton> getItems() {
         return this.items;
+    }
+
+    public void setMouseMoveOffset(float x, float y) {
+        this.mouseMoveOffsetX = x;
+        this.mouseMoveOffsetY = y;
     }
 
     private boolean isHovering(int mouseX, int mouseY) {

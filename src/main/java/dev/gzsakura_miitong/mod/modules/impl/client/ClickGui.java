@@ -62,9 +62,12 @@ extends Module {
     public final BooleanSetting scrollAnim = this.add(new BooleanSetting("ScrollAnim", true).setParent());
     public final SliderSetting scrollAnimLength = this.add(new SliderSetting("ScrollAnimLength", 220, 1, 1000, this.scrollAnim::isOpen));
     public final EnumSetting<Easing> scrollAnimEasing = this.add(new EnumSetting<Easing>("ScrollAnimEasing", Easing.SineOut, this.scrollAnim::isOpen));
+    public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", false).setParent());
+    public final SliderSetting mouseMoveStrength = this.add(new SliderSetting("MouseMoveStrength", 6.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
+    public final SliderSetting mouseMoveSmooth = this.add(new SliderSetting("MouseMoveSmooth", 10.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
     public final BooleanSetting blur = this.add(new BooleanSetting("Blur", true).setParent());
     public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
-    public final SliderSetting radius = this.add(new SliderSetting("Radius", 2.0, 0.0, 100.0, this.blur::isOpen));
+    public final SliderSetting radius = this.add(new SliderSetting("Radius", 5.0, 0.0, 100.0, this.blur::isOpen));
     public final BooleanSetting elements = this.add(new BooleanSetting("Elements", false).setParent().injectTask(this::keyCodec));
     public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));

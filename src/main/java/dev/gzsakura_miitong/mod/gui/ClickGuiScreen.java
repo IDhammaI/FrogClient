@@ -13,6 +13,7 @@ package dev.gzsakura_miitong.mod.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.gzsakura_miitong.Vitality;
 import dev.gzsakura_miitong.api.utils.Wrapper;
+import dev.gzsakura_miitong.api.utils.math.AnimateUtil;
 import dev.gzsakura_miitong.api.utils.render.Render2DUtil;
 import dev.gzsakura_miitong.api.utils.render.TextUtil;
 import dev.gzsakura_miitong.mod.Mod;
@@ -33,6 +34,8 @@ public class ClickGuiScreen
 extends Screen {
     private static ClickGuiScreen INSTANCE = new ClickGuiScreen();
     private final ArrayList<Component> components = new ArrayList();
+    private float mouseMoveOffsetX;
+    private float mouseMoveOffsetY;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Vitality"));
@@ -75,6 +78,41 @@ extends Screen {
         RenderSystem.setShaderColor((float)1.0f, (float)1.0f, (float)1.0f, (float)keyCodec);
         Item.context = context;
         this.renderBackground(context, mouseX, mouseY, delta);
+        boolean dragging = false;
+        for (Component c : this.components) {
+            if (!c.drag) continue;
+            dragging = true;
+            break;
+        }
+        float targetOffsetX = 0.0f;
+        float targetOffsetY = 0.0f;
+        if (ClickGui.getInstance().mouseMove.getValue() && !dragging) {
+            float strength = ClickGui.getInstance().mouseMoveStrength.getValueFloat() * (float)ClickGui.getInstance().alphaValue;
+            float cx = (float)context.getScaledWindowWidth() / 2.0f;
+            float cy = (float)context.getScaledWindowHeight() / 2.0f;
+            float nx = cx <= 0.0f ? 0.0f : ((float)mouseX - cx) / cx;
+            float ny = cy <= 0.0f ? 0.0f : ((float)mouseY - cy) / cy;
+            nx = Math.max(-1.0f, Math.min(1.0f, nx));
+            ny = Math.max(-1.0f, Math.min(1.0f, ny));
+            targetOffsetX = nx * strength;
+            targetOffsetY = ny * strength;
+        }
+        float smooth = ClickGui.getInstance().mouseMoveSmooth.getValueFloat();
+        if (smooth <= 0.0f) {
+            this.mouseMoveOffsetX = targetOffsetX;
+            this.mouseMoveOffsetY = targetOffsetY;
+        } else {
+            float a = AnimateUtil.deltaTime() * smooth;
+            if (a < 0.0f) {
+                a = 0.0f;
+            }
+            if (a > 0.35f) {
+                a = 0.35f;
+            }
+            this.mouseMoveOffsetX += (targetOffsetX - this.mouseMoveOffsetX) * a;
+            this.mouseMoveOffsetY += (targetOffsetY - this.mouseMoveOffsetY) * a;
+        }
+        this.components.forEach(c -> c.setMouseMoveOffset(this.mouseMoveOffsetX, this.mouseMoveOffsetY));
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
