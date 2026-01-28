@@ -144,14 +144,14 @@ extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (InputUtil.isKeyPressed((long)Wrapper.mc.getWindow().getHandle(), (int)340)) {
             if (verticalAmount < 0.0) {
-                this.components.forEach(component -> component.setX(component.getX() - 15));
+                this.components.forEach(component -> component.setX(component.getTargetX() - 15));
             } else if (verticalAmount > 0.0) {
-                this.components.forEach(component -> component.setX(component.getX() + 15));
+                this.components.forEach(component -> component.setX(component.getTargetX() + 15));
             }
         } else if (verticalAmount < 0.0) {
-            this.components.forEach(component -> component.setY(component.getY() - 15));
+            this.components.forEach(component -> component.setY(component.getTargetY() - 15));
         } else if (verticalAmount > 0.0) {
-            this.components.forEach(component -> component.setY(component.getY() + 15));
+            this.components.forEach(component -> component.setY(component.getTargetY() + 15));
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }

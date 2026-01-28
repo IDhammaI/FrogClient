@@ -59,6 +59,9 @@ extends Module {
     public final BooleanSetting fade = this.add(new BooleanSetting("Fade", true).setParent());
     public final SliderSetting length = this.add(new SliderSetting("Length", 250, 0, 1000, this.fade::isOpen));
     public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.Expo, this.fade::isOpen));
+    public final BooleanSetting scrollAnim = this.add(new BooleanSetting("ScrollAnim", true).setParent());
+    public final SliderSetting scrollAnimLength = this.add(new SliderSetting("ScrollAnimLength", 220, 1, 1000, this.scrollAnim::isOpen));
+    public final EnumSetting<Easing> scrollAnimEasing = this.add(new EnumSetting<Easing>("ScrollAnimEasing", Easing.SineOut, this.scrollAnim::isOpen));
     public final BooleanSetting blur = this.add(new BooleanSetting("Blur", true).setParent());
     public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
     public final SliderSetting radius = this.add(new SliderSetting("Radius", 2.0, 0.0, 100.0, this.blur::isOpen));

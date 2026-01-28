@@ -7,6 +7,7 @@
 package dev.gzsakura_miitong.mod.gui.items;
 
 import dev.gzsakura_miitong.Alien;
+import dev.gzsakura_miitong.api.utils.math.Animation;
 import dev.gzsakura_miitong.api.utils.math.Easing;
 import dev.gzsakura_miitong.api.utils.render.ColorUtil;
 import dev.gzsakura_miitong.api.utils.render.Render2DUtil;
@@ -30,6 +31,10 @@ extends Mod {
     protected DrawContext context;
     private int x;
     private int y;
+    private float animX;
+    private float animY;
+    private final Animation xAnimation = new Animation();
+    private final Animation yAnimation = new Animation();
     private int x2;
     private int y2;
     private int width;
@@ -42,6 +47,8 @@ extends Mod {
         this.category = category;
         this.setX(x);
         this.setY(y);
+        this.animX = this.x;
+        this.animY = this.y;
         if (ClickGui.getInstance() != null) {
             this.setWidth(ClickGui.getInstance().categoryWidth.getValueInt());
             this.setHeight(ClickGui.getInstance().categoryBarHeight.getValueInt() + 5);
@@ -62,63 +69,84 @@ extends Mod {
         }
         this.x = this.x2 + mouseX;
         this.y = this.y2 + mouseY;
+        this.animX = this.x;
+        this.animY = this.y;
+    }
+
+    private void updatePosition() {
+        if (!ClickGui.getInstance().scrollAnim.getValue() || this.drag) {
+            this.animX = this.x;
+            this.animY = this.y;
+            this.xAnimation.from = this.x;
+            this.xAnimation.to = this.x;
+            this.yAnimation.from = this.y;
+            this.yAnimation.to = this.y;
+            return;
+        }
+        int length = Math.max(1, ClickGui.getInstance().scrollAnimLength.getValueInt());
+        Easing easing = ClickGui.getInstance().scrollAnimEasing.getValue();
+        this.animX = (float)this.xAnimation.get((double)this.x, (long)length, easing);
+        this.animY = (float)this.yAnimation.get((double)this.y, (long)length, easing);
     }
 
     protected double getColorDelay() {
-        return (double)this.y / 10.0;
+        return (double)this.getY() / 10.0;
     }
 
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         this.context = context;
         this.drag(mouseX, mouseY);
+        this.updatePosition();
+        int x = this.getX();
+        int y = this.getY();
         float totalItemHeight = this.open ? this.getTotalItemHeight() - 2.0f : 0.0f;
         Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()), ClickGui.getInstance().topAlpha.getValueInt());
-        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, topColor);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
+        Render2DUtil.drawRect(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, topColor);
+        Render2DUtil.drawRectWithOutline(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
         if (this.open) {
             if (ClickGui.getInstance().backGround.booleanValue) {
-                Render2DUtil.drawRect(context.getMatrices(), this.x, (float)this.y + (float)this.height - 5.0f, this.width, (float)(this.y + this.height) + totalItemHeight - ((float)this.y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));
-                Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, (float)this.y + (float)this.height - 5.0f, this.width, (float)(this.y + this.height) + totalItemHeight - ((float)this.y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
+                Render2DUtil.drawRect(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));
+                Render2DUtil.drawRectWithOutline(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
             }
             if (ClickGui.getInstance().line.getValue()) {
                 int lineColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()).getRGB(), ClickGui.getInstance().topAlpha.getValueInt());
-                Render2DUtil.drawLine(context.getMatrices(), (float)this.x + 0.2f, (float)(this.y + this.height) + totalItemHeight, (float)this.x + 0.2f, (float)this.y + (float)this.height - 5.0f, lineColor);
-                Render2DUtil.drawLine(context.getMatrices(), this.x + this.width, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)this.y + (float)this.height - 5.0f, lineColor);
-                Render2DUtil.drawLine(context.getMatrices(), this.x, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)(this.y + this.height) + totalItemHeight, lineColor);
+                Render2DUtil.drawLine(context.getMatrices(), (float)x + 0.2f, (float)(y + this.height) + totalItemHeight, (float)x + 0.2f, (float)y + (float)this.height - 5.0f, lineColor);
+                Render2DUtil.drawLine(context.getMatrices(), x + this.width, (float)(y + this.height) + totalItemHeight, x + this.width, (float)y + (float)this.height - 5.0f, lineColor);
+                Render2DUtil.drawLine(context.getMatrices(), x, (float)(y + this.height) + totalItemHeight, x + this.width, (float)(y + this.height) + totalItemHeight, lineColor);
             }
         }
         float barHeight = (float)this.height - 5.0f;
-        float iconY = (float)this.y + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
-        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)this.x + 6.0f), (double)iconY, Button.enableTextColor);
+        float iconY = (float)y + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
+        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)x + 6.0f), (double)iconY, Button.enableTextColor);
         float nameFontHeight = ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : 9.0f;
-        float nameY = (float)this.y + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
-        this.drawString(this.getName(), (double)((float)this.x + 20.0f), (double)nameY, Button.enableTextColor);
+        float nameY = (float)y + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
+        this.drawString(this.getName(), (double)((float)x + 20.0f), (double)nameY, Button.enableTextColor);
         if (this.open) {
-            float y = (float)(this.getY() + this.getHeight()) - 3.0f;
+            float yOff = (float)(this.getY() + this.getHeight()) - 3.0f;
             for (ModuleButton item : this.getItems()) {
                 if (item.isHidden()) continue;
-                item.setLocation((float)this.x + 2.0f, y);
+                item.setLocation((float)x + 2.0f, yOff);
                 item.setWidth(this.getWidth() - 4);
                 if (item.itemHeight > 0.0 || item.subOpen) {
                     int scissorX1 = (int)item.x - 1;
                     int scissorY1 = (int)item.y - 1;
                     int scissorX2 = (int)(item.x + (float)item.getWidth() + 1.0f);
-                    int scissorY2 = (int)((double)(y + (float)item.getButtonHeight() + 1.5f) + item.itemHeight) + 1;
+                    int scissorY2 = (int)((double)(yOff + (float)item.getButtonHeight() + 1.5f) + item.itemHeight) + 1;
                     context.enableScissor(scissorX1, scissorY1, scissorX2, scissorY2);
                     item.drawScreen(context, mouseX, mouseY, partialTicks);
                     context.disableScissor();
                 } else {
                     item.drawScreen(context, mouseX, mouseY, partialTicks);
                 }
-                y += (float)item.getButtonHeight() + 1.5f + (float)item.itemHeight;
+                yOff += (float)item.getButtonHeight() + 1.5f + (float)item.itemHeight;
             }
         }
     }
 
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 0 && this.isHovering(mouseX, mouseY)) {
-            this.x2 = this.x - mouseX;
-            this.y2 = this.y - mouseY;
+            this.x2 = this.getX() - mouseX;
+            this.y2 = this.getY() - mouseY;
             ClickGuiScreen.getInstance().getComponents().forEach(component -> {
                 if (component.drag) {
                     component.drag = false;
@@ -167,6 +195,10 @@ extends Mod {
     }
 
     public int getX() {
+        return (int)this.animX;
+    }
+
+    public int getTargetX() {
         return this.x;
     }
 
@@ -175,6 +207,10 @@ extends Mod {
     }
 
     public int getY() {
+        return (int)this.animY;
+    }
+
+    public int getTargetY() {
         return this.y;
     }
 
