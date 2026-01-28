@@ -57,8 +57,8 @@ extends Module {
     public final SliderSetting topAlpha = this.add(new SliderSetting("TopAlpha", 128, 0, 255));
     public final SliderSetting backgroundAlpha = this.add(new SliderSetting("BackgroundAlpha", 236, 0, 255));
     public final BooleanSetting fade = this.add(new BooleanSetting("Fade", true).setParent());
-    public final SliderSetting length = this.add(new SliderSetting("Length", 250, 0, 1000, this.fade::isOpen));
-    public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.Expo, this.fade::isOpen));
+    public final SliderSetting length = this.add(new SliderSetting("Length", 400, 0, 1000, this.fade::isOpen));
+    public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.BackInOut, this.fade::isOpen));
     public final BooleanSetting scrollAnim = this.add(new BooleanSetting("ScrollAnim", true).setParent());
     public final SliderSetting scrollAnimLength = this.add(new SliderSetting("ScrollAnimLength", 220, 1, 1000, this.scrollAnim::isOpen));
     public final EnumSetting<Easing> scrollAnimEasing = this.add(new EnumSetting<Easing>("ScrollAnimEasing", Easing.SineOut, this.scrollAnim::isOpen));

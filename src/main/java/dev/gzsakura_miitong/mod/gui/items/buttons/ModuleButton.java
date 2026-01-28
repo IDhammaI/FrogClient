@@ -145,18 +145,21 @@ extends Button {
             }
         }
         if (this.subOpen || this.itemHeight > 0.0) {
-            if (ClickGui.getInstance().line.getValue()) {
-                double itemHeight = this.getItemHeight();
+            double totalItemHeight = (double)this.getItemHeight();
+            double visibleItemHeight = Math.max(0.0, Math.min(this.itemHeight, totalItemHeight));
+            float expandProgress = totalItemHeight <= 0.0 ? 0.0f : (float)(visibleItemHeight / totalItemHeight);
+            float slide = (1.0f - expandProgress) * 6.0f;
+            if (ClickGui.getInstance().line.getValue() && visibleItemHeight > 0.01) {
                 int line = new Color(220, 224, 230, 160).getRGB();
-                Render2DUtil.drawLine(context.getMatrices(), this.x + 0.6f, (float)((double)(this.y + (float)this.height) + itemHeight - 0.5), this.x + 0.6f, this.y + (float)this.height - 0.5f, line);
-                Render2DUtil.drawLine(context.getMatrices(), this.x + (float)this.width - 0.6f, (float)((double)(this.y + (float)this.height) + itemHeight - 0.5), this.x + (float)this.width - 0.6f, this.y + (float)this.height - 0.5f, line);
-                Render2DUtil.drawLine(context.getMatrices(), this.x + 0.6f, (float)((double)(this.y + (float)this.height) + itemHeight - 0.5), this.x + (float)this.width - 0.6f, (float)((double)(this.y + (float)this.height) + itemHeight - (double)0.7f), line);
+                Render2DUtil.drawLine(context.getMatrices(), this.x + 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5), this.x + 0.6f, this.y + (float)this.height - 0.5f, line);
+                Render2DUtil.drawLine(context.getMatrices(), this.x + (float)this.width - 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5), this.x + (float)this.width - 0.6f, this.y + (float)this.height - 0.5f, line);
+                Render2DUtil.drawLine(context.getMatrices(), this.x + 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5), this.x + (float)this.width - 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - (double)0.7f), line);
             }
             float height = this.height + 2;
             for (Item item : this.items) {
                 if (item.isHidden()) continue;
                 item.setHeight(this.height);
-                item.setLocation(this.x + 1.0f, this.y + height);
+                item.setLocation(this.x + 1.0f, this.y + height + slide);
                 item.setWidth(this.width - 9);
                 item.drawScreen(context, mouseX, mouseY, partialTicks);
                 height += (float)(item.getHeight() + 2);
