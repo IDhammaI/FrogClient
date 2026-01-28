@@ -96,7 +96,7 @@ extends Button {
         Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA) : idleFill;
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
-        Render2DUtil.drawRightRoundedRect(context.getMatrices(), this.x, this.y, this.width, h, radius, baseFill);
+        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, h, baseFill);
         if (!pressed && hoverProgress > 0.01) {
             int glowAlpha = (int)Math.min(240.0, (double)ClickGui.getInstance().hoverAlpha.getValueInt() * hoverProgress);
             float centerX = (float)mouseX;
@@ -112,21 +112,21 @@ extends Button {
             }
             context.disableScissor();
         }
-        this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)(this.y - 2.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
+        float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
+        this.drawString(this.module.getDisplayName(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
         if (ClickGui.getInstance().gear.booleanValue) {
             boolean expanded = this.subOpen || this.itemHeight > 0.0;
             switch (ClickGui.getInstance().expandIcon.getValue()) {
-                case PlusMinus -> this.drawString(this.subOpen ? "-" : "+", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
-                case Chevron -> this.drawString(this.subOpen ? "v" : ">", (double)(this.x + (float)this.width - 8.0f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), ClickGui.getInstance().gear.getValue().getRGB());
+                case PlusMinus -> this.drawString(this.subOpen ? "-" : "+", (double)(this.x + (float)this.width - 8.0f), (double)textY, ClickGui.getInstance().gear.getValue().getRGB());
+                case Chevron -> this.drawString(this.subOpen ? "v" : ">", (double)(this.x + (float)this.width - 8.0f), (double)textY, ClickGui.getInstance().gear.getValue().getRGB());
                 case Gear -> {
                     int gearColor = ClickGui.getInstance().gear.getValue().getRGB();
                     float gearW = (float)FontManager.icon.getWidth("d");
                     float gearH = (float)FontManager.icon.getFontHeight("d");
                     float centerX = this.x + (float)this.width - radius;
                     float centerY = this.y + h / 2.0f;
-                    float baselineFix = 2.2f;
                     float gearX = centerX - gearW / 2.0f;
-                    float gearY = centerY - gearH / 2.0f + baselineFix;
+                    float gearY = centerY - gearH / 2.0f;
                     int totalItemHeight = this.getItemHeight();
                     float expandProgress = totalItemHeight <= 0 ? 0.0f : (float)Math.min(1.0, Math.max(0.0, this.itemHeight / (double)totalItemHeight));
                     if (expandProgress > 0.001f) {
@@ -134,10 +134,12 @@ extends Button {
                         context.getMatrices().push();
                         context.getMatrices().translate(centerX, centerY, 0.0f);
                         context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle));
-                        FontManager.icon.drawString(context.getMatrices(), "d", (double)(-gearW / 2.0f), (double)(-gearH / 2.0f + baselineFix), gearColor);
+                        FontManager.icon.drawString(context.getMatrices(), "d", (double)(-gearW / 2.0f), (double)(-gearH / 2.0f), gearColor);
                         context.getMatrices().pop();
                     } else {
                         FontManager.icon.drawString(context.getMatrices(), "d", (double)gearX, (double)gearY, gearColor);
+                        // 画调试框：齿轮图标区域
+                        // Render2DUtil.drawRect(context.getMatrices(), gearX, gearY, gearW, gearH, new Color(255, 0, 0, 120).getRGB());
                     }
                 }
             }

@@ -42,8 +42,13 @@ extends Mod {
         this.category = category;
         this.setX(x);
         this.setY(y);
-        this.setWidth(93);
-        this.setHeight(18);
+        if (ClickGui.getInstance() != null) {
+            this.setWidth(ClickGui.getInstance().categoryWidth.getValueInt());
+            this.setHeight(ClickGui.getInstance().categoryBarHeight.getValueInt() + 5);
+        } else {
+            this.setWidth(93);
+            this.setHeight(18);
+        }
         this.open = open;
         this.setupItems();
     }
@@ -85,8 +90,12 @@ extends Mod {
                 Render2DUtil.drawLine(context.getMatrices(), this.x, (float)(this.y + this.height) + totalItemHeight, this.x + this.width, (float)(this.y + this.height) + totalItemHeight, lineColor);
             }
         }
-        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)this.x + 6.0f), (double)((float)this.y + 4.0f), Button.enableTextColor);
-        this.drawString(this.getName(), (double)((float)this.x + 20.0f), (double)((float)this.y - 1.0f - (float)(-ClickGui.getInstance().titleOffset.getValueInt() - 6)), Button.enableTextColor);
+        float barHeight = (float)this.height - 5.0f;
+        float iconY = (float)this.y + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
+        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)this.x + 6.0f), (double)iconY, Button.enableTextColor);
+        float nameFontHeight = ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : 9.0f;
+        float nameY = (float)this.y + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
+        this.drawString(this.getName(), (double)((float)this.x + 20.0f), (double)nameY, Button.enableTextColor);
         if (this.open) {
             float y = (float)(this.getY() + this.getHeight()) - 3.0f;
             for (ModuleButton item : this.getItems()) {

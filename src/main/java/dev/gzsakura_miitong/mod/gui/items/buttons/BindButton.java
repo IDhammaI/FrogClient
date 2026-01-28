@@ -32,18 +32,19 @@ extends Button {
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor) : (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()));
+        float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isListening) {
-            this.drawString("Press keyCodec Key...", (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), enableTextColor);
+            this.drawString("Press keyCodec Key...", (double)(this.x + 2.3f), (double)textY, enableTextColor);
         } else {
             String str = this.setting.getKeyString();
             if (!this.isListening && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340) && this.setting.getName().equals("Key")) {
                 if (this.setting.isHoldEnable()) {
-                    this.drawString("\u00a77Toggle/\u00a7fHold", (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), enableTextColor);
+                    this.drawString("\u00a77Toggle/\u00a7fHold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
                 } else {
-                    this.drawString("\u00a7fToggle\u00a77/Hold", (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), enableTextColor);
+                    this.drawString("\u00a7fToggle\u00a77/Hold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
                 }
             } else {
-                this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + str, (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
+                this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + str, (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
             }
         }
     }

@@ -20,7 +20,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.gzsakura_miitong.api.utils.render.ColorUtil;
 import dev.gzsakura_miitong.api.utils.render.Render2DUtil;
 import dev.gzsakura_miitong.core.impl.CommandManager;
-import dev.gzsakura_miitong.mod.gui.ClickGuiScreen;
 import dev.gzsakura_miitong.mod.modules.impl.client.ClickGui;
 import dev.gzsakura_miitong.mod.modules.settings.impl.ColorSetting;
 import java.awt.Color;
@@ -193,30 +192,45 @@ extends Button {
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
         Render2DUtil.rect(matrixStack, this.x - 1.5f + (float)this.width + 0.6f - 0.5f, this.y + 4.0f, this.x + (float)this.width + 7.0f - 2.5f, this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(this.setting.getValue(), 255).getRGB());
-        this.drawString(this.getName(), (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), enableTextColor);
+        float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
+        this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
         if (this.open) {
-            this.drawPicker(this.setting, (int)this.x, (int)this.y + this.height, (int)this.x, (int)this.y + 103, (int)this.x, (int)this.y + 95, mouseX, mouseY);
-            this.drawString("copy", (double)(this.x + 2.3f), (double)(this.y + 96.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()), this.isInsideCopy(mouseX, mouseY) ? enableTextColor : defaultTextColor);
-            this.drawString("paste", (double)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f), (double)(this.y + 96.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()), this.isInsidePaste(mouseX, mouseY) ? enableTextColor : defaultTextColor);
-            this.drawString("sync", (double)(this.x + 2.3f), (double)(this.y + 96.0f + (float)this.getFontHeight() + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()), this.setting.sync ? ColorUtil.injectAlpha(color, 255).getRGB() : (this.isInsideRainbow(mouseX, mouseY) ? enableTextColor : defaultTextColor));
+            int pickerX = (int)this.x;
+            int pickerY = (int)(this.y + (float)this.height);
+            int pickerWidth = (int)((float)this.width + 7.4f);
+            int pickerHeight = 78;
+            int alphaSliderY = pickerY + pickerHeight + 4;
+            int hueSliderY = alphaSliderY + 8;
+            this.drawPicker(this.setting, pickerX, pickerY, pickerX, hueSliderY, pickerX, alphaSliderY, mouseX, mouseY);
+            float actionsRowTopY = (float)pickerY + 96.0f;
+            float actionsTextY = this.getCenteredTextY(actionsRowTopY, (float)this.getFontHeight());
+            this.drawString("copy", (double)(this.x + 2.3f), (double)actionsTextY, this.isInsideCopy(mouseX, mouseY) ? enableTextColor : defaultTextColor);
+            this.drawString("paste", (double)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f), (double)actionsTextY, this.isInsidePaste(mouseX, mouseY) ? enableTextColor : defaultTextColor);
+            float syncRowTopY = actionsRowTopY + (float)this.getFontHeight();
+            float syncTextY = this.getCenteredTextY(syncRowTopY, (float)this.getFontHeight());
+            this.drawString("sync", (double)(this.x + 2.3f), (double)syncTextY, this.setting.sync ? ColorUtil.injectAlpha(color, 255).getRGB() : (this.isInsideRainbow(mouseX, mouseY) ? enableTextColor : defaultTextColor));
         }
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 0) {
+            int pickerX = (int)this.x;
+            int pickerY = (int)(this.y + (float)this.height);
             int pickerWidth = (int)((float)this.width + 7.4f);
             int pickerHeight = 78;
             int hueSliderWidth = pickerWidth + 3;
             int hueSliderHeight = 7;
             int alphaSliderHeight = 7;
-            if (PickerButton.mouseOver((int)this.x, (int)this.y + 15, (int)this.x + pickerWidth, (int)this.y + 15 + pickerHeight, mouseX, mouseY)) {
+            int alphaSliderY = pickerY + pickerHeight + 4;
+            int hueSliderY = alphaSliderY + alphaSliderHeight + 1;
+            if (PickerButton.mouseOver(pickerX, pickerY, pickerX + pickerWidth, pickerY + pickerHeight, mouseX, mouseY)) {
                 this.pickingColor = true;
             }
-            if (PickerButton.mouseOver((int)this.x, (int)this.y + 103, (int)this.x + hueSliderWidth, (int)this.y + 103 + hueSliderHeight, mouseX, mouseY)) {
+            if (PickerButton.mouseOver(pickerX, hueSliderY, pickerX + hueSliderWidth, hueSliderY + hueSliderHeight, mouseX, mouseY)) {
                 this.pickingHue = true;
             }
-            if (PickerButton.mouseOver((int)this.x, (int)this.y + 95, (int)this.x + pickerWidth, (int)this.y + 95 + alphaSliderHeight, mouseX, mouseY)) {
+            if (PickerButton.mouseOver(pickerX, alphaSliderY, pickerX + pickerWidth, alphaSliderY + alphaSliderHeight, mouseX, mouseY)) {
                 this.pickingAlpha = true;
             }
         }
@@ -282,15 +296,23 @@ extends Button {
     }
 
     public boolean isInsideCopy(int mouseX, int mouseY) {
-        return PickerButton.mouseOver((int)((float)((int)this.x) + 2.3f), (int)(this.y + 96.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()), (int)((float)((int)this.x) + 2.3f) + this.getWidth("copy"), (int)(this.y + 95.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()) + this.getFontHeight(), mouseX, mouseY);
+        float actionsRowTopY = this.y + (float)this.height + 96.0f;
+        int textY = (int)this.getCenteredTextY(actionsRowTopY, (float)this.getFontHeight());
+        return PickerButton.mouseOver((int)((float)((int)this.x) + 2.3f), textY, (int)((float)((int)this.x) + 2.3f) + this.getWidth("copy"), textY + this.getFontHeight(), mouseX, mouseY);
     }
 
     public boolean isInsideRainbow(int mouseX, int mouseY) {
-        return PickerButton.mouseOver((int)((float)((int)this.x) + 2.3f), (int)(this.y + 96.0f + (float)this.height + (float)this.getFontHeight() - (float)ClickGuiScreen.getInstance().getTextOffset()), (int)((float)((int)this.x) + 2.3f) + this.getWidth("sync"), (int)(this.y + 95.0f + (float)this.height + (float)this.getFontHeight() - (float)ClickGuiScreen.getInstance().getTextOffset()) + this.getFontHeight(), mouseX, mouseY);
+        float actionsRowTopY = this.y + (float)this.height + 96.0f;
+        float syncRowTopY = actionsRowTopY + (float)this.getFontHeight();
+        int textY = (int)this.getCenteredTextY(syncRowTopY, (float)this.getFontHeight());
+        return PickerButton.mouseOver((int)((float)((int)this.x) + 2.3f), textY, (int)((float)((int)this.x) + 2.3f) + this.getWidth("sync"), textY + this.getFontHeight(), mouseX, mouseY);
     }
 
     public boolean isInsidePaste(int mouseX, int mouseY) {
-        return PickerButton.mouseOver((int)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f), (int)(this.y + 96.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()), (int)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f) + this.getWidth("paste"), (int)(this.y + 95.0f + (float)this.height - (float)ClickGuiScreen.getInstance().getTextOffset()) + this.getFontHeight(), mouseX, mouseY);
+        float actionsRowTopY = this.y + (float)this.height + 96.0f;
+        int textY = (int)this.getCenteredTextY(actionsRowTopY, (float)this.getFontHeight());
+        int x = (int)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f);
+        return PickerButton.mouseOver(x, textY, x + this.getWidth("paste"), textY + this.getFontHeight(), mouseX, mouseY);
     }
 
     @Override

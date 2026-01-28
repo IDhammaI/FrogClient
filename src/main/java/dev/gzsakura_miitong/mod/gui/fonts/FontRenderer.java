@@ -275,7 +275,7 @@ implements Closeable {
         float g2 = g;
         float b2 = elementCodec;
         stack.push();
-        stack.translate(FontRenderer.roundToDecimal(x, 1), FontRenderer.roundToDecimal(y -= 3.0f, 1), 0.0);
+        stack.translate(FontRenderer.roundToDecimal(x, 1), FontRenderer.roundToDecimal(y, 1), 0.0);
         stack.scale(1.0f / (float)this.scaleMul, 1.0f / (float)this.scaleMul, 1.0f);
         RenderSystem.enableBlend();
         RenderSystem.disableCull();

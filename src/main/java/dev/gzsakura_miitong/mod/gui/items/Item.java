@@ -119,6 +119,10 @@ extends Mod {
         return 9;
     }
 
+    protected float getCenteredTextY(float baseY, float boxHeight) {
+        return baseY + (boxHeight - (float)this.getFontHeight()) / 2.0f + (float)ClickGui.getInstance().textOffset.getValueInt();
+    }
+
     protected int getWidth(String s) {
         if (ClickGui.getInstance().font.getValue()) {
             return (int)FontManager.ui.getWidth(s);

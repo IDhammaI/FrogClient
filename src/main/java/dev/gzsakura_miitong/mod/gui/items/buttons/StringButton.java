@@ -59,10 +59,11 @@ extends Button {
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
+        float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isListening) {
-            this.drawString(this.currentString + StringButton.getIdleSign(), (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
+            this.drawString(this.currentString + StringButton.getIdleSign(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
         } else {
-            this.drawString(this.setting.getName() + ": " + String.valueOf(Formatting.GRAY) + this.setting.getValue(), (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
+            this.drawString(this.setting.getName() + ": " + String.valueOf(Formatting.GRAY) + this.setting.getValue(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
         }
     }
 

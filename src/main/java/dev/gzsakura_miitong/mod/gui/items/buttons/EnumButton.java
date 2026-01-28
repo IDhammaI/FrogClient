@@ -30,12 +30,14 @@ extends Button {
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
-        this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + (((Enum)this.setting.getValue()).name().equalsIgnoreCase("ABC") ? "ABC" : ((Enum)this.setting.getValue()).name()), (double)(this.x + 2.3f), (double)(this.y - 1.7f - (float)ClickGuiScreen.getInstance().getTextOffset()), this.getState() ? enableTextColor : defaultTextColor);
+        float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
+        this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + (((Enum)this.setting.getValue()).name().equalsIgnoreCase("ABC") ? "ABC" : ((Enum)this.setting.getValue()).name()), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
         if (this.open) {
             int y = (int)this.y;
             for (Enum e : (Enum[])((Enum)this.setting.getValue()).getDeclaringClass().getEnumConstants()) {
                 String s = e.name();
-                this.drawString(s, (double)((float)this.width / 2.0f - (float)this.getWidth(s) / 2.0f + 2.0f + this.x), (double)((float)y + (float)this.height - 3.0f - (float)ClickGuiScreen.getInstance().getTextOffset()), ((Enum)this.setting.getValue()).name().equals(s) ? enableTextColor : defaultTextColor);
+                float optionY = this.getCenteredTextY((float)y + (float)this.height + 1.0f, 11.0f);
+                this.drawString(s, (double)((float)this.width / 2.0f - (float)this.getWidth(s) / 2.0f + 2.0f + this.x), (double)optionY, ((Enum)this.setting.getValue()).name().equals(s) ? enableTextColor : defaultTextColor);
                 y += 11;
             }
         }
