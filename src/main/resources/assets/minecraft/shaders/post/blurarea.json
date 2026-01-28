@@ -9,6 +9,7 @@
       "outtarget": "swap",
       "uniforms": [
         { "name": "Radius", "values": [ 1.0 ] },
+        { "name": "BlurType", "values": [ 0.0 ] },
         { "name": "BlurXY", "values": [ 0.0, 0.0 ] },
         { "name": "BlurCoord", "values": [ 1.0, 1.0 ] }
       ]

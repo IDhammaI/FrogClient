@@ -59,8 +59,9 @@ extends Module {
     public final BooleanSetting fade = this.add(new BooleanSetting("Fade", true).setParent());
     public final SliderSetting length = this.add(new SliderSetting("Length", 250, 0, 1000, this.fade::isOpen));
     public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.Expo, this.fade::isOpen));
-    public final BooleanSetting blur = this.add(new BooleanSetting("Blur", false).setParent());
-    public final SliderSetting radius = this.add(new SliderSetting("Radius", 10.0, 0.0, 100.0, this.blur::isOpen));
+    public final BooleanSetting blur = this.add(new BooleanSetting("Blur", true).setParent());
+    public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
+    public final SliderSetting radius = this.add(new SliderSetting("Radius", 2.0, 0.0, 100.0, this.blur::isOpen));
     public final BooleanSetting elements = this.add(new BooleanSetting("Elements", false).setParent().injectTask(this::keyCodec));
     public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
@@ -258,6 +259,14 @@ extends Module {
         PlusMinus,
         Chevron,
         Gear
+    }
+
+    public enum BlurType {
+        Box,
+        Tent,
+        Gaussian,
+        Kawase,
+        Radial
     }
 
     static {

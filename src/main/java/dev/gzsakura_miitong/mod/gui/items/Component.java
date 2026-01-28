@@ -76,9 +76,6 @@ extends Mod {
         Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, topColor);
         Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, this.y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
         if (this.open) {
-            if (ClickGui.getInstance().blur.getValue()) {
-                Alien.BLUR.applyBlur(1.0f + (ClickGui.getInstance().radius.getValueFloat() - 1.0f) * (float)ClickGui.getInstance().alphaValue, this.x, (float)this.y + (float)this.height - 5.0f, this.width, totalItemHeight + 5.0f);
-            }
             if (ClickGui.getInstance().backGround.booleanValue) {
                 Render2DUtil.drawRect(context.getMatrices(), this.x, (float)this.y + (float)this.height - 5.0f, this.width, (float)(this.y + this.height) + totalItemHeight - ((float)this.y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));
                 Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, (float)this.y + (float)this.height - 5.0f, this.width, (float)(this.y + this.height) + totalItemHeight - ((float)this.y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));

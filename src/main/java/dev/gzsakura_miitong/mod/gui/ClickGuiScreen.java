@@ -92,7 +92,10 @@ extends Screen {
         int panelH = Math.min(context.getScaledWindowHeight() - panelY - 6, maxY - minY + margin * 2 + 24);
         boolean focused = mouseX >= panelX && mouseX <= panelX + panelW && mouseY >= panelY && mouseY <= panelY + panelH;
         int alpha = focused ? (int)Math.round(242.25) : (int)Math.round(226.95000000000002);
-        Vitality.BLUR.applyBlur(30.0f, panelX, panelY, panelW, panelH);
+        if (ClickGui.getInstance().blur.getValue()) {
+            float blurRadius = 1.0f + (ClickGui.getInstance().radius.getValueFloat() - 1.0f) * (float)ClickGui.getInstance().alphaValue;
+            Vitality.BLUR.applyBlur(blurRadius, 0.0f, 0.0f, (float)context.getScaledWindowWidth(), (float)context.getScaledWindowHeight(), (float)ClickGui.getInstance().blurType.getValue().ordinal());
+        }
         float r = 4.0f;
         context.getMatrices().push();
         context.getMatrices().translate((float)panelX + (float)panelW / 2.0f, (float)panelY + (float)panelH / 2.0f + slideY, 0.0f);
