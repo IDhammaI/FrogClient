@@ -37,6 +37,7 @@ extends Button {
     public double itemHeight;
     public final Animation animation = new Animation();
     private final Animation hoverAnimation = new Animation();
+    private final java.util.HashMap<BooleanSetting, Animation> parentOpenAnimations = new java.util.HashMap<BooleanSetting, Animation>();
 
     public ModuleButton(Module module) {
         super(module.getName());
@@ -161,12 +162,83 @@ extends Button {
                 Render2DUtil.drawLine(context.getMatrices(), this.x + 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5), this.x + (float)this.width - 0.6f, (float)((double)(this.y + (float)this.height) + visibleItemHeight - (double)0.7f), line);
             }
             float height = this.height + 2;
-            for (Item item : this.items) {
+            List<Setting> settings = this.module.getSettings();
+            int i = 0;
+            while (i < this.items.size() && i < settings.size()) {
+                Setting setting = settings.get(i);
+                Item item = this.items.get(i);
                 item.setHeight(this.height);
                 double visibleH = item.getVisibleHeight();
-                if (visibleH <= 0.01 && item.isHidden()) continue;
+                if (visibleH <= 0.01 && item.isHidden()) {
+                    ++i;
+                    continue;
+                }
                 item.setLocation(this.x + 1.0f, this.y + height + slide);
                 item.setWidth(this.width - 9);
+                if (setting instanceof BooleanSetting && ((BooleanSetting)setting).hasParent()) {
+                    item.drawScreen(context, mouseX, mouseY, partialTicks);
+                    height += (float)(visibleH + 2.0);
+                    BooleanSetting parent = (BooleanSetting)setting;
+                    double openProgress = this.getParentOpenProgress(parent);
+                    int j = i + 1;
+                    while (j < settings.size()) {
+                        if (!this.isChildOf(parent, settings.get(j))) break;
+                        ++j;
+                    }
+                    double childrenFull = 0.0;
+                    for (int k = i + 1; k < j && k < this.items.size(); ++k) {
+                        if (!this.isVisibleWithParentOpen(parent, settings.get(k))) continue;
+                        Item child = this.items.get(k);
+                        child.setHeight(this.height);
+                        double childVisibleH = child.getVisibleHeight();
+                        if (childVisibleH <= 0.01 && child.isHidden()) continue;
+                        childrenFull += childVisibleH + 2.0;
+                    }
+                    double childrenVisible = childrenFull * openProgress;
+                    if (childrenVisible > 0.01) {
+                        float childSlide = (1.0f - (float)openProgress) * 6.0f;
+                        float childStartY = this.y + height + slide + childSlide;
+                        float childX = this.x + 2.0f;
+                        int childW = this.width - 11;
+                        int scissorX1 = (int)childX - 1;
+                        int scissorY1 = (int)childStartY - 1;
+                        int scissorX2 = (int)(childX + (float)childW + 8.0f) + 1;
+                        int scissorY2 = (int)Math.round((double)childStartY + childrenVisible) + 1;
+                        context.enableScissor(scissorX1, scissorY1, scissorX2, scissorY2);
+                        float yOff = childStartY;
+                        for (int k = i + 1; k < j && k < this.items.size(); ++k) {
+                            if (!this.isVisibleWithParentOpen(parent, settings.get(k))) continue;
+                            Item child = this.items.get(k);
+                            child.setHeight(this.height);
+                            double childVisibleH = child.getVisibleHeight();
+                            if (childVisibleH <= 0.01 && child.isHidden()) continue;
+                            child.setLocation(childX, yOff);
+                            child.setWidth(childW);
+                            if (childVisibleH < (double)child.getHeight() - 0.01) {
+                                int cX1 = (int)child.getX() - 1;
+                                int cY1 = (int)child.getY() - 1;
+                                int cX2 = (int)(child.getX() + (float)child.getWidth() + 7.0f) + 1;
+                                int cY2 = (int)((double)child.getY() + childVisibleH) + 1;
+                                int iX1 = Math.max(scissorX1, cX1);
+                                int iY1 = Math.max(scissorY1, cY1);
+                                int iX2 = Math.min(scissorX2, cX2);
+                                int iY2 = Math.min(scissorY2, cY2);
+                                if (iX2 > iX1 && iY2 > iY1) {
+                                    context.enableScissor(iX1, iY1, iX2, iY2);
+                                    child.drawScreen(context, mouseX, mouseY, partialTicks);
+                                    context.disableScissor();
+                                }
+                            } else {
+                                child.drawScreen(context, mouseX, mouseY, partialTicks);
+                            }
+                            yOff += (float)(childVisibleH + 2.0);
+                        }
+                        context.disableScissor();
+                    }
+                    height += (float)childrenVisible;
+                    i = j;
+                    continue;
+                }
                 if (visibleH < (double)item.getHeight() - 0.01) {
                     int scissorX1 = (int)item.getX() - 1;
                     int scissorY1 = (int)item.getY() - 1;
@@ -179,6 +251,7 @@ extends Button {
                     item.drawScreen(context, mouseX, mouseY, partialTicks);
                 }
                 height += (float)(visibleH + 2.0);
+                ++i;
             }
         }
     }
@@ -233,10 +306,40 @@ extends Button {
 
     public double getVisibleItemHeight() {
         double height = 3.0;
-        for (Item item : this.items) {
+        List<Setting> settings = this.module.getSettings();
+        int i = 0;
+        while (i < this.items.size() && i < settings.size()) {
+            Setting setting = settings.get(i);
+            Item item = this.items.get(i);
+            item.setHeight(this.height);
             double visibleH = item.getVisibleHeight();
-            if (visibleH <= 0.01 && item.isHidden()) continue;
+            if (visibleH <= 0.01 && item.isHidden()) {
+                ++i;
+                continue;
+            }
             height += visibleH + 2.0;
+            if (setting instanceof BooleanSetting && ((BooleanSetting)setting).hasParent()) {
+                BooleanSetting parent = (BooleanSetting)setting;
+                double openProgress = this.getParentOpenProgress(parent);
+                int j = i + 1;
+                while (j < settings.size()) {
+                    if (!this.isChildOf(parent, settings.get(j))) break;
+                    ++j;
+                }
+                double childrenFull = 0.0;
+                for (int k = i + 1; k < j && k < this.items.size(); ++k) {
+                    if (!this.isVisibleWithParentOpen(parent, settings.get(k))) continue;
+                    Item child = this.items.get(k);
+                    child.setHeight(this.height);
+                    double childVisibleH = child.getVisibleHeight();
+                    if (childVisibleH <= 0.01 && child.isHidden()) continue;
+                    childrenFull += childVisibleH + 2.0;
+                }
+                height += childrenFull * openProgress;
+                i = j;
+                continue;
+            }
+            ++i;
         }
         return height;
     }
@@ -300,6 +403,33 @@ extends Button {
             this.resetSettingToDefault(setting);
         }
         page.setEnumValue(originalName);
+    }
+
+    private double getParentOpenProgress(BooleanSetting parent) {
+        Animation anim = (Animation)this.parentOpenAnimations.get(parent);
+        if (anim == null) {
+            anim = new Animation();
+            this.parentOpenAnimations.put(parent, anim);
+        }
+        return anim.get(parent.isOpen() ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+    }
+
+    private boolean isChildOf(BooleanSetting parent, Setting setting) {
+        boolean originalOpen = parent.isOpen();
+        parent.setOpen(true);
+        boolean visibleWhenOpen = setting.isVisible();
+        parent.setOpen(false);
+        boolean visibleWhenClosed = setting.isVisible();
+        parent.setOpen(originalOpen);
+        return visibleWhenOpen && !visibleWhenClosed;
+    }
+
+    private boolean isVisibleWithParentOpen(BooleanSetting parent, Setting setting) {
+        boolean originalOpen = parent.isOpen();
+        parent.setOpen(true);
+        boolean visible = setting.isVisible();
+        parent.setOpen(originalOpen);
+        return visible;
     }
 
     private void resetSettingToDefault(Setting setting) {

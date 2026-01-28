@@ -37,11 +37,15 @@ extends Button {
             this.drawString("Press keyCodec Key...", (double)(this.x + 2.3f), (double)textY, enableTextColor);
         } else {
             String str = this.setting.getKeyString();
-            if (!this.isListening && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340) && this.setting.getName().equals("Key")) {
-                if (this.setting.isHoldEnable()) {
-                    this.drawString("\u00a77Toggle/\u00a7fHold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+            if (!this.isListening && this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+                if (this.setting.getName().equals("Key")) {
+                    if (this.setting.isHoldEnable()) {
+                        this.drawString("\u00a77Toggle/\u00a7fHold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+                    } else {
+                        this.drawString("\u00a7fToggle\u00a77/Hold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+                    }
                 } else {
-                    this.drawString("\u00a7fToggle\u00a77/Hold", (double)(this.x + 2.3f), (double)textY, enableTextColor);
+                    this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
                 }
             } else {
                 this.drawString(this.setting.getName() + " " + String.valueOf(Formatting.GRAY) + str, (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
@@ -57,9 +61,17 @@ extends Button {
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 0 && this.isHovering(mouseX, mouseY)) {
-            if (InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340) && this.setting.getName().equals("Key")) {
-                this.setting.setHoldEnable(!this.setting.isHoldEnable());
-                BindButton.sound();
+            if (InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+                if (this.setting.getName().equals("Key")) {
+                    this.setting.setHoldEnable(!this.setting.isHoldEnable());
+                    BindButton.sound();
+                } else {
+                    this.setting.setValue(this.setting.getDefaultValue());
+                    this.setting.setHoldEnable(false);
+                    this.setting.setPressed(false);
+                    this.setting.holding = false;
+                    BindButton.sound();
+                }
             } else {
                 this.onMouseClick();
             }
