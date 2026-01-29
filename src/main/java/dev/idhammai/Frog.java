@@ -99,7 +99,7 @@ public class Frog implements ModInitializer {
         initTime = System.currentTimeMillis();
         loaded = true;
         EVENT_BUS.post(new InitEvent());
-        File folder = new File(MinecraftClient.getInstance().runDirectory.getPath() + File.separator + NAME.toLowerCase() + File.separator + "cfg");
+        File folder = new File(MinecraftClient.getInstance().runDirectory.getPath() + File.separator + "frog" + File.separator + "cfg");
         if (!folder.exists()) {
             folder.mkdirs();
         }

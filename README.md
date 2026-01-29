@@ -30,7 +30,7 @@ Required local libraries (included in repo):
 - `sodium-fabric-0.6.13+mc1.21.1.jar`
 
 ## Configuration
-Configuration files are generated in `vitality/cfg/` under the game run directory.
+Configuration files are generated in `frog/cfg/` under the game run directory.
 
 ## License
 MIT

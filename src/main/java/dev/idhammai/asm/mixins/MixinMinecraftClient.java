@@ -158,7 +158,7 @@ extends ReentrantThreadExecutor<Runnable> {
     }
 
     @Inject(method={"render"}, at={@At(value="TAIL")})
-    private void vitalityMagentaOverlay(CallbackInfo ci) {
+    private void frogMagentaOverlay(CallbackInfo ci) {
         float ny;
         float nx;
         float x0;
