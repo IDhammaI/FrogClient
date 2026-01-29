@@ -27,6 +27,8 @@ package dev.idhammai.mod.gui.fonts;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.render.Render3DUtil;
+import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.modules.impl.client.ClickGui;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -271,9 +273,22 @@ implements Closeable {
             }
         }
         this.sizeCheck();
+        float baseR = r;
+        float baseG = g;
+        float baseB = elementCodec;
         float r2 = r;
         float g2 = g;
         float b2 = elementCodec;
+        boolean useClickGuiRainbowByY = this.useClickGuiRainbowByY();
+        if (useClickGuiRainbowByY) {
+            Color active = ClickGui.getInstance().getActiveColor((double)y / 10.0);
+            baseR = (float)active.getRed() / 255.0f;
+            baseG = (float)active.getGreen() / 255.0f;
+            baseB = (float)active.getBlue() / 255.0f;
+            r2 = baseR;
+            g2 = baseG;
+            b2 = baseB;
+        }
         stack.push();
         stack.translate(FontRenderer.roundToDecimal(x, 1), FontRenderer.roundToDecimal(y, 1), 0.0);
         stack.scale(1.0f / (float)this.scaleMul, 1.0f / (float)this.scaleMul, 1.0f);
@@ -303,9 +318,9 @@ implements Closeable {
                         continue;
                     }
                     if (c1 != 'R') continue;
-                    r2 = r;
-                    g2 = g;
-                    b2 = elementCodec;
+                    r2 = baseR;
+                    g2 = baseG;
+                    b2 = baseB;
                     continue;
                 }
                 if (c == '\u00a7') {
@@ -316,6 +331,15 @@ implements Closeable {
                     yOffset += this.getStringHeight(s.substring(lineStart, i)) * (float)this.scaleMul;
                     xOffset = 0.0f;
                     lineStart = i + 1;
+                    if (useClickGuiRainbowByY) {
+                        Color active = ClickGui.getInstance().getActiveColor((double)(y + yOffset) / 10.0);
+                        baseR = (float)active.getRed() / 255.0f;
+                        baseG = (float)active.getGreen() / 255.0f;
+                        baseB = (float)active.getBlue() / 255.0f;
+                        r2 = baseR;
+                        g2 = baseG;
+                        b2 = baseB;
+                    }
                     continue;
                 }
                 Glyph glyph = this.locateGlyph1(c);
@@ -449,6 +473,20 @@ implements Closeable {
 
     public void drawGradientCenteredString(MatrixStack matrices, String s, float x, float y) {
         this.drawGradientString(matrices, s, x - this.getWidth(s) / 2.0f, y);
+    }
+
+    private boolean useClickGuiRainbowByY() {
+        if (Wrapper.mc == null || Wrapper.mc.currentScreen == null) {
+            return false;
+        }
+        if (!(Wrapper.mc.currentScreen instanceof ClickGuiScreen)) {
+            return false;
+        }
+        ClickGui clickGui = ClickGui.getInstance();
+        if (clickGui == null) {
+            return false;
+        }
+        return clickGui.colors.getValue() && clickGui.colorMode.getValue() == ClickGui.ColorMode.Rainbow;
     }
 
     record DrawEntry(float atX, float atY, float r, float g, float elementCodec, Glyph toDraw) {

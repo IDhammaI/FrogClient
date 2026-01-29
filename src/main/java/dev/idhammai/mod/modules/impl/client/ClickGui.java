@@ -79,9 +79,9 @@ extends Module {
     public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
     public final BooleanSetting colors = this.add(new BooleanSetting("Colors", false).setParent().injectTask(this::elementCodec));
     public final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Custom, this.colors::isOpen));
-    public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 4.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
-    public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 130.0, 1.0, 255.0, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
-    public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 350, 0, 1000, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 50, 0, 1000, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
     public final ColorSetting color = this.add(new ColorSetting("FirstColor", new Color(0, 120, 212), this.colors::isOpen));
     public final ColorSetting secondColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
     public final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
