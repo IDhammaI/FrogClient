@@ -14,8 +14,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.Frog;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.AnimateUtil;
-import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
+import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.Mod;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
@@ -181,7 +181,6 @@ extends Screen {
             float blurRadius = 1.0f + (ClickGui.getInstance().radius.getValueFloat() - 1.0f) * (float)ClickGui.getInstance().alphaValue;
             Frog.BLUR.applyBlur(blurRadius, 0.0f, 0.0f, (float)context.getScaledWindowWidth(), (float)context.getScaledWindowHeight(), (float)ClickGui.getInstance().blurType.getValue().ordinal());
         }
-        float r = 4.0f;
         context.getMatrices().push();
         context.getMatrices().translate((float)panelX + (float)panelW / 2.0f, (float)panelY + (float)panelH / 2.0f + slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
@@ -198,11 +197,15 @@ extends Screen {
         int tipColor = new Color(255, 255, 255, alpha).getRGB();
         boolean customFont = ClickGui.getInstance().font.getValue();
         boolean shadow = ClickGui.getInstance().shadow.getValue();
+        float lineHeight = customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight();
+        float marginBottom = 6.0f;
+        int lines = 3;
+        float baseY = (float)context.getScaledWindowHeight() - marginBottom - lineHeight * (float)lines;
         int tipX = 6;
-        int tipY = context.getScaledWindowHeight() - 54;
+        int tipY = Math.round(baseY);
         TextUtil.drawString(context, "左键拖动面板 右键展开/折叠", tipX, tipY, tipColor, customFont, shadow);
-        TextUtil.drawString(context, "滚轮上下移动面板 SHIFT+滚轮左右移动", tipX, tipY + 12, tipColor, customFont, shadow);
-        TextUtil.drawString(context, "SHIFT+单击切换触发方式 按住/松开", tipX, tipY + 24, tipColor, customFont, shadow);
+        TextUtil.drawString(context, "滚轮上下移动面板 SHIFT+滚轮左右移动", tipX, (int)((float)tipY + lineHeight), tipColor, customFont, shadow);
+        TextUtil.drawString(context, "SHIFT+单击切换触发方式 按住/松开", tipX, (int)((float)tipY + lineHeight * 2.0f), tipColor, customFont, shadow);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
