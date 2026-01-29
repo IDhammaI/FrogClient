@@ -14,6 +14,7 @@ import dev.idhammai.Frog;
 import dev.idhammai.api.events.eventbus.EventListener;
 import dev.idhammai.api.events.impl.Render2DEvent;
 import dev.idhammai.api.events.impl.UpdateEvent;
+import dev.idhammai.api.events.impl.ResizeEvent;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
@@ -122,28 +123,67 @@ extends Module {
 
     private void applyHeights() {
         java.util.ArrayList<Component> components = ClickGuiScreen.getInstance().getComponents();
+        int categoryWidth = this.categoryWidth.getValueInt();
+        int spacing = categoryWidth + 1;
+        int count = components.size();
+        int startX = 10;
+        int startY = 4;
+        if (mc != null && mc.getWindow() != null) {
+            int screenWidth = mc.getWindow().getScaledWidth();
+            int screenHeight = mc.getWindow().getScaledHeight();
+            int totalWidth = count * categoryWidth + (count - 1);
+            startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
+            startY = Math.round((float)screenHeight / 6.0f);
+        }
         boolean defaultLayout = true;
-        int expectedX = 10;
+        int expectedX = startX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
-            if (component.getX() != expectedX || component.getY() != 4) {
+            if (component.getX() != expectedX || component.getY() != startY) {
                 defaultLayout = false;
                 break;
             }
-            expectedX += 94;
+            expectedX += spacing;
         }
-        int categoryWidth = this.categoryWidth.getValueInt();
         int componentHeight = this.categoryBarHeight.getValueInt() + 5;
-        int x = 10;
+        int x = startX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
             component.setWidth(categoryWidth);
             component.setHeight(componentHeight);
             if (defaultLayout) {
                 component.setX(x);
-                component.setY(4);
-                x += categoryWidth + 1;
+                component.setY(startY);
+                x += spacing;
             }
+            for (Item item : component.getItems()) {
+                item.setHeight(10 + this.height.getValueInt());
+            }
+        }
+    }
+
+    private void recenterLayout() {
+        java.util.ArrayList<Component> components = ClickGuiScreen.getInstance().getComponents();
+        int categoryWidth = this.categoryWidth.getValueInt();
+        int spacing = categoryWidth + 1;
+        int count = components.size();
+        if (mc == null || mc.getWindow() == null) {
+            return;
+        }
+        int screenWidth = mc.getWindow().getScaledWidth();
+        int screenHeight = mc.getWindow().getScaledHeight();
+        int totalWidth = count * categoryWidth + (count - 1);
+        int startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
+        int startY = Math.round((float)screenHeight / 6.0f);
+        int componentHeight = this.categoryBarHeight.getValueInt() + 5;
+        int x = startX;
+        for (int i = 0; i < components.size(); ++i) {
+            Component component = components.get(i);
+            component.setWidth(categoryWidth);
+            component.setHeight(componentHeight);
+            component.setX(x);
+            component.setY(startY);
+            x += spacing;
             for (Item item : component.getItems()) {
                 item.setHeight(10 + this.height.getValueInt());
             }
@@ -194,6 +234,13 @@ extends Module {
         this.updateColor();
         if (!(ClickGui.mc.currentScreen instanceof ClickGuiScreen)) {
             this.disable();
+        }
+    }
+
+    @EventListener
+    public void onResize(ResizeEvent event) {
+        if (mc != null && mc.currentScreen instanceof ClickGuiScreen) {
+            this.recenterLayout();
         }
     }
 
