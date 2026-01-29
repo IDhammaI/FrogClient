@@ -54,7 +54,7 @@ extends Module {
     public final SliderSetting titleOffset = this.add(new SliderSetting("TitleOffset", 1, -5.0, 5.0, 1.0));
     public final SliderSetting alpha = this.add(new SliderSetting("Alpha", 150, 0, 255));
     public final SliderSetting hoverAlpha = this.add(new SliderSetting("HoverAlpha", 220, 0, 255));
-    public final SliderSetting topAlpha = this.add(new SliderSetting("TopAlpha", 128, 0, 255));
+    public final SliderSetting topAlpha = this.add(new SliderSetting("TopAlpha", 210, 0, 255));
     public final SliderSetting backgroundAlpha = this.add(new SliderSetting("BackgroundAlpha", 236, 0, 255));
     public final BooleanSetting fade = this.add(new BooleanSetting("Fade", true).setParent());
     public final SliderSetting length = this.add(new SliderSetting("Length", 400, 0, 1000, this.fade::isOpen));
