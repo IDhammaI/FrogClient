@@ -34,7 +34,7 @@ public class FontManager {
 
     public static FontRenderer assets(float size, String font, int style, String alternate) throws IOException, FontFormatException {
         ClassLoader classLoader = FontManager.class.getClassLoader();
-        InputStream primary = classLoader.getResourceAsStream("assets/alienclient/font/" + font + ".ttf");
+        InputStream primary = classLoader.getResourceAsStream("assets/frogclient/font/" + font + ".ttf");
         InputStream fallback = classLoader.getResourceAsStream("assets/minecraft/font/font.ttf");
         InputStream stream = primary != null ? primary : fallback;
         return new FontRenderer(Font.createFont(0, Objects.requireNonNull(stream)).deriveFont(style, size), FontManager.getFont(alternate, style, (int)size), size){
@@ -48,7 +48,7 @@ public class FontManager {
 
     public static FontRenderer assetsWithoutOffset(float size, String name, int style) throws IOException, FontFormatException {
         ClassLoader classLoader = FontManager.class.getClassLoader();
-        InputStream primary = classLoader.getResourceAsStream("assets/alien/icon/" + name + ".ttf");
+        InputStream primary = classLoader.getResourceAsStream("assets/frog/icon/" + name + ".ttf");
         InputStream fallback = classLoader.getResourceAsStream("assets/minecraft/font/font.ttf");
         InputStream stream = primary != null ? primary : fallback;
         return new FontRenderer(Font.createFont(0, Objects.requireNonNull(stream)).deriveFont(style, size), size);
@@ -56,7 +56,7 @@ public class FontManager {
 
     public static FontRenderer assets(float size, String name, int style) throws IOException, FontFormatException {
         ClassLoader classLoader = FontManager.class.getClassLoader();
-        InputStream primary = classLoader.getResourceAsStream("assets/alienclient/font/" + name + ".ttf");
+        InputStream primary = classLoader.getResourceAsStream("assets/frogclient/font/" + name + ".ttf");
         InputStream fallback = classLoader.getResourceAsStream("assets/minecraft/font/font.ttf");
         InputStream stream = primary != null ? primary : fallback;
         return new FontRenderer(Font.createFont(0, Objects.requireNonNull(stream)).deriveFont(style, size), size){

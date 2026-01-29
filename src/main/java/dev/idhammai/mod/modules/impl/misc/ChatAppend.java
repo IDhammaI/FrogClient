@@ -11,7 +11,7 @@ import dev.idhammai.mod.modules.settings.impl.StringSetting;
 public class ChatAppend
 extends Module {
     public static ChatAppend INSTANCE;
-    private final StringSetting message = this.add(new StringSetting("Text", "Vitality"));
+    private final StringSetting message = this.add(new StringSetting("Text", "Frog"));
 
     public ChatAppend() {
         super("ChatAppend", Module.Category.Misc);
@@ -32,4 +32,3 @@ extends Module {
         event.message = (String)message + " " + suffix;
     }
 }
-

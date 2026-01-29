@@ -88,7 +88,7 @@ implements Wrapper {
                 CommandManager.mc.inGameHud.getChatHud().addMessage(Text.of((String)("\u00a7f[\u00a7b" + ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f] " + message)));
                 return;
             }
-            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).alienClient$addMessage(Text.of((String)(ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f " + message)));
+            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).frogClient$addMessage(Text.of((String)(ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f " + message)));
         });
     }
 
@@ -98,14 +98,14 @@ implements Wrapper {
                 return;
             }
             if (ClientSetting.INSTANCE.messageStyle.getValue() == ClientSetting.Style.Earth) {
-                ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).alienClient$addMessage(Text.of((String)message), id);
+                ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).frogClient$addMessage(Text.of((String)message), id);
                 return;
             }
             if (ClientSetting.INSTANCE.messageStyle.getValue() == ClientSetting.Style.Moon) {
-                ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).alienClient$addMessage(Text.of((String)("\u00a7f[\u00a7b" + ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f] " + message)), id);
+                ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).frogClient$addMessage(Text.of((String)("\u00a7f[\u00a7b" + ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f] " + message)), id);
                 return;
             }
-            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).alienClient$addMessage(Text.of((String)(ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f " + message)), id);
+            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).frogClient$addMessage(Text.of((String)(ClientSetting.INSTANCE.hackName.getValue() + "\u00a7f " + message)), id);
         });
     }
 
@@ -114,7 +114,7 @@ implements Wrapper {
             if (Module.nullCheck()) {
                 return;
             }
-            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).alienClient$addMessageOutSync(Text.of((String)("\u00a7f" + message)), id);
+            ((IChatHudHook)CommandManager.mc.inGameHud.getChatHud()).frogClient$addMessageOutSync(Text.of((String)("\u00a7f" + message)), id);
         });
     }
 

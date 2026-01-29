@@ -77,7 +77,7 @@ implements IChatHudHook {
     }
 
     @Override
-    public void alienClient$addMessage(Text message, int id) {
+    public void frogClient$addMessage(Text message, int id) {
         this.nextMessageId = id;
         this.nextSync = true;
         this.addMessage(message);
@@ -86,14 +86,14 @@ implements IChatHudHook {
     }
 
     @Override
-    public void alienClient$addMessage(Text message) {
+    public void frogClient$addMessage(Text message) {
         this.nextSync = true;
         this.addMessage(message);
         this.nextSync = false;
     }
 
     @Override
-    public void alienClient$addMessageOutSync(Text message, int id) {
+    public void frogClient$addMessageOutSync(Text message, int id) {
         this.nextMessageId = id;
         this.addMessage(message);
         this.nextMessageId = 0;
@@ -103,9 +103,9 @@ implements IChatHudHook {
     private void onAddMessageAfterNewChatHudLineVisible(ChatHudLine message, CallbackInfo ci) {
         IChatHudLineHook line = (IChatHudLineHook)(Object)this.visibleMessages.getFirst();
         if (line != null) {
-            line.alienClient$setMessageId(this.nextMessageId);
-            line.alienClient$setSync(this.nextSync);
-            line.alienClient$setFade(new FadeUtils(ClientSetting.INSTANCE.animationTime.getValueInt()));
+            line.frogClient$setMessageId(this.nextMessageId);
+            line.frogClient$setSync(this.nextSync);
+            line.frogClient$setFade(new FadeUtils(ClientSetting.INSTANCE.animationTime.getValueInt()));
         }
     }
 
@@ -113,17 +113,17 @@ implements IChatHudHook {
     private void onAddMessageAfterNewChatHudLine(ChatHudLine message, CallbackInfo ci) {
         IChatHudLineHook line = (IChatHudLineHook)(Object)this.messages.getFirst();
         if (line != null) {
-            line.alienClient$setMessageId(this.nextMessageId);
-            line.alienClient$setSync(this.nextSync);
-            line.alienClient$setFade(new FadeUtils(ClientSetting.INSTANCE.animationTime.getValueInt()));
+            line.frogClient$setMessageId(this.nextMessageId);
+            line.frogClient$setSync(this.nextSync);
+            line.frogClient$setFade(new FadeUtils(ClientSetting.INSTANCE.animationTime.getValueInt()));
         }
     }
 
     @Inject(at={@At(value="HEAD")}, method={"addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V"})
     private void onAddMessage(Text message, MessageSignatureData signatureData, MessageIndicator indicator, CallbackInfo ci) {
         if (this.nextMessageId != 0) {
-            this.visibleMessages.removeIf(msg -> ((IChatHudLineHook)(Object)msg).alienClient$getMessageId() == this.nextMessageId);
-            this.messages.removeIf(msg -> ((IChatHudLineHook)(Object)msg).alienClient$getMessageId() == this.nextMessageId);
+            this.visibleMessages.removeIf(msg -> ((IChatHudLineHook)(Object)msg).frogClient$getMessageId() == this.nextMessageId);
+            this.messages.removeIf(msg -> ((IChatHudLineHook)(Object)msg).frogClient$getMessageId() == this.nextMessageId);
         }
     }
 
@@ -136,12 +136,12 @@ implements IChatHudHook {
     private int drawStringWithShadow(DrawContext drawContext, TextRenderer textRenderer, OrderedText text, int x, int y, int color) {
         IChatHudLineHook line = (IChatHudLineHook)(Object)this.visibleMessages.get(this.chatLineIndex);
         if (line != null) {
-            FadeUtils fadeUtils = line.alienClient$getFade();
+            FadeUtils fadeUtils = line.frogClient$getFade();
             double ease = fadeUtils == null ? 0.0 : fadeUtils.ease(ClientSetting.INSTANCE.ease.getValue());
             double fade = 1.0 - ease;
             x += (int)(fade * ClientSetting.INSTANCE.animateOffset.getValue());
             double c = Math.max(10.0, (double)(color >> 24 & 0xFF) * ease);
-            if (line.alienClient$getSync()) {
+            if (line.frogClient$getSync()) {
                 return drawContext.drawTextWithShadow(textRenderer, text, x, y, ColorUtil.injectAlpha(ClientSetting.INSTANCE.color.getValue(), ClientSetting.INSTANCE.fade.getValue() ? (int)c : color >> 24 & 0xFF).getRGB());
             }
             return drawContext.drawTextWithShadow(textRenderer, text, x, y, ColorUtil.injectAlpha(color, ClientSetting.INSTANCE.fade.getValue() ? (int)c : color >> 24 & 0xFF));

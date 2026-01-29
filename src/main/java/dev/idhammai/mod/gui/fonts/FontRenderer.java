@@ -137,7 +137,7 @@ implements Closeable {
     @Contract(value="-> new", pure=true)
     @NotNull
     public static Identifier randomIdentifier() {
-        return Identifier.of((String)"alienclient", (String)("temp/" + FontRenderer.randomString()));
+        return Identifier.of((String)"frogclient", (String)("temp/" + FontRenderer.randomString()));
     }
 
     private static String randomString() {

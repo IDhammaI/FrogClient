@@ -25,32 +25,32 @@ implements IChatHudLineHook {
     private FadeUtils fade;
 
     @Override
-    public int alienClient$getMessageId() {
+    public int frogClient$getMessageId() {
         return this.id;
     }
 
     @Override
-    public void alienClient$setMessageId(int id) {
+    public void frogClient$setMessageId(int id) {
         this.id = id;
     }
 
     @Override
-    public boolean alienClient$getSync() {
+    public boolean frogClient$getSync() {
         return this.sync;
     }
 
     @Override
-    public void alienClient$setSync(boolean sync) {
+    public void frogClient$setSync(boolean sync) {
         this.sync = sync;
     }
 
     @Override
-    public FadeUtils alienClient$getFade() {
+    public FadeUtils frogClient$getFade() {
         return this.fade;
     }
 
     @Override
-    public void alienClient$setFade(FadeUtils fade) {
+    public void frogClient$setFade(FadeUtils fade) {
         this.fade = fade;
     }
 }

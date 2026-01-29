@@ -23,7 +23,7 @@ public class Spammer
 extends Module {
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public final BooleanSetting checkSelf = this.add(new BooleanSetting("CheckSelf", false));
-    final StringSetting message = this.add(new StringSetting("Message", "\u6700\u5f3a\u5916\u6302Alien\u793e\u533a\u7248\u514d\u8d39\u8bd5\u7528 \u7fa4\ud835\udff1\ud835\udff4\ud835\udff5\ud835\udfed\ud835\udff5\ud835\udfed\ud835\udff1\ud835\udff2\ud835\udfed"));
+    final StringSetting message = this.add(new StringSetting("Message", ""));
     private final Random random = new Random();
     private final SliderSetting randoms = this.add(new SliderSetting("Random", 3.0, 0.0, 20.0, 1.0));
     private final SliderSetting delay = this.add(new SliderSetting("Delay", 5.0, 0.0, 60.0, 0.1).setSuffix("s"));

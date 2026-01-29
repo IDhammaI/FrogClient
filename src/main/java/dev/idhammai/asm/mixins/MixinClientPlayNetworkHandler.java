@@ -79,7 +79,7 @@ extends ClientCommonNetworkHandler {
     @Shadow
     private ClientWorld world;
     @Unique
-    private boolean alien$worldNotNull;
+    private boolean frog$worldNotNull;
     @Unique
     private boolean ignore;
 
@@ -94,12 +94,12 @@ extends ClientCommonNetworkHandler {
 
     @Inject(method={"onGameJoin"}, at={@At(value="HEAD")})
     private void onGameJoinHead(GameJoinS2CPacket packet, CallbackInfo info) {
-        this.alien$worldNotNull = this.world != null;
+        this.frog$worldNotNull = this.world != null;
     }
 
     @Inject(method={"onGameJoin"}, at={@At(value="TAIL")})
     private void onGameJoinTail(GameJoinS2CPacket packet, CallbackInfo info) {
-        if (this.alien$worldNotNull) {
+        if (this.frog$worldNotNull) {
             Frog.EVENT_BUS.post(GameLeftEvent.INSTANCE);
         }
     }

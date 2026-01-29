@@ -9,6 +9,5 @@ package dev.idhammai.api.interfaces;
 import net.minecraft.client.gl.Framebuffer;
 
 public interface IShaderEffectHook {
-    public void alienClient$addHook(String var1, Framebuffer var2);
+    public void frogClient$addHook(String var1, Framebuffer var2);
 }
-

@@ -6,16 +6,16 @@ package dev.idhammai.api.interfaces;
 import dev.idhammai.api.utils.math.FadeUtils;
 
 public interface IChatHudLineHook {
-    public int alienClient$getMessageId();
+    public int frogClient$getMessageId();
 
-    public void alienClient$setMessageId(int var1);
+    public void frogClient$setMessageId(int var1);
 
-    public boolean alienClient$getSync();
+    public boolean frogClient$getSync();
 
-    public void alienClient$setSync(boolean var1);
+    public void frogClient$setSync(boolean var1);
 
-    public FadeUtils alienClient$getFade();
+    public FadeUtils frogClient$getFade();
 
-    public void alienClient$setFade(FadeUtils var1);
+    public void frogClient$setFade(FadeUtils var1);
 }
 

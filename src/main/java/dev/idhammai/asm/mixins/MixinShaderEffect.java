@@ -44,7 +44,7 @@ implements IShaderEffectHook {
     private List<PostEffectPass> passes;
 
     @Override
-    public void alienClient$addHook(String name, Framebuffer buffer) {
+    public void frogClient$addHook(String name, Framebuffer buffer) {
         Framebuffer previousFramebuffer = this.targetsByName.get(name);
         if (previousFramebuffer == buffer) {
             return;
@@ -71,4 +71,3 @@ implements IShaderEffectHook {
         }
     }
 }
-

@@ -42,7 +42,7 @@ extends Screen {
     private float walkShakeTime;
 
     public ClickGuiScreen() {
-        super((Text)Text.literal((String)"Vitality"));
+        super((Text)Text.literal((String)"Frog"));
         this.setInstance();
         this.load();
     }

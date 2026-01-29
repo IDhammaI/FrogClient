@@ -79,7 +79,7 @@ implements Wrapper {
         ManagedShaderEffect shader = this.getShader(mode);
         PostEffectProcessor effect = shader.getShaderEffect();
         if (effect != null) {
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", this.shaderBuffer);
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", this.shaderBuffer);
         } else {
             return;
         }
@@ -218,56 +218,56 @@ implements Wrapper {
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         PULSE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/pulse.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         SMOKE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/smoke.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         GRADIENT_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/gradient.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/snow.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         FLOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/flow.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
         RAINBOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of((String)"shaders/post/rainbow.json"), managedShaderEffect -> {
             PostEffectProcessor effect = managedShaderEffect.getShaderEffect();
             if (effect == null) {
                 return;
             }
-            ((IShaderEffectHook)effect).alienClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
-            ((IShaderEffectHook)effect).alienClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufIn", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
+            ((IShaderEffectHook)effect).frogClient$addHook("bufOut", ShaderManager.mc.worldRenderer.getEntityOutlinesFramebuffer());
         });
     }
 

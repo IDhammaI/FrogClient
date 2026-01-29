@@ -4,6 +4,5 @@
 package dev.idhammai.api.interfaces;
 
 public interface IMouseHook {
-    public void alienClient$lock();
+    public void frogClient$lock();
 }
-

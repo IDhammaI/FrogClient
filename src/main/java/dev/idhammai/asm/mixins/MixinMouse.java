@@ -53,7 +53,7 @@ implements IMouseHook {
     }
 
     @Override
-    public void alienClient$lock() {
+    public void frogClient$lock() {
         if (this.client.isWindowFocused() && !this.cursorLocked) {
             if (!MinecraftClient.IS_SYSTEM_MAC) {
                 KeyBinding.updatePressedStates();
@@ -65,4 +65,3 @@ implements IMouseHook {
         }
     }
 }
-
