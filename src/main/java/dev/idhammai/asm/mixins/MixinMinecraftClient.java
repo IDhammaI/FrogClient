@@ -350,7 +350,7 @@ extends ReentrantThreadExecutor<Runnable> {
         if (ClientSetting.INSTANCE.titleOverride.getValue()) {
             return ClientSetting.INSTANCE.windowTitle.getValue();
         }
-        StringBuilder stringBuilder = new StringBuilder(ClientSetting.INSTANCE.windowTitle.getValue());
+        StringBuilder stringBuilder = new StringBuilder(Frog.NAME);
         stringBuilder.append(" ");
         stringBuilder.append(SharedConstants.getGameVersion().getName());
         ClientPlayNetworkHandler clientPlayNetworkHandler = this.getNetworkHandler();
@@ -381,4 +381,3 @@ extends ReentrantThreadExecutor<Runnable> {
     }
 
 }
-

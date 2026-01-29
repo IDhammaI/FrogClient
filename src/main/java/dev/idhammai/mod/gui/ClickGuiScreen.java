@@ -198,22 +198,12 @@ extends Screen {
         int tipColor = new Color(255, 255, 255, alpha).getRGB();
         boolean customFont = ClickGui.getInstance().font.getValue();
         boolean shadow = ClickGui.getInstance().shadow.getValue();
-        int buttonSize = 12;
-        int buttonX = 6;
-        int buttonY = context.getScaledWindowHeight() - (buttonSize + 6);
-        Color baseColor = ClickGui.getInstance().color.getValue();
-        Color buttonColor = new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), alpha);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), buttonX, buttonY, buttonSize, buttonSize, buttonColor, new Color(0, 0, 0, Math.min(180, alpha)));
-        TextUtil.drawString(context, "?", buttonX + 4, buttonY + 4, tipColor, customFont, shadow);
-        boolean hoverTip = mouseX >= buttonX && mouseX <= buttonX + buttonSize && mouseY >= buttonY && mouseY <= buttonY + buttonSize;
-        if (hoverTip) {
-            int tipX = 6;
-            int tipY = context.getScaledWindowHeight() - 54;
-            TextUtil.drawString(context, "左键拖动面板 右键展开/折叠", tipX, tipY, tipColor, customFont, shadow);
-            TextUtil.drawString(context, "滚轮上下移动面板 SHIFT+滚轮左右移动", tipX, tipY + 12, tipColor, customFont, shadow);
-            TextUtil.drawString(context, "SHIFT+单击切换触发方式 按住/松开", tipX, tipY + 24, tipColor, customFont, shadow);
-        }
-        RenderSystem.setShaderColor((float)1.0f, (float)1.0f, (float)1.0f, (float)1.0f);
+        int tipX = 6;
+        int tipY = context.getScaledWindowHeight() - 54;
+        TextUtil.drawString(context, "左键拖动面板 右键展开/折叠", tipX, tipY, tipColor, customFont, shadow);
+        TextUtil.drawString(context, "滚轮上下移动面板 SHIFT+滚轮左右移动", tipX, tipY + 12, tipColor, customFont, shadow);
+        TextUtil.drawString(context, "SHIFT+单击切换触发方式 按住/松开", tipX, tipY + 24, tipColor, customFont, shadow);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int clickedButton) {
