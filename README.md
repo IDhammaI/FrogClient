@@ -1,4 +1,4 @@
-# Alien (Fabric 1.21.1)
+# Frog Client (Fabric 1.21.1)
 
 A Fabric client mod for Minecraft 1.21.1.
 

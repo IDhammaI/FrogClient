@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "id": "alien",
+  "id": "frog",
   "version": "${version}",
-  "name": "Alien",
-  "description": "Alien client",
+  "name": "Frog Client",
+  "description": "Frog Client (\u9752\u86d9\u7aef)",
   "authors": [
-    "GZ_Sakura"
+    "IDhammaI"
   ],
-  "accessWidener": "alien.accesswidener",
+  "accessWidener": "frog.accesswidener",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "dev.gzsakura_miitong.Vitality"
+      "dev.idhammai.Frog"
     ]
   },
   "mixins": [
-    "alien.mixins.json"
+    "frog.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.15.0",

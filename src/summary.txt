@@ -2,9 +2,9 @@ Summary for .\vitality-1.0-remapped.jar
 Decompiled with CFR 0.152
 
 
-dev.gzsakura_miitong.mod.modules.impl.misc.Bot
+dev.idhammai.mod.modules.impl.misc.Bot
 ----------------------------
 
-onUpdate(dev.gzsakura_miitong.api.events.impl.UpdateEvent )
+onUpdate(dev.idhammai.api.events.impl.UpdateEvent )
   Could not resolve type clashes
   Unable to fully structure code

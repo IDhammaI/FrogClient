@@ -15,7 +15,7 @@ package satin.impl;
 import com.google.common.base.Preconditions;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
-import dev.gzsakura_miitong.asm.accessors.IPostEffectProcessor;
+import dev.idhammai.asm.accessors.IPostEffectProcessor;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

@@ -10,9 +10,9 @@
  */
 package satin.impl;
 
-import dev.gzsakura_miitong.Vitality;
-import dev.gzsakura_miitong.api.events.eventbus.EventListener;
-import dev.gzsakura_miitong.api.events.impl.ResizeEvent;
+import dev.idhammai.Frog;
+import dev.idhammai.api.events.eventbus.EventListener;
+import dev.idhammai.api.events.impl.ResizeEvent;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -33,7 +33,7 @@ implements ShaderEffectManager {
     private final Set<ResettableManagedShaderBase<?>> managedShaders = new ReferenceOpenHashSet();
 
     public ReloadableShaderEffectManager() {
-        Vitality.EVENT_BUS.subscribe(this);
+        Frog.EVENT_BUS.subscribe(this);
     }
 
     @EventListener
@@ -89,4 +89,3 @@ implements ShaderEffectManager {
         }
     }
 }
-
