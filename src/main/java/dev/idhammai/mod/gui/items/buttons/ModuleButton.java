@@ -89,7 +89,7 @@ extends Button {
         boolean pressed = this.getState();
         double hoverProgress = this.hoverAnimation.get(hovered ? 1.0 : 0.0, 100L, Easing.CubicInOut);
         double toggleProgress = this.toggleAnimation.get(pressed ? 1.0 : 0.0, 160L, Easing.CubicInOut);
-        Color accent = ClickGui.getInstance().getActiveColor(this.getColorDelay());
+        double baseDelay = this.getColorDelay();
         Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
         Color idleFill = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), defaultColor.getAlpha());
@@ -98,11 +98,20 @@ extends Button {
         int accentA = Math.max(0, Math.min(255, (int)Math.round((double)baseA + (double)(hoverA - baseA) * hoverProgress)));
         Color hoverFill = new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), hoverA);
         Color unpressedFill = ColorUtil.fadeColor(idleFill, hoverFill, hoverProgress);
-        Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
-        Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
-        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, h, baseFill);
+        if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, (float)this.width, h, 2.0f, yy -> {
+                Color accent = ClickGui.getInstance().getActiveColor((double)yy * 0.25);
+                Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+                return ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress).getRGB();
+            });
+        } else {
+            Color accent = ClickGui.getInstance().getActiveColor(baseDelay);
+            Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+            Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
+            Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, h, baseFill);
+        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
@@ -156,18 +165,17 @@ extends Button {
                 float yBottom = (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5);
                 float yBottomLine = (float)((double)(this.y + (float)this.height) + visibleItemHeight - (double)0.7f);
                 float segment = 2.0f;
-                double baseDelay = this.getColorDelay();
                 double delayPerPixel = 0.25;
                 float leftX = this.x + 0.6f;
                 float rightX = this.x + (float)this.width - 0.6f;
                 int alpha = Math.min(160, ClickGui.getInstance().topAlpha.getValueInt());
                 for (float yy = yTop; yy < yBottom; yy += segment) {
                     float yy2 = Math.min(yy + segment, yBottom);
-                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yy * delayPerPixel).getRGB(), alpha);
+                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
                     Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
                     Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
                 }
-                int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yBottom * delayPerPixel).getRGB(), alpha);
+                int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yBottom * delayPerPixel).getRGB(), alpha);
                 Render2DUtil.drawLine(context.getMatrices(), leftX, yBottom, rightX, yBottomLine, bottomColor);
             }
             float height = this.height + 2;

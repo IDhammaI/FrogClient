@@ -20,6 +20,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.api.utils.Wrapper;
 
 import java.awt.Color;
+import java.util.function.DoubleFunction;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
@@ -173,6 +174,21 @@ implements Wrapper {
 
     public static void drawRect(DrawContext drawContext, float x, float y, float width, float height, Color c) {
         Render2DUtil.drawRect(drawContext.getMatrices(), x, y, width, height, c);
+    }
+
+    public static void drawSegmentedRect(MatrixStack matrices, float x, float y, float width, float height, float segment, DoubleFunction<Integer> colorAtY) {
+        if (width <= 0.0f || height <= 0.0f || segment <= 0.0f) {
+            return;
+        }
+        float y1 = y;
+        float y2 = y + height;
+        float top = Math.min(y1, y2);
+        float bottom = Math.max(y1, y2);
+        for (float yy = top; yy < bottom; yy += segment) {
+            float yy2 = Math.min(yy + segment, bottom);
+            int c = colorAtY.apply((double)yy);
+            Render2DUtil.drawRect(matrices, x, yy, width, yy2 - yy, c);
+        }
     }
 
     public static boolean isHovered(double mouseX, double mouseY, double x, double y, double width, double height) {

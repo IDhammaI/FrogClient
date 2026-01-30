@@ -54,10 +54,18 @@ extends Button {
         this.dragSetting(mouseX, mouseY);
         boolean hovered = this.isHovering(mouseX, mouseY);
         Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, !hovered ? defaultColor : hoverColor);
-        Color color = ClickGui.getInstance().getColor(this.getColorDelay());
+        double baseDelay = this.getColorDelay();
         double fillProgress = this.valueAnimation.get(this.partialMultiplier(), 200L, Easing.CubicInOut);
         float filledX = (float)((double)this.x + (double)((float)this.width + 7.0f) * fillProgress);
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, filledX, this.y + (float)this.height - 0.5f, !hovered ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB());
+        float h = (float)this.height - 0.5f;
+        int a = !hovered ? ClickGui.getInstance().alpha.getValueInt() : ClickGui.getInstance().hoverAlpha.getValueInt();
+        if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            float fillW = Math.max(0.0f, filledX - this.x);
+            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, fillW, h, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * 0.25), a).getRGB());
+        } else {
+            Color color = ClickGui.getInstance().getColor(baseDelay);
+            Render2DUtil.rect(context.getMatrices(), this.x, this.y, filledX, this.y + (float)this.height - 0.5f, ColorUtil.injectAlpha(color, a).getRGB());
+        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isListening) {
             this.drawString(this.currentString + StringButton.getIdleSign(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);

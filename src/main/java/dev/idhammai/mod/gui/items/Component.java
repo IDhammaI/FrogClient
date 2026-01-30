@@ -109,8 +109,14 @@ extends Mod {
         float headerY = (float)y;
         float headerW = (float)categoryWidth;
         float headerH = (float)this.height - 5.0f;
-        Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()), ClickGui.getInstance().topAlpha.getValueInt());
-        Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
+        double headerBaseDelay = this.getColorDelay();
+        int topAlpha = ClickGui.getInstance().topAlpha.getValueInt();
+        if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawSegmentedRect(context.getMatrices(), headerX, headerY, headerW, headerH, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * 0.25), topAlpha).getRGB());
+        } else {
+            Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(headerBaseDelay), topAlpha);
+            Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
+        }
         Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerH, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
         if (openProgress > 0.01) {
             if (ClickGui.getInstance().backGround.booleanValue) {
@@ -121,18 +127,17 @@ extends Mod {
                 float yTop = (float)y + (float)this.height - 5.0f;
                 float yBottom = (float)(y + this.height) + totalItemHeight;
                 float segment = 2.0f;
-                double baseDelay = this.getColorDelay();
                 double delayPerPixel = 0.25;
                 float leftX = (float)x + 0.2f;
                 float rightX = (float)(x + this.width);
                 int alpha = ClickGui.getInstance().topAlpha.getValueInt();
                 for (float yy = yTop; yy < yBottom; yy += segment) {
                     float yy2 = Math.min(yy + segment, yBottom);
-                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yy * delayPerPixel).getRGB(), alpha);
+                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
                     Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
                     Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
                 }
-                int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yBottom * delayPerPixel).getRGB(), alpha);
+                int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yBottom * delayPerPixel).getRGB(), alpha);
                 Render2DUtil.drawLine(context.getMatrices(), x, yBottom, x + this.width, yBottom, bottomColor);
             }
         }

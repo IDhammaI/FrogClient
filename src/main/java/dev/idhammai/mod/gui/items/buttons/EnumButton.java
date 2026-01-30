@@ -29,8 +29,17 @@ extends Button {
 
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        Color color = ClickGui.getInstance().getColor(this.getColorDelay());
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
+        boolean hovered = this.isHovering(mouseX, mouseY);
+        double baseDelay = this.getColorDelay();
+        float w = (float)this.width + 7.0f;
+        float h = (float)this.height - 0.5f;
+        if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum && this.getState()) {
+            int a = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
+            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, w, h, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * 0.25), a).getRGB());
+        } else {
+            Color color = ClickGui.getInstance().getColor(baseDelay);
+            Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + w, this.y + (float)this.height - 0.5f, this.getState() ? (!hovered ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!hovered ? defaultColor : hoverColor));
+        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString(this.setting.getName().equalsIgnoreCase("Page") ? "Reset Page" : "Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);

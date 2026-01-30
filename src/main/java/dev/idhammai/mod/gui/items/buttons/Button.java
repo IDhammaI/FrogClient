@@ -30,8 +30,20 @@ extends Item {
 
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        Color color = ClickGui.getInstance().getActiveColor(this.getColorDelay());
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
+        boolean hovered = this.isHovering(mouseX, mouseY);
+        float h = (float)this.height - 0.5f;
+        if (this.getState()) {
+            int a = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
+            double baseDelay = this.getColorDelay();
+            if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+                Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, (float)this.width, h, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getActiveColor((double)yy * 0.25), a).getRGB());
+            } else {
+                Color color = ClickGui.getInstance().getActiveColor(baseDelay);
+                Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width, this.y + (float)this.height - 0.5f, ColorUtil.injectAlpha(color, a).getRGB());
+            }
+        } else {
+            Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width, this.y + (float)this.height - 0.5f, !hovered ? defaultColor : hoverColor);
+        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
     }

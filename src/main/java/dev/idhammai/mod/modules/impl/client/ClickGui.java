@@ -85,9 +85,9 @@ extends Module {
     public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
     public final BooleanSetting colors = this.add(new BooleanSetting("Colors", false).setParent().injectTask(this::elementCodec));
     public final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Custom, this.colors::isOpen));
-    public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
-    public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
-    public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 50, 0, 1000, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Rainbow));
+    public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && (this.colorMode.getValue() == ColorMode.Rainbow || this.colorMode.getValue() == ColorMode.Spectrum)));
+    public final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.colors.isOpen() && (this.colorMode.getValue() == ColorMode.Rainbow || this.colorMode.getValue() == ColorMode.Spectrum)));
+    public final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 50, 0, 1000, () -> this.colors.isOpen() && (this.colorMode.getValue() == ColorMode.Rainbow || this.colorMode.getValue() == ColorMode.Spectrum)));
     public final ColorSetting color = this.add(new ColorSetting("FirstColor", new Color(0, 120, 212), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Custom));
     public final ColorSetting secondColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
     public final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
@@ -293,7 +293,7 @@ extends Module {
             }
             return ColorUtil.pulseColor(this.color.getValue(), delay, this.pulseCounter.getValueInt(), this.pulseSpeed.getValue());
         }
-        if (this.colorMode.getValue() == ColorMode.Rainbow) {
+        if (this.colorMode.getValue() == ColorMode.Rainbow || this.colorMode.getValue() == ColorMode.Spectrum) {
             double rainbowState = Math.ceil(((double)System.currentTimeMillis() * this.rainbowSpeed.getValue() + delay * this.rainbowDelay.getValue()) / 20.0);
             return Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), this.saturation.getValueFloat() / 255.0f, 1.0f);
         }
@@ -392,7 +392,8 @@ extends Module {
     public enum ColorMode {
         Custom,
         Pulse,
-        Rainbow
+        Rainbow,
+        Spectrum
     }
 
     public enum ExpandIcon {

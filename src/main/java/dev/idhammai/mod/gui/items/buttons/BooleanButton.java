@@ -34,12 +34,23 @@ extends Button {
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         boolean hovered = this.isHovering(mouseX, mouseY);
         double toggleProgress = this.toggleAnimation.get(this.getState() ? 1.0 : 0.0, 160L, Easing.CubicInOut);
-        Color accent = ClickGui.getInstance().getColor(this.getColorDelay());
+        double baseDelay = this.getColorDelay();
         int accentA = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
         Color unpressedFill = new Color(hovered ? hoverColor : defaultColor, true);
-        Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
-        Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, baseFill.getRGB());
+        float w = (float)this.width + 7.0f;
+        float h = (float)this.height - 0.5f;
+        if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, w, h, 2.0f, yy -> {
+                Color accent = ClickGui.getInstance().getColor((double)yy * 0.25);
+                Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+                return ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress).getRGB();
+            });
+        } else {
+            Color accent = ClickGui.getInstance().getColor(baseDelay);
+            Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+            Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
+            Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + w, this.y + (float)this.height - 0.5f, baseFill.getRGB());
+        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
