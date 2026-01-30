@@ -62,22 +62,26 @@ extends Screen {
     }
 
     private void load() {
-        int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 93;
-        int spacing = categoryWidth + 1;
+        int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
+        int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        int spacing = layoutWidth + 1;
         int count = Module.Category.values().length;
         int startX = 10;
         int startY = 4;
         if (Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
             int screenWidth = Wrapper.mc.getWindow().getScaledWidth();
             int screenHeight = Wrapper.mc.getWindow().getScaledHeight();
-            int totalWidth = count * categoryWidth + (count - 1);
+            int totalWidth = count * layoutWidth + (count - 1);
             startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
             startY = Math.round((float)screenHeight / 6.0f);
             this.layoutCorrected = true;
         }
+        int offsetX = Math.round(((float)layoutWidth - (float)moduleButtonWidth) / 2.0f);
         int x = startX - spacing;
         for (final Module.Category category : Module.Category.values()) {
-            this.components.add(new Component(category.toString(), category, x += spacing, startY, true){
+            x += spacing;
+            this.components.add(new Component(category.toString(), category, x + offsetX, startY, true){
 
                 @Override
                 public void setupItems() {
@@ -99,18 +103,22 @@ extends Screen {
         Item.context = context;
         this.renderBackground(context, mouseX, mouseY, delta);
         if (!this.layoutCorrected && Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
-            int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 93;
-            int spacing = categoryWidth + 1;
+            int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
+            int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
+            int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+            int spacing = layoutWidth + 1;
             int count = this.components.size();
             if (count > 0) {
                 int screenWidth = Wrapper.mc.getWindow().getScaledWidth();
                 int screenHeight = Wrapper.mc.getWindow().getScaledHeight();
-                int totalWidth = count * categoryWidth + (count - 1);
+                int totalWidth = count * layoutWidth + (count - 1);
                 int startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
                 int startY = Math.round((float)screenHeight / 6.0f);
+                int offsetX = Math.round(((float)layoutWidth - (float)moduleButtonWidth) / 2.0f);
                 int x = startX - spacing;
                 for (Component component : this.components) {
-                    component.setX(x += spacing);
+                    x += spacing;
+                    component.setX(x + offsetX);
                     component.setY(startY);
                 }
             }

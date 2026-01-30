@@ -52,7 +52,7 @@ extends Mod {
         this.animX = this.x;
         this.animY = this.y;
         if (ClickGui.getInstance() != null) {
-            this.setWidth(ClickGui.getInstance().categoryWidth.getValueInt());
+            this.setWidth(ClickGui.getInstance().moduleButtonWidth.getValueInt());
             this.setHeight(ClickGui.getInstance().categoryBarHeight.getValueInt() + 5);
         } else {
             this.setWidth(93);
@@ -104,9 +104,14 @@ extends Mod {
         float targetItemHeight = this.getTotalItemHeight() - 2.0f;
         double openProgress = this.openAnimation.get(this.open ? 1.0 : 0.0, 200L, Easing.CubicInOut);
         float totalItemHeight = (float)(targetItemHeight * openProgress);
+        int categoryWidth = ClickGui.getInstance().categoryWidth.getValueInt();
+        float headerX = (float)x + ((float)this.width - (float)categoryWidth) / 2.0f;
+        float headerY = (float)y;
+        float headerW = (float)categoryWidth;
+        float headerH = (float)this.height - 5.0f;
         Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()), ClickGui.getInstance().topAlpha.getValueInt());
-        Render2DUtil.drawRect(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, topColor);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), x, y, this.width, (float)this.height - 5.0f, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
+        Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
+        Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerH, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
         if (openProgress > 0.01) {
             if (ClickGui.getInstance().backGround.booleanValue) {
                 Render2DUtil.drawRect(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));
@@ -119,12 +124,12 @@ extends Mod {
                 Render2DUtil.drawLine(context.getMatrices(), x, (float)(y + this.height) + totalItemHeight, x + this.width, (float)(y + this.height) + totalItemHeight, lineColor);
             }
         }
-        float barHeight = (float)this.height - 5.0f;
-        float iconY = (float)y + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
-        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)((float)x + 6.0f), (double)iconY, Button.enableTextColor);
+        float barHeight = headerH;
+        float iconY = headerY + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
+        FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)(headerX + 6.0f), (double)iconY, Button.enableTextColor);
         float nameFontHeight = ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : 9.0f;
-        float nameY = (float)y + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
-        this.drawString(this.getName(), (double)((float)x + 20.0f), (double)nameY, Button.enableTextColor);
+        float nameY = headerY + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
+        this.drawString(this.getName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
         if (openProgress > 0.01) {
             int panelX1 = x - 1;
             int panelY1 = (int)((float)y + (float)this.height - 6.0f);
@@ -276,7 +281,12 @@ extends Mod {
     }
 
     private boolean isHovering(int mouseX, int mouseY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.getWidth() && mouseY >= this.getY() && mouseY <= this.getY() + this.getHeight() - 5;
+        int categoryWidth = ClickGui.getInstance().categoryWidth.getValueInt();
+        int hx = Math.round((float)this.getX() + ((float)this.getWidth() - (float)categoryWidth) / 2.0f);
+        int hy = this.getY();
+        int hw = categoryWidth;
+        int hh = this.getHeight() - 5;
+        return mouseX >= hx && mouseX <= hx + hw && mouseY >= hy && mouseY <= hy + hh;
     }
 
     private float getTotalItemHeight() {

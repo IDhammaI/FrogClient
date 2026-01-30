@@ -46,11 +46,12 @@ extends Module {
     public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
     public final BooleanSetting sound = this.add(new BooleanSetting("Sound", true).setParent());
-    public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.0, 0.0, 2.0, 0.1, this.sound::isOpen));
+    public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.6, 0.0, 2.0, 0.1, this.sound::isOpen));
     public final BooleanSetting guiSound = this.add(new BooleanSetting("GuiSound", true));
-    public final SliderSetting height = this.add(new SliderSetting("Height", 3, 0, 7).injectTask(this::applyHeights));
-    public final SliderSetting categoryWidth = this.add(new SliderSetting("CategoryWidth", 93, 60, 160).injectTask(this::applyHeights));
-    public final SliderSetting categoryBarHeight = this.add(new SliderSetting("CategoryBarHeight", 13, 8, 30).injectTask(this::applyHeights));
+    public final SliderSetting moduleButtonHeight = this.add(new SliderSetting("ModuleButtonHeight", 13, 10, 25).injectTask(this::applyHeights));
+    public final SliderSetting moduleButtonWidth = this.add(new SliderSetting("ModuleButtonWidth", 93, 60, 160).injectTask(this::applyHeights));
+    public final SliderSetting categoryWidth = this.add(new SliderSetting("CategoryWidth", 95, 60, 200).injectTask(this::applyHeights));
+    public final SliderSetting categoryBarHeight = this.add(new SliderSetting("CategoryBarHeight", 17, 8, 30).injectTask(this::applyHeights));
     public final SliderSetting textOffset = this.add(new SliderSetting("TextOffset", 0.0, -5.0, 5.0, 1.0));
     public final SliderSetting titleOffset = this.add(new SliderSetting("TitleOffset", 1, -5.0, 5.0, 1.0));
     public final SliderSetting alpha = this.add(new SliderSetting("Alpha", 150, 0, 255));
@@ -99,7 +100,7 @@ extends Module {
     private final Animation animation = new Animation();
     public static String key;
     private boolean styleApplied = false;
-    private int lastCategoryWidth = -1;
+    private int lastLayoutWidth = -1;
 
     public ClickGui() {
         super("ClickGui", Module.Category.Client);
@@ -125,21 +126,24 @@ extends Module {
     private void applyHeights() {
         java.util.ArrayList<Component> components = ClickGuiScreen.getInstance().getComponents();
         int categoryWidth = this.categoryWidth.getValueInt();
-        boolean widthChanged = this.lastCategoryWidth != categoryWidth;
-        this.lastCategoryWidth = categoryWidth;
-        int spacing = categoryWidth + 1;
+        int moduleButtonWidth = this.moduleButtonWidth.getValueInt();
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        boolean widthChanged = this.lastLayoutWidth != layoutWidth;
+        this.lastLayoutWidth = layoutWidth;
+        int spacing = layoutWidth + 1;
         int count = components.size();
         int startX = 10;
         int startY = 4;
         if (mc != null && mc.getWindow() != null) {
             int screenWidth = mc.getWindow().getScaledWidth();
             int screenHeight = mc.getWindow().getScaledHeight();
-            int totalWidth = count * categoryWidth + (count - 1);
+            int totalWidth = count * layoutWidth + (count - 1);
             startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
             startY = Math.round((float)screenHeight / 6.0f);
         }
         boolean defaultLayout = true;
-        int expectedX = startX;
+        int offsetX = Math.round(((float)layoutWidth - (float)moduleButtonWidth) / 2.0f);
+        int expectedX = startX + offsetX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
             if (component.getX() != expectedX || component.getY() != startY) {
@@ -150,10 +154,10 @@ extends Module {
         }
         boolean forceRecenter = widthChanged && mc != null && mc.currentScreen instanceof ClickGuiScreen;
         int componentHeight = this.categoryBarHeight.getValueInt() + 5;
-        int x = startX;
+        int x = startX + offsetX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
-            component.setWidth(categoryWidth);
+            component.setWidth(moduleButtonWidth);
             component.setHeight(componentHeight);
             if (defaultLayout || forceRecenter) {
                 component.setX(x);
@@ -161,7 +165,7 @@ extends Module {
                 x += spacing;
             }
             for (Item item : component.getItems()) {
-                item.setHeight(10 + this.height.getValueInt());
+                item.setHeight(this.moduleButtonHeight.getValueInt());
             }
         }
     }
@@ -169,27 +173,30 @@ extends Module {
     private void recenterLayout() {
         java.util.ArrayList<Component> components = ClickGuiScreen.getInstance().getComponents();
         int categoryWidth = this.categoryWidth.getValueInt();
-        int spacing = categoryWidth + 1;
+        int moduleButtonWidth = this.moduleButtonWidth.getValueInt();
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        int spacing = layoutWidth + 1;
         int count = components.size();
         if (mc == null || mc.getWindow() == null) {
             return;
         }
         int screenWidth = mc.getWindow().getScaledWidth();
         int screenHeight = mc.getWindow().getScaledHeight();
-        int totalWidth = count * categoryWidth + (count - 1);
+        int totalWidth = count * layoutWidth + (count - 1);
         int startX = Math.round(((float)screenWidth - (float)totalWidth) / 2.0f);
         int startY = Math.round((float)screenHeight / 6.0f);
         int componentHeight = this.categoryBarHeight.getValueInt() + 5;
-        int x = startX;
+        int offsetX = Math.round(((float)layoutWidth - (float)moduleButtonWidth) / 2.0f);
+        int x = startX + offsetX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
-            component.setWidth(categoryWidth);
+            component.setWidth(moduleButtonWidth);
             component.setHeight(componentHeight);
             component.setX(x);
             component.setY(startY);
             x += spacing;
             for (Item item : component.getItems()) {
-                item.setHeight(10 + this.height.getValueInt());
+                item.setHeight(this.moduleButtonHeight.getValueInt());
             }
         }
     }
