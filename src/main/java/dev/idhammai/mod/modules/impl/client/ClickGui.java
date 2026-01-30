@@ -362,6 +362,18 @@ extends Module {
             return;
         }
 
+        if (mode == Style.Spectrum) {
+            this.colorMode.setValue(ColorMode.Spectrum);
+            this.rainbowSpeed.setValue(1.0);
+            this.saturation.setValue(210.0);
+            this.rainbowDelay.setValue(50.0);
+            this.tint.booleanValue = true;
+            this.tint.rainbow = true;
+            this.endColor.rainbow = false;
+            this.secondColor.booleanValue = false;
+            return;
+        }
+
         if (mode == Style.Pulse) {
             this.colorMode.setValue(ColorMode.Pulse);
             this.pulseSpeed.setValue(1.15);
@@ -386,6 +398,7 @@ extends Module {
         Static,
         RainbowDelay,
         SimpleRainbow,
+        Spectrum,
         Pulse
     }
 
