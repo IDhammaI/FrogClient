@@ -55,16 +55,15 @@ extends Setting {
 
     public Color getValue() {
         if (this.sync) {
-            if (this.allowClientColor) {
-                ColorsModule colors = ColorsModule.INSTANCE;
-                if (colors != null && colors.colorMode.getValue() == ColorsModule.ColorMode.Rainbow) {
-                    double rainbowState = Math.ceil(((double)System.currentTimeMillis() * colors.rainbowSpeed.getValue() + (double)colors.rainbowDelay.getValue()) / 20.0);
-                    Color hsb = Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), colors.saturation.getValueFloat() / 255.0f, 1.0f);
-                    this.setValue(new Color(hsb.getRed(), hsb.getGreen(), hsb.getBlue(), this.value.getAlpha()));
-                }
+            ColorsModule colors = ColorsModule.INSTANCE;
+            if (this.allowClientColor && colors != null && colors.colorMode.getValue() == ColorsModule.ColorMode.Rainbow) {
+                double rainbowState = Math.ceil(((double)System.currentTimeMillis() * colors.rainbowSpeed.getValue() + (double)colors.rainbowDelay.getValue()) / 20.0);
+                Color hsb = Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), colors.saturation.getValueFloat() / 255.0f, 1.0f);
+                this.setValue(new Color(hsb.getRed(), hsb.getGreen(), hsb.getBlue(), this.value.getAlpha()));
             } else {
                 float[] HSB = Color.RGBtoHSB(this.value.getRed(), this.value.getGreen(), this.value.getBlue(), null);
-                Color preColor = Color.getHSBColor((float)timer.getMs() * 0.36f * 4.0f / 20.0f % 361.0f / 360.0f, HSB[1], HSB[2]);
+                float hue = (float)((double)timer.getMs() * 0.36 * (double)effectSpeed / 20.0 % 361.0 / 360.0);
+                Color preColor = Color.getHSBColor(hue, HSB[1], HSB[2]);
                 this.setValue(new Color(preColor.getRed(), preColor.getGreen(), preColor.getBlue(), this.value.getAlpha()));
             }
         }
