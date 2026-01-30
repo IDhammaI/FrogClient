@@ -14,6 +14,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.Frog;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.AnimateUtil;
+import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.api.utils.render.ColorUtil;
@@ -27,6 +28,7 @@ import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Random;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
@@ -43,6 +45,8 @@ extends Screen {
     private float walkShakeOffsetY;
     private float walkShakeTime;
     private boolean layoutCorrected = false;
+    private final Random snowRandom = new Random();
+    private final ArrayList<Snowflake> snowflakes = new ArrayList();
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -223,6 +227,7 @@ extends Screen {
             float blurRadius = 1.0f + (ClickGui.getInstance().radius.getValueFloat() - 1.0f) * (float)ClickGui.getInstance().alphaValue;
             Frog.BLUR.applyBlur(blurRadius, 0.0f, 0.0f, (float)context.getScaledWindowWidth(), (float)context.getScaledWindowHeight(), (float)ClickGui.getInstance().blurType.getValue().ordinal());
         }
+        this.renderSnow(context);
         context.getMatrices().push();
         context.getMatrices().translate((float)panelX + (float)panelW / 2.0f, (float)panelY + (float)panelH / 2.0f + slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
@@ -313,6 +318,78 @@ extends Screen {
 
     public int getTextOffset() {
         return -ClickGui.getInstance().textOffset.getValueInt() - 6;
+    }
+
+    private void renderSnow(DrawContext context) {
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null || !gui.snow.getValue()) {
+            if (!this.snowflakes.isEmpty()) {
+                this.snowflakes.clear();
+            }
+            return;
+        }
+        float fade = (float)gui.alphaValue;
+        if (fade <= 0.01f) {
+            return;
+        }
+        int w = context.getScaledWindowWidth();
+        int h = context.getScaledWindowHeight();
+        int target = Math.max(0, gui.snowAmount.getValueInt());
+        while (this.snowflakes.size() < target) {
+            this.snowflakes.add(this.spawnSnowflake(w, h, true));
+        }
+        while (this.snowflakes.size() > target) {
+            this.snowflakes.remove(this.snowflakes.size() - 1);
+        }
+        float dt = AnimateUtil.deltaTime();
+        if (dt <= 0.0f) {
+            dt = 0.016f;
+        }
+        float baseSpeed = gui.snowSpeed.getValueFloat();
+        float baseSize = gui.snowSize.getValueFloat();
+        float wind = gui.snowWind.getValueFloat();
+        int a = (int)Math.round((double)gui.snowAlpha.getValueInt() * (double)fade);
+        a = Math.max(0, Math.min(255, a));
+        Color c = new Color(255, 255, 255, a);
+        for (int i = 0; i < this.snowflakes.size(); ++i) {
+            Snowflake f = this.snowflakes.get(i);
+            f.y += (baseSpeed * f.speedMul) * dt;
+            f.x += wind * dt + (float)Math.sin((double)(f.y * 0.02f + f.phase)) * f.drift * dt;
+            float size = Math.max(0.3f, baseSize * f.sizeMul);
+            if (f.y > (float)h + size + 2.0f || f.x < -10.0f || f.x > (float)w + 10.0f) {
+                this.snowflakes.set(i, this.spawnSnowflake(w, h, false));
+                continue;
+            }
+            Render2DUtil.drawCircle(context.getMatrices(), f.x, f.y, size, c, 12);
+        }
+    }
+
+    private Snowflake spawnSnowflake(int w, int h, boolean randomY) {
+        float x = (float)this.snowRandom.nextInt(Math.max(1, w));
+        float y = randomY ? (float)this.snowRandom.nextInt(Math.max(1, h)) : -5.0f - this.snowRandom.nextFloat() * 20.0f;
+        float phase = this.snowRandom.nextFloat() * 6.2831855f;
+        float drift = 10.0f + this.snowRandom.nextFloat() * 40.0f;
+        float speedMul = 0.55f + this.snowRandom.nextFloat() * 1.05f;
+        float sizeMul = 0.6f + this.snowRandom.nextFloat() * 1.2f;
+        return new Snowflake(x, y, phase, drift, speedMul, sizeMul);
+    }
+
+    private static final class Snowflake {
+        private float x;
+        private float y;
+        private final float phase;
+        private final float drift;
+        private final float speedMul;
+        private final float sizeMul;
+
+        private Snowflake(float x, float y, float phase, float drift, float speedMul, float sizeMul) {
+            this.x = x;
+            this.y = y;
+            this.phase = phase;
+            this.drift = drift;
+            this.speedMul = speedMul;
+            this.sizeMul = sizeMul;
+        }
     }
 }
 
