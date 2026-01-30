@@ -32,6 +32,7 @@ import java.util.Random;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 
@@ -360,7 +361,29 @@ extends Screen {
                 this.snowflakes.set(i, this.spawnSnowflake(w, h, false));
                 continue;
             }
-            Render2DUtil.drawCircle(context.getMatrices(), f.x, f.y, size, c, 12);
+            this.drawSnowflake(context.getMatrices(), f.x, f.y, size, c.getRGB(), f.phase + f.y * 0.01f);
+        }
+    }
+
+    private void drawSnowflake(MatrixStack matrices, float x, float y, float r, int color, float rotation) {
+        float branchLen = r * 0.45f;
+        float branchOffset = 0.65f;
+        for (int i = 0; i < 3; ++i) {
+            double a = (double)rotation + (double)i * 1.0471975511965976;
+            float dx = (float)Math.cos(a) * r;
+            float dy = (float)Math.sin(a) * r;
+            Render2DUtil.drawLine(matrices, x - dx, y - dy, x + dx, y + dy, color);
+
+            float fx1 = x + dx * branchOffset;
+            float fy1 = y + dy * branchOffset;
+            Render2DUtil.drawLine(matrices, fx1, fy1, fx1 + (float)Math.cos(a + 0.5235987755982988) * branchLen, fy1 + (float)Math.sin(a + 0.5235987755982988) * branchLen, color);
+            Render2DUtil.drawLine(matrices, fx1, fy1, fx1 + (float)Math.cos(a - 0.5235987755982988) * branchLen, fy1 + (float)Math.sin(a - 0.5235987755982988) * branchLen, color);
+
+            double a2 = a + Math.PI;
+            float fx2 = x - dx * branchOffset;
+            float fy2 = y - dy * branchOffset;
+            Render2DUtil.drawLine(matrices, fx2, fy2, fx2 + (float)Math.cos(a2 + 0.5235987755982988) * branchLen, fy2 + (float)Math.sin(a2 + 0.5235987755982988) * branchLen, color);
+            Render2DUtil.drawLine(matrices, fx2, fy2, fx2 + (float)Math.cos(a2 - 0.5235987755982988) * branchLen, fy2 + (float)Math.sin(a2 - 0.5235987755982988) * branchLen, color);
         }
     }
 

@@ -61,10 +61,10 @@ extends Module {
     public final BooleanSetting scrollAnim = this.add(new BooleanSetting("ScrollAnim", true).setParent());
     public final SliderSetting scrollAnimLength = this.add(new SliderSetting("ScrollAnimLength", 220, 1, 1000, this.scrollAnim::isOpen));
     public final EnumSetting<Easing> scrollAnimEasing = this.add(new EnumSetting<Easing>("ScrollAnimEasing", Easing.SineOut, this.scrollAnim::isOpen));
-    public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", false).setParent());
+    public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", true).setParent());
     public final SliderSetting mouseMoveStrength = this.add(new SliderSetting("MouseMoveStrength", 16.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
     public final SliderSetting mouseMoveSmooth = this.add(new SliderSetting("MouseMoveSmooth", 10.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
-    public final BooleanSetting walkShake = this.add(new BooleanSetting("WalkShake", false).setParent());
+    public final BooleanSetting walkShake = this.add(new BooleanSetting("WalkShake", true).setParent());
     public final SliderSetting walkShakeStrength = this.add(new SliderSetting("WalkShakeStrength", 8.0, 0.0, 20.0, 0.5, this.walkShake::isOpen));
     public final SliderSetting walkShakeSpeed = this.add(new SliderSetting("WalkShakeSpeed", 12.0, 0.0, 30.0, 0.5, this.walkShake::isOpen));
     public final SliderSetting walkShakeSmooth = this.add(new SliderSetting("WalkShakeSmooth", 14.0, 0.0, 30.0, 0.5, this.walkShake::isOpen));
