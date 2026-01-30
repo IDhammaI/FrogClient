@@ -484,7 +484,7 @@ extends Button {
         if (setting instanceof ColorSetting) {
             ColorSetting s = (ColorSetting)setting;
             s.setValue(s.getDefaultValue());
-            s.sync = s.getDefaultSync();
+            s.rainbow = s.getDefaultRainbow();
             if (s.injectBoolean) {
                 s.booleanValue = s.getDefaultBooleanValue();
             }

@@ -237,7 +237,7 @@ extends Button {
             this.drawString("paste", (double)(this.x + (float)this.width - 2.3f - (float)this.getWidth("paste") + 11.7f - 4.6f), (double)actionsTextY, this.isInsidePaste(mouseX, mouseY) ? enableTextColor : defaultTextColor);
             float syncRowTopY = actionsRowTopY + (float)this.getFontHeight();
             float syncTextY = this.getCenteredTextY(syncRowTopY, (float)this.getFontHeight());
-            this.drawString("rainbow", (double)(this.x + 2.3f), (double)syncTextY, this.setting.sync ? ColorUtil.injectAlpha(color, 255).getRGB() : (this.isInsideRainbow(mouseX, mouseY) ? enableTextColor : defaultTextColor));
+            this.drawString("rainbow", (double)(this.x + 2.3f), (double)syncTextY, this.setting.rainbow ? ColorUtil.injectAlpha(color, 255).getRGB() : (this.isInsideRainbow(mouseX, mouseY) ? enableTextColor : defaultTextColor));
             context.disableScissor();
         }
     }
@@ -249,7 +249,7 @@ extends Button {
             this.pickingHue = false;
             this.pickingAlpha = false;
             this.setting.setValue(this.setting.getDefaultValue());
-            this.setting.sync = this.setting.getDefaultSync();
+            this.setting.rainbow = this.setting.getDefaultRainbow();
             if (this.setting.injectBoolean) {
                 this.setting.booleanValue = this.setting.getDefaultBooleanValue();
             }
@@ -286,7 +286,7 @@ extends Button {
             }
         }
         if (mouseButton == 0 && this.isInsideRainbow(mouseX, mouseY) && this.open) {
-            boolean bl = this.setting.sync = !this.setting.sync;
+            boolean bl = this.setting.rainbow = !this.setting.rainbow;
         }
         if (mouseButton == 0 && this.isInsideCopy(mouseX, mouseY) && this.open) {
             PickerButton.sound();

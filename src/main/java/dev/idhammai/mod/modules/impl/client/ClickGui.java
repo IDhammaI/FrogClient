@@ -91,8 +91,8 @@ extends Module {
     public final ColorSetting defaultTextColor = this.add(new ColorSetting("DefaultTextColor", new Color(220, 220, 220), this.colors::isOpen));
     public final ColorSetting enableTextColor = this.add(new ColorSetting("EnableTextColor", new Color(255, 255, 255), this.colors::isOpen));
     public final ColorSetting backGround = this.add(new ColorSetting("BackGround", new Color(30, 30, 30, 236), this.colors::isOpen).injectBoolean(true));
-    public final ColorSetting tint = this.add(new ColorSetting("Tint", new Color(12, 60, 95, 56)).injectBoolean(true));
-    public final ColorSetting endColor = this.add(new ColorSetting("End", new Color(255, 120, 240, 72), () -> this.tint.booleanValue));
+    public final ColorSetting tint = this.add(new ColorSetting("Tint", new Color(255, 0, 0, 80)).defaultRainbow(true).injectBoolean(true));
+    public final ColorSetting endColor = this.add(new ColorSetting("End", new Color(255, 0, 0, 50), () -> this.tint.booleanValue));
     public double alphaValue;
     private final Animation animation = new Animation();
     public static String key;

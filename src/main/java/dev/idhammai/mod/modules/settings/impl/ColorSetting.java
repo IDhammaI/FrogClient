@@ -14,23 +14,23 @@ extends Setting {
     public static final Timer timer = new Timer();
     public static final float effectSpeed = 4.0f;
     private final Color defaultValue;
-    public boolean sync = false;
+    public boolean rainbow = false;
     public boolean injectBoolean = false;
     public boolean booleanValue = false;
     private Color value;
-    private boolean defaultSync = false;
+    private boolean defaultRainbow = false;
     private boolean defaultBooleanValue = false;
     private boolean allowClientColor = true;
 
     public ColorSetting(String name) {
         this(name, new Color(255, 255, 255));
-        this.defaultSync = true;
+        this.defaultRainbow = true;
     }
 
     public ColorSetting(String name, BooleanSupplier visibilityIn) {
         super(name, visibilityIn);
         this.defaultValue = this.value = new Color(255, 255, 255);
-        this.defaultSync = true;
+        this.defaultRainbow = true;
     }
 
     public ColorSetting(String name, Color defaultValue) {
@@ -54,7 +54,7 @@ extends Setting {
     }
 
     public Color getValue() {
-        if (this.sync) {
+        if (this.rainbow) {
             ColorsModule colors = ColorsModule.INSTANCE;
             if (this.allowClientColor && colors != null && colors.colorMode.getValue() == ColorsModule.ColorMode.Rainbow) {
                 double rainbowState = Math.ceil(((double)System.currentTimeMillis() * colors.rainbowSpeed.getValue() + (double)colors.rainbowDelay.getValue()) / 20.0);
@@ -78,8 +78,14 @@ extends Setting {
         this.value = new Color(value, true);
     }
 
-    public void setSync(boolean sync) {
-        this.sync = sync;
+    public void setRainbow(boolean rainbow) {
+        this.rainbow = rainbow;
+    }
+
+    public ColorSetting defaultRainbow(boolean defaultRainbow) {
+        this.defaultRainbow = defaultRainbow;
+        this.rainbow = defaultRainbow;
+        return this;
     }
 
     public ColorSetting injectBoolean(boolean value) {
@@ -102,8 +108,8 @@ extends Setting {
         return this.defaultBooleanValue;
     }
 
-    public boolean getDefaultSync() {
-        return this.defaultSync;
+    public boolean getDefaultRainbow() {
+        return this.defaultRainbow;
     }
 }
 

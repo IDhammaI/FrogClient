@@ -87,7 +87,13 @@ extends Manager {
                 } else if (setting instanceof ColorSetting) {
                     ColorSetting s = (ColorSetting)setting;
                     s.setValue(new Color(Frog.CONFIG.getInt(line, s.getDefaultValue().getRGB()), true));
-                    s.setSync(Frog.CONFIG.getBoolean(line + "Sync", s.getDefaultSync()));
+                    boolean rainbow;
+                    if (Frog.CONFIG.getString(line + "Rainbow") != null) {
+                        rainbow = Frog.CONFIG.getBoolean(line + "Rainbow", s.getDefaultRainbow());
+                    } else {
+                        rainbow = Frog.CONFIG.getBoolean(line + "Sync", s.getDefaultRainbow());
+                    }
+                    s.setRainbow(rainbow);
                     if (s.injectBoolean) {
                         s.booleanValue = Frog.CONFIG.getBoolean(line + "Boolean", s.getDefaultBooleanValue());
                     }
@@ -128,7 +134,7 @@ extends Manager {
                     } else if (setting instanceof ColorSetting) {
                         ColorSetting s = (ColorSetting)setting;
                         printwriter.println(line + ":" + s.getValue().getRGB());
-                        printwriter.println(line + "Sync:" + s.sync);
+                        printwriter.println(line + "Rainbow:" + s.rainbow);
                         if (s.injectBoolean) {
                             printwriter.println(line + "Boolean:" + s.booleanValue);
                         }
