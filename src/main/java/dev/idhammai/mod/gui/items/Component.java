@@ -118,10 +118,22 @@ extends Mod {
                 Render2DUtil.drawRectWithOutline(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
             }
             if (ClickGui.getInstance().line.getValue()) {
-                int lineColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(this.getColorDelay()).getRGB(), ClickGui.getInstance().topAlpha.getValueInt());
-                Render2DUtil.drawLine(context.getMatrices(), (float)x + 0.2f, (float)(y + this.height) + totalItemHeight, (float)x + 0.2f, (float)y + (float)this.height - 5.0f, lineColor);
-                Render2DUtil.drawLine(context.getMatrices(), x + this.width, (float)(y + this.height) + totalItemHeight, x + this.width, (float)y + (float)this.height - 5.0f, lineColor);
-                Render2DUtil.drawLine(context.getMatrices(), x, (float)(y + this.height) + totalItemHeight, x + this.width, (float)(y + this.height) + totalItemHeight, lineColor);
+                float yTop = (float)y + (float)this.height - 5.0f;
+                float yBottom = (float)(y + this.height) + totalItemHeight;
+                float segment = 2.0f;
+                double baseDelay = this.getColorDelay();
+                double delayPerPixel = 0.25;
+                float leftX = (float)x + 0.2f;
+                float rightX = (float)(x + this.width);
+                int alpha = ClickGui.getInstance().topAlpha.getValueInt();
+                for (float yy = yTop; yy < yBottom; yy += segment) {
+                    float yy2 = Math.min(yy + segment, yBottom);
+                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yy * delayPerPixel).getRGB(), alpha);
+                    Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
+                    Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
+                }
+                int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(baseDelay + (double)yBottom * delayPerPixel).getRGB(), alpha);
+                Render2DUtil.drawLine(context.getMatrices(), x, yBottom, x + this.width, yBottom, bottomColor);
             }
         }
         float barHeight = headerH;
