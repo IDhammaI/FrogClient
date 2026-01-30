@@ -10,6 +10,8 @@ public class StringSetting
 extends Setting {
     private final String defaultValue;
     private String value;
+    private Runnable task = null;
+    private boolean injectTask = false;
 
     public StringSetting(String name, String value) {
         super(name);
@@ -29,6 +31,15 @@ extends Setting {
 
     public void setValue(String text) {
         this.value = text;
+        if (this.injectTask) {
+            this.task.run();
+        }
+    }
+
+    public StringSetting injectTask(Runnable task) {
+        this.task = task;
+        this.injectTask = true;
+        return this;
     }
 
     public String getDefaultValue() {

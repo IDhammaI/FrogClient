@@ -139,7 +139,7 @@ extends Mod {
         float barHeight = headerH;
         float iconY = headerY + (barHeight - FontManager.icon.getFontHeight()) / 2.0f;
         FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)(headerX + 6.0f), (double)iconY, Button.enableTextColor);
-        float nameFontHeight = ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : 9.0f;
+        float nameFontHeight = FontManager.isCustomFontEnabled() ? FontManager.ui.getFontHeight() : 9.0f;
         float nameY = headerY + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
         this.drawString(this.getName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
         if (openProgress > 0.01) {
@@ -317,10 +317,11 @@ extends Mod {
     }
 
     protected void drawString(String text, double x, double y, int color) {
-        if (ClickGui.getInstance().font.getValue()) {
-            FontManager.ui.drawString(this.context.getMatrices(), text, (double)((int)x), (double)((int)y), color, ClickGui.getInstance().shadow.getValue());
+        boolean shadow = FontManager.isShadowEnabled();
+        if (FontManager.isCustomFontEnabled()) {
+            FontManager.ui.drawString(this.context.getMatrices(), text, (double)((int)x), (double)((int)y), color, shadow);
         } else {
-            this.context.drawText(Component.mc.textRenderer, text, (int)x, (int)y, color, ClickGui.getInstance().shadow.getValue());
+            this.context.drawText(Component.mc.textRenderer, text, (int)x, (int)y, color, shadow);
         }
     }
 }

@@ -449,7 +449,8 @@ implements Wrapper {
             int ss = totalSec % 60;
             String time = String.format("%d:%02d", mm, ss);
             String text = name + " " + time;
-            int tw = ClickGui.getInstance().font.getValue() ? (int)FontManager.ui.getWidth(text) : (int)TextUtil.getWidth(text);
+            boolean customFont = FontManager.isCustomFontEnabled();
+            int tw = customFont ? (int)FontManager.ui.getWidth(text) : (int)TextUtil.getWidth(text);
             int pillW = tw + pillPad * 2;
             int x = startX;
             int y = startY + idx * (pillH + 4);
@@ -457,8 +458,8 @@ implements Wrapper {
             Render2DUtil.drawRoundedRect(ctx.getMatrices(), x, y, pillW, pillH, 4.0f, new Color(255, 255, 255, keyCodec));
             Render2DUtil.drawRoundedStroke(ctx.getMatrices(), x, y, pillW, pillH, 4.0f, new Color(220, 224, 230, 160), 48);
             int tx = x + pillPad;
-            double ty = (double)y + (double)((float)pillH - (ClickGui.getInstance().font.getValue() ? FontManager.ui.getFontHeight() : TextUtil.getHeight())) / 2.0;
-            TextUtil.drawString(ctx, text, tx, ty, new Color(30, 30, 30).getRGB(), ClickGui.getInstance().font.getValue());
+            double ty = (double)y + (double)((float)pillH - (customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight())) / 2.0;
+            TextUtil.drawString(ctx, text, tx, ty, new Color(30, 30, 30).getRGB(), customFont);
             if (++idx < 5) continue;
             break;
         }

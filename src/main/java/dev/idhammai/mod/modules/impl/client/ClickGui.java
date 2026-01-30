@@ -41,8 +41,6 @@ public class ClickGui
 extends Module {
     private static ClickGui INSTANCE;
     public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.Dark).injectTask(this::updateStyle));
-    public final BooleanSetting font = this.add(new BooleanSetting("Font", true));
-    public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
     public final BooleanSetting sound = this.add(new BooleanSetting("Sound", true).setParent());
     public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.6, 0.0, 2.0, 0.1, this.sound::isOpen));

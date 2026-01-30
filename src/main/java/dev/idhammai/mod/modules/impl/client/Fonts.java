@@ -5,6 +5,7 @@ package dev.idhammai.mod.modules.impl.client;
 
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.EnumSetting;
 import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 import dev.idhammai.mod.modules.settings.impl.StringSetting;
@@ -12,12 +13,13 @@ import dev.idhammai.mod.modules.settings.impl.StringSetting;
 public class Fonts
 extends Module {
     public static Fonts INSTANCE;
-    public final StringSetting font = this.add(new StringSetting("Font", "default"));
-    public final StringSetting alternate = this.add(new StringSetting("Alternate", "msyh"));
-    public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.PLAIN));
-    public final SliderSetting size = this.add(new SliderSetting("Size", 8.0, 1.0, 15.0, 1.0));
-    public final SliderSetting shift = this.add(new SliderSetting("Shift", 0.0, -10.0, 10.0, 1.0));
-    public final SliderSetting translate = this.add(new SliderSetting("Translate", 0.0, -10.0, 10.0, 1.0));
+        public final StringSetting font = this.add(new StringSetting("Font", "default").injectTask(this::refresh));
+    public final StringSetting alternate = this.add(new StringSetting("Alternate", "msyh").injectTask(this::refresh));
+    public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.PLAIN).injectTask(this::refresh));
+    public final SliderSetting size = this.add(new SliderSetting("Size", 8.0, 1.0, 15.0, 1.0).injectTask(this::refresh));
+    public final SliderSetting shift = this.add(new SliderSetting("Shift", 0.0, -10.0, 10.0, 1.0).injectTask(this::refresh));
+    public final SliderSetting translate = this.add(new SliderSetting("Translate", 0.0, -10.0, 10.0, 1.0).injectTask(this::refresh));
+    public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
 
     public Fonts() {
         super("Fonts", Module.Category.Client);
@@ -26,11 +28,20 @@ extends Module {
     }
 
     @Override
-    public void enable() {
+    public void onEnable() {
         this.refresh();
     }
 
+    @Override
+    public void onDisable() {
+        FontManager.init();
+    }
+
     public void refresh() {
+        if (!this.isOn()) {
+            return;
+        }
+
         try {
             if (this.font.getValue().equals("default")) {
                 if (this.alternate.getValue().equals("null")) {

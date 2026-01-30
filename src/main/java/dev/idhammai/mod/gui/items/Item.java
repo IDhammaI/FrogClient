@@ -112,15 +112,16 @@ extends Mod {
     }
 
     protected void drawString(String text, double x, double y, int color) {
-        if (ClickGui.getInstance().font.getValue()) {
-            FontManager.ui.drawString(context.getMatrices(), text, (double)((int)x), (double)((int)y), color, ClickGui.getInstance().shadow.getValue());
+        boolean shadow = FontManager.isShadowEnabled();
+        if (FontManager.isCustomFontEnabled()) {
+            FontManager.ui.drawString(context.getMatrices(), text, (double)((int)x), (double)((int)y), color, shadow);
         } else {
-            context.drawText(Item.mc.textRenderer, text, (int)x, (int)y, color, ClickGui.getInstance().shadow.getValue());
+            context.drawText(Item.mc.textRenderer, text, (int)x, (int)y, color, shadow);
         }
     }
 
     protected int getFontHeight() {
-        if (ClickGui.getInstance().font.getValue()) {
+        if (FontManager.isCustomFontEnabled()) {
             return (int)FontManager.ui.getFontHeight();
         }
         Objects.requireNonNull(Item.mc.textRenderer);
@@ -132,7 +133,7 @@ extends Mod {
     }
 
     protected int getWidth(String s) {
-        if (ClickGui.getInstance().font.getValue()) {
+        if (FontManager.isCustomFontEnabled()) {
             return (int)FontManager.ui.getWidth(s);
         }
         return Item.mc.textRenderer.getWidth(s);

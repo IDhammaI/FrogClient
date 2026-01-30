@@ -236,8 +236,8 @@ extends Screen {
         context.getMatrices().scale(scale, scale, 1.0f);
         this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
         context.getMatrices().pop();
-        boolean customFont = ClickGui.getInstance().font.getValue();
-        boolean shadow = ClickGui.getInstance().shadow.getValue();
+        boolean customFont = FontManager.isCustomFontEnabled();
+        boolean shadow = FontManager.isShadowEnabled();
         float lineHeight = customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight();
         float marginBottom = 6.0f;
         int lines = 4;

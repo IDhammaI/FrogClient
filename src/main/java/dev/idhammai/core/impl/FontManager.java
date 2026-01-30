@@ -21,6 +21,14 @@ public class FontManager {
     public static FontRenderer small;
     public static FontRenderer icon;
 
+    public static boolean isCustomFontEnabled() {
+        return Fonts.INSTANCE != null && Fonts.INSTANCE.isOn();
+    }
+
+    public static boolean isShadowEnabled() {
+        return Fonts.INSTANCE == null || Fonts.INSTANCE.shadow.getValue();
+    }
+
     public static void init() {
         try {
             ui = FontManager.assets(8.0f, "default", 0);
@@ -41,7 +49,13 @@ public class FontManager {
 
             @Override
             public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float elementCodec, float keyCodec, boolean shadow) {
-                super.drawString(stack, s, x + (float)Fonts.INSTANCE.translate.getValueInt(), y + (float)Fonts.INSTANCE.shift.getValueInt(), r, g, elementCodec, keyCodec, shadow);
+                float dx = 0.0f;
+                float dy = 0.0f;
+                if (FontManager.isCustomFontEnabled()) {
+                    dx = (float)Fonts.INSTANCE.translate.getValueInt();
+                    dy = (float)Fonts.INSTANCE.shift.getValueInt();
+                }
+                super.drawString(stack, s, x + dx, y + dy, r, g, elementCodec, keyCodec, shadow);
             }
         };
     }
@@ -63,7 +77,13 @@ public class FontManager {
 
             @Override
             public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float elementCodec, float keyCodec, boolean shadow) {
-                super.drawString(stack, s, x + (float)Fonts.INSTANCE.translate.getValueInt(), y + (float)Fonts.INSTANCE.shift.getValueInt(), r, g, elementCodec, keyCodec, shadow);
+                float dx = 0.0f;
+                float dy = 0.0f;
+                if (FontManager.isCustomFontEnabled()) {
+                    dx = (float)Fonts.INSTANCE.translate.getValueInt();
+                    dy = (float)Fonts.INSTANCE.shift.getValueInt();
+                }
+                super.drawString(stack, s, x + dx, y + dy, r, g, elementCodec, keyCodec, shadow);
             }
         };
     }
@@ -73,7 +93,13 @@ public class FontManager {
 
             @Override
             public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float elementCodec, float keyCodec, boolean shadow) {
-                super.drawString(stack, s, x + (float)Fonts.INSTANCE.translate.getValueInt(), y + (float)Fonts.INSTANCE.shift.getValueInt(), r, g, elementCodec, keyCodec, shadow);
+                float dx = 0.0f;
+                float dy = 0.0f;
+                if (FontManager.isCustomFontEnabled()) {
+                    dx = (float)Fonts.INSTANCE.translate.getValueInt();
+                    dy = (float)Fonts.INSTANCE.shift.getValueInt();
+                }
+                super.drawString(stack, s, x + dx, y + dy, r, g, elementCodec, keyCodec, shadow);
             }
         };
     }
@@ -83,7 +109,13 @@ public class FontManager {
 
             @Override
             public void drawString(MatrixStack stack, String s, float x, float y, float r, float g, float elementCodec, float keyCodec, boolean shadow) {
-                super.drawString(stack, s, x + (float)Fonts.INSTANCE.translate.getValueInt(), y + (float)Fonts.INSTANCE.shift.getValueInt(), r, g, elementCodec, keyCodec, shadow);
+                float dx = 0.0f;
+                float dy = 0.0f;
+                if (FontManager.isCustomFontEnabled()) {
+                    dx = (float)Fonts.INSTANCE.translate.getValueInt();
+                    dy = (float)Fonts.INSTANCE.shift.getValueInt();
+                }
+                super.drawString(stack, s, x + dx, y + dy, r, g, elementCodec, keyCodec, shadow);
             }
         };
     }
