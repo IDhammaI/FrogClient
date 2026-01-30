@@ -40,7 +40,7 @@ import net.minecraft.sound.SoundEvents;
 public class ClickGui
 extends Module {
     private static ClickGui INSTANCE;
-    public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.Dark).injectTask(this::updateStyle));
+    public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.Static).injectTask(this::updateStyle));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
     public final BooleanSetting sound = this.add(new BooleanSetting("Sound", true).setParent());
     public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.6, 0.0, 2.0, 0.1, this.sound::isOpen));
@@ -301,14 +301,81 @@ extends Module {
     }
 
     public void updateStyle() {
+        Style mode = this.style.getValue();
+        if (mode == null) {
+            mode = Style.Static;
+        }
         this.color.setValue(new Color(0, 120, 212));
+        this.activeColor.setValue(new Color(0, 120, 212));
         this.hoverColor.setValue(new Color(50, 50, 50, 200));
         this.defaultColor.setValue(new Color(30, 30, 30, 236));
         this.defaultTextColor.setValue(new Color(220, 220, 220));
         this.enableTextColor.setValue(new Color(255, 255, 255));
         this.backGround.setValue(new Color(30, 30, 30, 236));
-        this.tint.setValue(new Color(0, 120, 212, 36));
-        this.endColor.setValue(new Color(0, 120, 212, 18));
+        this.backGround.booleanValue = true;
+        this.color.rainbow = false;
+        this.activeColor.rainbow = false;
+        this.tint.rainbow = false;
+        this.endColor.rainbow = false;
+        this.alpha.setValue(150.0);
+        this.hoverAlpha.setValue(220.0);
+        this.topAlpha.setValue(210.0);
+        this.backgroundAlpha.setValue(236.0);
+
+        if (mode == Style.Static) {
+            this.colors.setValueWithoutTask(false);
+            this.colors.setOpen(false);
+            this.colorMode.setValue(ColorMode.Custom);
+            this.tint.booleanValue = true;
+            this.tint.rainbow = false;
+            this.tint.setValue(new Color(0, 120, 212, 36));
+            this.endColor.rainbow = false;
+            this.endColor.setValue(new Color(0, 120, 212, 18));
+            this.secondColor.booleanValue = false;
+            return;
+        }
+
+        this.colors.setValueWithoutTask(true);
+        this.colors.setOpen(true);
+
+        if (mode == Style.RainbowDelay) {
+            this.colorMode.setValue(ColorMode.Rainbow);
+            this.rainbowSpeed.setValue(1.0);
+            this.saturation.setValue(210.0);
+            this.rainbowDelay.setValue(50.0);
+            this.defaultTextColor.setValue(new Color(255, 255, 255));
+            this.tint.booleanValue = true;
+            this.tint.rainbow = true;
+            this.endColor.rainbow = false;
+            this.secondColor.booleanValue = false;
+            return;
+        }
+
+        if (mode == Style.SimpleRainbow) {
+            this.colorMode.setValue(ColorMode.Custom);
+            this.color.rainbow = true;
+            this.activeColor.rainbow = true;
+            this.tint.booleanValue = true;
+            this.tint.rainbow = true;
+            this.endColor.rainbow = false;
+            this.secondColor.booleanValue = false;
+            return;
+        }
+
+        if (mode == Style.Pulse) {
+            this.colorMode.setValue(ColorMode.Pulse);
+            this.pulseSpeed.setValue(1.15);
+            this.pulseCounter.setValue(14.0);
+            this.color.setValue(new Color(0, 120, 212));
+            this.activeColor.setValue(new Color(0, 120, 212));
+            this.secondColor.setValue(new Color(255, 0, 0, 255));
+            this.secondColor.booleanValue = true;
+            this.tint.booleanValue = true;
+            this.tint.rainbow = false;
+            this.tint.setValue(new Color(0, 120, 212, 36));
+            this.endColor.rainbow = false;
+            this.endColor.setValue(new Color(255, 0, 0, 24));
+        }
     }
 
     public Color dynamicColor(int delay) {
@@ -316,7 +383,10 @@ extends Module {
     }
 
     public enum Style {
-        Dark
+        Static,
+        RainbowDelay,
+        SimpleRainbow,
+        Pulse
     }
 
     public enum ColorMode {

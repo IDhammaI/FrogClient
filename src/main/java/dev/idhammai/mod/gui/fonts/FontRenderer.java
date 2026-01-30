@@ -486,7 +486,7 @@ implements Closeable {
         if (clickGui == null) {
             return false;
         }
-        return clickGui.colors.getValue() && clickGui.colorMode.getValue() == ClickGui.ColorMode.Rainbow;
+        return clickGui.style.getValue() != ClickGui.Style.RainbowDelay && clickGui.colors.getValue() && clickGui.colorMode.getValue() == ClickGui.ColorMode.Rainbow;
     }
 
     record DrawEntry(float atX, float atY, float r, float g, float elementCodec, Glyph toDraw) {
