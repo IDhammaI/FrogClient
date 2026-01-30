@@ -41,7 +41,6 @@ public class ClickGui
 extends Module {
     private static ClickGui INSTANCE;
     public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.Dark).injectTask(this::updateStyle));
-    public final BooleanSetting autoSave = this.add(new BooleanSetting("AutoSave", true));
     public final BooleanSetting font = this.add(new BooleanSetting("Font", true));
     public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
@@ -230,9 +229,6 @@ extends Module {
         }
         if (this.guiSound.getValue() && mc.getSoundManager() != null) {
             mc.getSoundManager().play((SoundInstance)PositionedSoundInstance.master((RegistryEntry)SoundEvents.UI_BUTTON_CLICK, (float)this.soundPitch.getValueFloat()));
-        }
-        if (this.autoSave.getValue()) {
-            Frog.save();
         }
     }
 

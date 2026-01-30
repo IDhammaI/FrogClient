@@ -53,6 +53,11 @@ extends Button {
     boolean pickingAlpha;
     boolean open;
     private final Animation openAnimation = new Animation();
+    private final Animation pickerCursorXAnimation = new Animation();
+    private final Animation pickerCursorYAnimation = new Animation();
+    private final Animation hueCursorAnimation = new Animation();
+    private final Animation alphaCursorAnimation = new Animation();
+    private boolean indicatorsInitialized;
     float[] hsb = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 
     public PickerButton(ColorSetting setting) {
@@ -388,15 +393,31 @@ extends Button {
         float selectedGreen = (float)(selectedColor >> 8 & 0xFF) / 255.0f;
         float selectedBlue = (float)(selectedColor & 0xFF) / 255.0f;
         PickerButton.drawPickerBase(pickerX, pickerY, pickerWidth, pickerHeight, selectedRed, selectedGreen, selectedBlue, color[3]);
-        this.drawHueSlider(hueSliderX, hueSliderY, pickerWidth, hueSliderHeight, color[0]);
-        int cursorX = (int)((float)pickerX + color[1] * (float)pickerWidth);
-        int cursorY = (int)((float)(pickerY + pickerHeight) - color[2] * (float)pickerHeight);
+        int targetCursorX = (int)((float)pickerX + color[1] * (float)pickerWidth);
+        int targetCursorY = (int)((float)(pickerY + pickerHeight) - color[2] * (float)pickerHeight);
+        int targetHueCursor = (int)((float)hueSliderX + (float)pickerWidth * color[0]);
+        int targetAlphaCursor = (int)((float)(alphaSliderX + pickerWidth) - (float)pickerWidth * color[3]);
+        if (!this.indicatorsInitialized) {
+            this.pickerCursorXAnimation.from = targetCursorX;
+            this.pickerCursorXAnimation.to = targetCursorX;
+            this.pickerCursorYAnimation.from = targetCursorY;
+            this.pickerCursorYAnimation.to = targetCursorY;
+            this.hueCursorAnimation.from = targetHueCursor;
+            this.hueCursorAnimation.to = targetHueCursor;
+            this.alphaCursorAnimation.from = targetAlphaCursor;
+            this.alphaCursorAnimation.to = targetAlphaCursor;
+            this.indicatorsInitialized = true;
+        }
+        long pickerCursorLength = this.pickingColor ? 40L : 120L;
+        int cursorX = (int)Math.round(this.pickerCursorXAnimation.get(targetCursorX, pickerCursorLength, Easing.SineOut));
+        int cursorY = (int)Math.round(this.pickerCursorYAnimation.get(targetCursorY, pickerCursorLength, Easing.SineOut));
+        this.drawHueSlider(hueSliderX, hueSliderY, pickerWidth, hueSliderHeight, color[0], this.pickingHue);
         setting.setValue(PickerButton.getColor(new Color(Color.HSBtoRGB(color[0], color[1], color[2])), color[3]));
         Render2DUtil.arrow(matrixStack, cursorX, cursorY, setting.getValue());
-        this.drawAlphaSlider(alphaSliderX, alphaSliderY, pickerWidth - 1, alphaSliderHeight, selectedRed, selectedGreen, selectedBlue, color[3]);
+        this.drawAlphaSlider(alphaSliderX, alphaSliderY, pickerWidth - 1, alphaSliderHeight, selectedRed, selectedGreen, selectedBlue, color[3], this.pickingAlpha);
     }
 
-    public void drawHueSlider(int x, int y, int width, int height, float hue) {
+    public void drawHueSlider(int x, int y, int width, int height, float hue, boolean snap) {
         int step = 0;
         if (height > width) {
             Render2DUtil.rect(matrixStack, x, y, x + width, y + 4, -65536);
@@ -407,7 +428,9 @@ extends Button {
                 PickerButton.drawGradientRect(x, (float)y + (float)step * ((float)height / 6.0f), x + width, (float)y + (float)(step + 1) * ((float)height / 6.0f), previousStep, nextStep, false);
                 ++step;
             }
-            int sliderMinY = (int)((float)y + (float)height * hue) - 4;
+            int targetSliderMinY = (int)((float)y + (float)height * hue) - 4;
+            long cursorLength = snap ? 40L : 120L;
+            int sliderMinY = (int)Math.round(this.hueCursorAnimation.get(targetSliderMinY, cursorLength, Easing.SineOut));
             Render2DUtil.rect(matrixStack, x, sliderMinY - 1, x + width, sliderMinY + 1, -1);
             PickerButton.drawOutlineRect(x, sliderMinY - 1, x + width, sliderMinY + 1, Color.BLACK, 1.0f);
         } else {
@@ -417,13 +440,15 @@ extends Button {
                 PickerButton.gradient(x + step * (width / 6), y, x + (step + 1) * (width / 6) + 3, y + height, previousStep, nextStep, true);
                 ++step;
             }
-            int sliderMinX = (int)((float)x + (float)width * hue);
+            int targetSliderMinX = (int)((float)x + (float)width * hue);
+            long cursorLength = snap ? 40L : 120L;
+            int sliderMinX = (int)Math.round(this.hueCursorAnimation.get(targetSliderMinX, cursorLength, Easing.SineOut));
             Render2DUtil.rect(matrixStack, sliderMinX - 1, (float)y - 1.2f, sliderMinX + 1, (float)(y + height) + 1.2f, -1);
             PickerButton.drawOutlineRect((double)sliderMinX - 1.2, (double)y - 1.2, (double)sliderMinX + 1.2, (double)(y + height) + 1.2, Color.BLACK, 0.1f);
         }
     }
 
-    public void drawAlphaSlider(int x, int y, int width, int height, float red, float green, float blue, float alpha) {
+    public void drawAlphaSlider(int x, int y, int width, int height, float red, float green, float blue, float alpha, boolean snap) {
         boolean left = true;
         int checkerBoardSquareSize = height / 2;
         for (int squareIndex = -checkerBoardSquareSize; squareIndex < width; squareIndex += checkerBoardSquareSize) {
@@ -440,7 +465,9 @@ extends Button {
             left = !left;
         }
         PickerButton.drawLeftGradientRect(x, y, x + width, y + height, new Color(red, green, blue, 1.0f).getRGB(), 0);
-        int sliderMinX = (int)((float)(x + width) - (float)width * alpha);
+        int targetSliderMinX = (int)((float)(x + width) - (float)width * alpha);
+        long cursorLength = snap ? 40L : 120L;
+        int sliderMinX = (int)Math.round(this.alphaCursorAnimation.get(targetSliderMinX, cursorLength, Easing.SineOut));
         Render2DUtil.rect(matrixStack, sliderMinX - 1, (float)y - 1.2f, sliderMinX + 1, (float)(y + height) + 1.2f, -1);
         PickerButton.drawOutlineRect((double)sliderMinX - 1.2, (double)y - 1.2, (double)sliderMinX + 1.2, (double)(y + height) + 1.2, Color.BLACK, 0.1f);
     }
