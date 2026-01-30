@@ -11,6 +11,8 @@
  */
 package dev.idhammai.mod.gui.items.buttons;
 
+import dev.idhammai.api.utils.math.Animation;
+import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.mod.gui.ClickGuiScreen;
@@ -34,6 +36,7 @@ extends Button {
     public boolean isListening;
     private String currentString = "";
     private boolean drag = false;
+    private final Animation valueAnimation = new Animation();
 
     public SliderButton(SliderSetting setting) {
         super(setting.getName());
@@ -41,18 +44,24 @@ extends Button {
         this.min = setting.getMin();
         this.max = setting.getMax();
         this.difference = this.max - this.min;
+        double initial = this.partialMultiplier();
+        this.valueAnimation.from = initial;
+        this.valueAnimation.to = initial;
     }
 
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         this.dragSetting(mouseX, mouseY);
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, !this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor);
+        boolean hovered = this.isHovering(mouseX, mouseY);
+        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, !hovered ? defaultColor : hoverColor);
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.setting.getValue() <= this.min ? this.x : (float)((double)this.x + (double)((float)this.width + 7.0f) * this.partialMultiplier()), this.y + (float)this.height - 0.5f, !this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB());
+        double fillProgress = this.valueAnimation.get(this.partialMultiplier(), 200L, Easing.CubicInOut);
+        float filledX = (float)((double)this.x + (double)((float)this.width + 7.0f) * fillProgress);
+        Render2DUtil.rect(context.getMatrices(), this.x, this.y, filledX, this.y + (float)this.height - 0.5f, !hovered ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB());
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isListening) {
             this.drawString(this.currentString + StringButton.getIdleSign(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);
-        } else if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+        } else if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
         } else {
             this.drawString(this.getName() + " " + String.valueOf(Formatting.GRAY) + this.setting.getValueFloat() + this.setting.getSuffix(), (double)(this.x + 2.3f), (double)textY, enableTextColor);
@@ -164,7 +173,8 @@ extends Button {
 
     private void setSettingFromX(int mouseX) {
         double percent = (double)((float)mouseX - this.x) / ((double)this.width + 7.4);
-        double result = Math.min(this.setting.getMin() + this.difference * percent, this.max);
+        double result = this.setting.getMin() + this.difference * percent;
+        result = Math.max(this.min, Math.min(result, this.max));
         this.setting.setValue(result);
     }
 
@@ -173,7 +183,12 @@ extends Button {
     }
 
     private double partialMultiplier() {
-        return Math.min(this.part() / this.difference, 1.0);
+        return Math.max(0.0, Math.min(this.part() / this.difference, 1.0));
+    }
+
+    public void resetFillAnimation() {
+        this.valueAnimation.from = 0.0;
+        this.valueAnimation.to = 0.0;
     }
 
     private boolean isNumeric(String str) {

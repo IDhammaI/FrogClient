@@ -36,6 +36,7 @@ extends Button {
     public double itemHeight;
     public final Animation animation = new Animation();
     private final Animation hoverAnimation = new Animation();
+    private final Animation toggleAnimation = new Animation();
     private final java.util.HashMap<BooleanSetting, Animation> parentOpenAnimations = new java.util.HashMap<BooleanSetting, Animation>();
 
     public ModuleButton(Module module) {
@@ -87,6 +88,7 @@ extends Button {
         boolean hovered = this.isHovering(mouseX, mouseY);
         boolean pressed = this.getState();
         double hoverProgress = this.hoverAnimation.get(hovered ? 1.0 : 0.0, 100L, Easing.CubicInOut);
+        double toggleProgress = this.toggleAnimation.get(pressed ? 1.0 : 0.0, 160L, Easing.CubicInOut);
         Color accent = ClickGui.getInstance().getActiveColor(this.getColorDelay());
         Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
@@ -94,25 +96,13 @@ extends Button {
         int baseA = ClickGui.getInstance().alpha.getValueInt();
         int hoverA = ClickGui.getInstance().hoverAlpha.getValueInt();
         int accentA = Math.max(0, Math.min(255, (int)Math.round((double)baseA + (double)(hoverA - baseA) * hoverProgress)));
-        Color baseFill = pressed ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA) : idleFill;
+        Color hoverFill = new Color(hoverColor.getRed(), hoverColor.getGreen(), hoverColor.getBlue(), hoverA);
+        Color unpressedFill = ColorUtil.fadeColor(idleFill, hoverFill, hoverProgress);
+        Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+        Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
         Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, h, baseFill);
-        if (!pressed && hoverProgress > 0.01) {
-            int glowAlpha = (int)Math.min(240.0, (double)ClickGui.getInstance().hoverAlpha.getValueInt() * hoverProgress);
-            float centerX = (float)mouseX;
-            float centerY = (float)mouseY;
-            float baseRadius = 11.0f * (0.7f + 0.3f * (float)hoverProgress);
-            context.enableScissor((int)this.x, (int)this.y, (int)(this.x + (float)this.width), (int)(this.y + (float)this.height - 0.5f));
-            int steps = 36;
-            for (int i = 0; i < steps; ++i) {
-                float t = (float)i / (float)(steps - 1);
-                float r = baseRadius + baseRadius * 3.0f * t;
-                int alpha = (int)((double)glowAlpha * (1.0 - (double)t) * (1.0 - (double)t) * 0.6);
-                Render2DUtil.drawCircle(context.getMatrices(), centerX, centerY, r, ColorUtil.injectAlpha(hoverColor, alpha), 64);
-            }
-            context.disableScissor();
-        }
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
@@ -153,6 +143,13 @@ extends Button {
             double totalItemHeight = this.getVisibleItemHeight();
             double visibleItemHeight = Math.max(0.0, Math.min(this.itemHeight, totalItemHeight));
             float expandProgress = totalItemHeight <= 0.0 ? 0.0f : (float)(visibleItemHeight / totalItemHeight);
+            if (this.subOpen && expandProgress < 0.9f) {
+                for (Item item : this.items) {
+                    if (item instanceof SliderButton) {
+                        ((SliderButton)item).resetFillAnimation();
+                    }
+                }
+            }
             float slide = (1.0f - expandProgress) * 6.0f;
             if (ClickGui.getInstance().line.getValue() && visibleItemHeight > 0.01) {
                 float yTop = this.y + (float)this.height - 0.5f;
@@ -279,6 +276,13 @@ extends Button {
         if (!this.items.isEmpty()) {
             if (mouseButton == 1 && this.isHovering(mouseX, mouseY)) {
                 this.subOpen = !this.subOpen;
+                if (this.subOpen) {
+                    for (Item item : this.items) {
+                        if (item instanceof SliderButton) {
+                            ((SliderButton)item).resetFillAnimation();
+                        }
+                    }
+                }
                 ModuleButton.sound();
             }
             if (this.subOpen) {

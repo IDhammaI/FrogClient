@@ -17,9 +17,9 @@ import net.minecraft.client.util.math.MatrixStack;
 public class Crosshair
 extends Module {
     public static Crosshair INSTANCE;
-    public final SliderSetting length = this.add(new SliderSetting("Length", 5.0, 0.0, 20.0, 0.1));
-    public final SliderSetting thickness = this.add(new SliderSetting("Thickness", 2.0, 0.0, 20.0, 0.1));
-    public final SliderSetting interval = this.add(new SliderSetting("Interval", 2.0, 0.0, 20.0, 0.1));
+    public final SliderSetting length = this.add(new SliderSetting("Length", 1.4, 0.0, 20.0, 0.1));
+    public final SliderSetting thickness = this.add(new SliderSetting("Thickness", 0.8, 0.0, 20.0, 0.1));
+    public final SliderSetting interval = this.add(new SliderSetting("Interval", 1.0, 0.0, 20.0, 0.1));
     private final ColorSetting color = this.add(new ColorSetting("Color"));
 
     public Crosshair() {

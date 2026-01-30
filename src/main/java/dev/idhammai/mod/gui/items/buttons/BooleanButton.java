@@ -6,6 +6,8 @@
  */
 package dev.idhammai.mod.gui.items.buttons;
 
+import dev.idhammai.api.utils.math.Animation;
+import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.mod.gui.ClickGuiScreen;
@@ -18,18 +20,28 @@ import net.minecraft.client.util.InputUtil;
 public class BooleanButton
 extends Button {
     private final BooleanSetting setting;
+    private final Animation toggleAnimation = new Animation();
 
     public BooleanButton(BooleanSetting setting) {
         super(setting.getName());
         this.setting = setting;
+        double initial = setting.getValue() ? 1.0 : 0.0;
+        this.toggleAnimation.from = initial;
+        this.toggleAnimation.to = initial;
     }
 
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        Color color = ClickGui.getInstance().getColor(this.getColorDelay());
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
+        boolean hovered = this.isHovering(mouseX, mouseY);
+        double toggleProgress = this.toggleAnimation.get(this.getState() ? 1.0 : 0.0, 160L, Easing.CubicInOut);
+        Color accent = ClickGui.getInstance().getColor(this.getColorDelay());
+        int accentA = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
+        Color unpressedFill = new Color(hovered ? hoverColor : defaultColor, true);
+        Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
+        Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
+        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, baseFill.getRGB());
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
-        if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
+        if (hovered && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
             this.drawString("Reset Default", (double)(this.x + 2.3f), (double)textY, enableTextColor);
         } else {
             this.drawString(this.getName(), (double)(this.x + 2.3f), (double)textY, this.getState() ? enableTextColor : defaultTextColor);

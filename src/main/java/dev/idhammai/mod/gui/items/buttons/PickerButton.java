@@ -57,12 +57,16 @@ extends Button {
     private final Animation pickerCursorYAnimation = new Animation();
     private final Animation hueCursorAnimation = new Animation();
     private final Animation alphaCursorAnimation = new Animation();
+    private final Animation toggleAnimation = new Animation();
     private boolean indicatorsInitialized;
     float[] hsb = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
 
     public PickerButton(ColorSetting setting) {
         super(setting.getName());
         this.setting = setting;
+        double initial = this.getState() ? 1.0 : 0.0;
+        this.toggleAnimation.from = initial;
+        this.toggleAnimation.to = initial;
     }
 
     public static boolean mouseOver(int minX, int minY, int maxX, int maxY, int mX, int mY) {
@@ -198,8 +202,14 @@ extends Button {
     @Override
     public void drawScreen(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         matrixStack = context.getMatrices();
+        boolean hovered = this.isHovering(mouseX, mouseY);
+        double toggleProgress = this.toggleAnimation.get(this.getState() ? 1.0 : 0.0, 160L, Easing.CubicInOut);
         Color color = ClickGui.getInstance().getColor(this.getColorDelay());
-        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, this.getState() ? (!this.isHovering(mouseX, mouseY) ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!this.isHovering(mouseX, mouseY) ? defaultColor : hoverColor));
+        int accentA = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
+        Color unpressedFill = new Color(hovered ? hoverColor : defaultColor, true);
+        Color pressedFill = new Color(color.getRed(), color.getGreen(), color.getBlue(), accentA);
+        Color baseFill = ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress);
+        Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width + 7.0f, this.y + (float)this.height - 0.5f, baseFill.getRGB());
         Render2DUtil.rect(matrixStack, this.x - 1.5f + (float)this.width + 0.6f - 0.5f, this.y + 4.0f, this.x + (float)this.width + 7.0f - 2.5f, this.y + (float)this.height - 5.0f, ColorUtil.injectAlpha(this.setting.getValue(), 255).getRGB());
         float textY = this.getCenteredTextY(this.y, (float)this.height - 0.5f);
         if (this.isHovering(mouseX, mouseY) && InputUtil.isKeyPressed((long)mc.getWindow().getHandle(), (int)340)) {
