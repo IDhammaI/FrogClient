@@ -68,7 +68,7 @@ public class FakePlayer
 extends Module {
     public static FakePlayer INSTANCE;
     public static FakePlayerEntity fakePlayer;
-    final StringSetting name = this.add(new StringSetting("Name", "FakePlayer"));
+    final StringSetting name = this.add(new StringSetting("Name", "IDhammaI"));
     private final BooleanSetting damage = this.add(new BooleanSetting("Damage", true));
     private final BooleanSetting autoTotem = this.add(new BooleanSetting("AutoTotem", true));
     public final BooleanSetting record = this.add(new BooleanSetting("Record", false));
