@@ -94,8 +94,8 @@ extends Module {
     public final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50, () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Pulse));
     public final ColorSetting activeColor = this.add(new ColorSetting("ActiveColor", new Color(0, 120, 212), () -> this.colors.isOpen() && this.colorMode.getValue() == ColorMode.Custom));
     public final ColorSetting hoverColor = this.add(new ColorSetting("HoverColor", new Color(50, 50, 50, 200), this.colors::isOpen));
-    public final ColorSetting backgroudColor = this.add(new ColorSetting("BackgroudColor", new Color(30, 30, 30, 236), this.colors::isOpen));
-    public final ColorSetting textColor = this.add(new ColorSetting("TextColor", new Color(220, 220, 220), this.colors::isOpen));
+    public final ColorSetting defaultColor = this.add(new ColorSetting("DefaultColor", new Color(30, 30, 30, 236), this.colors::isOpen));
+    public final ColorSetting defaultTextColor = this.add(new ColorSetting("DefaultTextColor", new Color(220, 220, 220), this.colors::isOpen));
     public final ColorSetting enableTextColor = this.add(new ColorSetting("EnableTextColor", new Color(255, 255, 255), this.colors::isOpen));
     public final ColorSetting backGround = this.add(new ColorSetting("BackGround", new Color(30, 30, 30, 236), this.colors::isOpen).injectBoolean(true));
     public final ColorSetting tint = this.add(new ColorSetting("Tint", new Color(255, 0, 0, 80)).defaultRainbow(true).injectBoolean(true));
@@ -258,8 +258,8 @@ extends Module {
 
     public void updateColor() {
         Button.hoverColor = this.hoverColor.getValue().getRGB();
-        Button.defaultTextColor = this.textColor.getValue().getRGB();
-        Button.defaultColor = this.backgroudColor.getValue().getRGB();
+        Button.defaultTextColor = this.defaultTextColor.getValue().getRGB();
+        Button.defaultColor = this.defaultColor.getValue().getRGB();
         Button.enableTextColor = this.enableTextColor.getValue().getRGB();
     }
 
@@ -303,8 +303,8 @@ extends Module {
     public void updateStyle() {
         this.color.setValue(new Color(0, 120, 212));
         this.hoverColor.setValue(new Color(50, 50, 50, 200));
-        this.backgroudColor.setValue(new Color(30, 30, 30, 236));
-        this.textColor.setValue(new Color(220, 220, 220));
+        this.defaultColor.setValue(new Color(30, 30, 30, 236));
+        this.defaultTextColor.setValue(new Color(220, 220, 220));
         this.enableTextColor.setValue(new Color(255, 255, 255));
         this.backGround.setValue(new Color(30, 30, 30, 236));
         this.tint.setValue(new Color(0, 120, 212, 36));

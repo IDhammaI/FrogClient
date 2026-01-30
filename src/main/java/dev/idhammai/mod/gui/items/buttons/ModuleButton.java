@@ -90,7 +90,7 @@ extends Button {
         double hoverProgress = this.hoverAnimation.get(hovered ? 1.0 : 0.0, 100L, Easing.CubicInOut);
         double toggleProgress = this.toggleAnimation.get(pressed ? 1.0 : 0.0, 160L, Easing.CubicInOut);
         Color accent = ClickGui.getInstance().getActiveColor(this.getColorDelay());
-        Color defaultColor = ClickGui.getInstance().backgroudColor.getValue();
+        Color defaultColor = ClickGui.getInstance().defaultColor.getValue();
         Color hoverColor = ClickGui.getInstance().hoverColor.getValue();
         Color idleFill = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), defaultColor.getAlpha());
         int baseA = ClickGui.getInstance().alpha.getValueInt();
