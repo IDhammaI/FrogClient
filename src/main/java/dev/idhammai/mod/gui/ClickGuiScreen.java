@@ -361,7 +361,11 @@ extends Screen {
                 this.snowflakes.set(i, this.spawnSnowflake(w, h, false));
                 continue;
             }
-            this.drawSnowflake(context.getMatrices(), f.x, f.y, size, c.getRGB(), f.phase + f.y * 0.01f);
+            if (gui.snowShape.getValue() == ClickGui.SnowShape.Circle) {
+                Render2DUtil.drawCircle(context.getMatrices(), f.x, f.y, size, c, 16);
+            } else {
+                this.drawSnowflake(context.getMatrices(), f.x, f.y, size, c.getRGB(), f.phase + f.y * 0.01f);
+            }
         }
     }
 

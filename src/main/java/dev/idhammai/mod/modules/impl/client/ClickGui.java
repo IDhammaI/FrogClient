@@ -72,7 +72,8 @@ extends Module {
     public final BooleanSetting blur = this.add(new BooleanSetting("Blur", true).setParent());
     public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
     public final SliderSetting radius = this.add(new SliderSetting("Radius", 5.0, 0.0, 100.0, this.blur::isOpen));
-    public final BooleanSetting snow = this.add(new BooleanSetting("Snow", false).setParent());
+    public final BooleanSetting snow = this.add(new BooleanSetting("Snow", true).setParent());
+    public final EnumSetting<SnowShape> snowShape = this.add(new EnumSetting<SnowShape>("SnowShape", SnowShape.Snowflake, this.snow::isOpen));
     public final SliderSetting snowAmount = this.add(new SliderSetting("SnowAmount", 120, 0, 600, this.snow::isOpen));
     public final SliderSetting snowSpeed = this.add(new SliderSetting("SnowSpeed", 38.0, 1.0, 160.0, 1.0, this.snow::isOpen));
     public final SliderSetting snowSize = this.add(new SliderSetting("SnowSize", 1.8, 0.5, 5.0, 0.1, this.snow::isOpen));
@@ -328,6 +329,11 @@ extends Module {
         PlusMinus,
         Chevron,
         Gear
+    }
+
+    public enum SnowShape {
+        Snowflake,
+        Circle
     }
 
     public enum BlurType {
