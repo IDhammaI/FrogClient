@@ -99,6 +99,7 @@ extends Module {
     private final Animation animation = new Animation();
     public static String key;
     private boolean styleApplied = false;
+    private int lastCategoryWidth = -1;
 
     public ClickGui() {
         super("ClickGui", Module.Category.Client);
@@ -124,6 +125,8 @@ extends Module {
     private void applyHeights() {
         java.util.ArrayList<Component> components = ClickGuiScreen.getInstance().getComponents();
         int categoryWidth = this.categoryWidth.getValueInt();
+        boolean widthChanged = this.lastCategoryWidth != categoryWidth;
+        this.lastCategoryWidth = categoryWidth;
         int spacing = categoryWidth + 1;
         int count = components.size();
         int startX = 10;
@@ -145,13 +148,14 @@ extends Module {
             }
             expectedX += spacing;
         }
+        boolean forceRecenter = widthChanged && mc != null && mc.currentScreen instanceof ClickGuiScreen;
         int componentHeight = this.categoryBarHeight.getValueInt() + 5;
         int x = startX;
         for (int i = 0; i < components.size(); ++i) {
             Component component = components.get(i);
             component.setWidth(categoryWidth);
             component.setHeight(componentHeight);
-            if (defaultLayout) {
+            if (defaultLayout || forceRecenter) {
                 component.setX(x);
                 component.setY(startY);
                 x += spacing;
