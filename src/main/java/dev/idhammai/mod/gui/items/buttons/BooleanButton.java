@@ -40,11 +40,15 @@ extends Button {
         float w = (float)this.width + 7.0f;
         float h = (float)this.height - 0.5f;
         if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
-            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, w, h, 2.0f, yy -> {
-                Color accent = ClickGui.getInstance().getColor((double)yy * 0.25);
-                Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
-                return ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress).getRGB();
-            });
+            if (toggleProgress >= 0.999) {
+                Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, w, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), accentA);
+            } else {
+                Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + w, this.y + h, unpressedFill.getRGB());
+                int overlayA = (int)Math.round((double)accentA * toggleProgress);
+                if (overlayA > 0) {
+                    Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, w, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), overlayA);
+                }
+            }
         } else {
             Color accent = ClickGui.getInstance().getColor(baseDelay);
             Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);

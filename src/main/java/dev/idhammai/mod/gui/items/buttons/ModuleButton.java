@@ -101,11 +101,15 @@ extends Button {
         float h = (float)this.height - 0.5f;
         float radius = Math.min(10.0f, Math.min(this.width, h) / 2.0f);
         if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
-            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, (float)this.width, h, 2.0f, yy -> {
-                Color accent = ClickGui.getInstance().getActiveColor((double)yy * 0.25);
-                Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
-                return ColorUtil.fadeColor(unpressedFill, pressedFill, toggleProgress).getRGB();
-            });
+            if (toggleProgress >= 0.999) {
+                Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, (float)this.width, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), accentA);
+            } else {
+                Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width, h, unpressedFill);
+                int overlayA = (int)Math.round((double)accentA * toggleProgress);
+                if (overlayA > 0) {
+                    Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, (float)this.width, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), overlayA);
+                }
+            }
         } else {
             Color accent = ClickGui.getInstance().getActiveColor(baseDelay);
             Color pressedFill = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), accentA);
@@ -164,16 +168,22 @@ extends Button {
                 float yTop = this.y + (float)this.height - 0.5f;
                 float yBottom = (float)((double)(this.y + (float)this.height) + visibleItemHeight - 0.5);
                 float yBottomLine = (float)((double)(this.y + (float)this.height) + visibleItemHeight - (double)0.7f);
-                float segment = 2.0f;
                 double delayPerPixel = 0.25;
                 float leftX = this.x + 0.6f;
                 float rightX = this.x + (float)this.width - 0.6f;
                 int alpha = Math.min(160, ClickGui.getInstance().topAlpha.getValueInt());
-                for (float yy = yTop; yy < yBottom; yy += segment) {
-                    float yy2 = Math.min(yy + segment, yBottom);
-                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
-                    Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
-                    Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
+                if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+                    float lineW = 1.0f;
+                    Render2DUtil.drawLutRect(context.getMatrices(), leftX, yTop, lineW, yBottom - yTop, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), alpha);
+                    Render2DUtil.drawLutRect(context.getMatrices(), rightX - lineW, yTop, lineW, yBottom - yTop, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), alpha);
+                } else {
+                    float segment = 2.0f;
+                    for (float yy = yTop; yy < yBottom; yy += segment) {
+                        float yy2 = Math.min(yy + segment, yBottom);
+                        int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
+                        Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
+                        Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
+                    }
                 }
                 int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yBottom * delayPerPixel).getRGB(), alpha);
                 Render2DUtil.drawLine(context.getMatrices(), leftX, yBottom, rightX, yBottomLine, bottomColor);

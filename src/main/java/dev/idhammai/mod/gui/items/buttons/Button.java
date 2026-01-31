@@ -36,7 +36,7 @@ extends Item {
             int a = hovered ? ClickGui.getInstance().hoverAlpha.getValueInt() : ClickGui.getInstance().alpha.getValueInt();
             double baseDelay = this.getColorDelay();
             if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
-                Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, (float)this.width, h, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getActiveColor((double)yy * 0.25), a).getRGB());
+                Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, (float)this.width, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), a);
             } else {
                 Color color = ClickGui.getInstance().getActiveColor(baseDelay);
                 Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + (float)this.width, this.y + (float)this.height - 0.5f, ColorUtil.injectAlpha(color, a).getRGB());

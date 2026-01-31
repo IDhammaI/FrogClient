@@ -112,7 +112,7 @@ extends Mod {
         double headerBaseDelay = this.getColorDelay();
         int topAlpha = ClickGui.getInstance().topAlpha.getValueInt();
         if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
-            Render2DUtil.drawSegmentedRect(context.getMatrices(), headerX, headerY, headerW, headerH, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * 0.25), topAlpha).getRGB());
+            Render2DUtil.drawLutRect(context.getMatrices(), headerX, headerY, headerW, headerH, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), topAlpha);
         } else {
             Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(headerBaseDelay), topAlpha);
             Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
@@ -126,16 +126,22 @@ extends Mod {
             if (ClickGui.getInstance().line.getValue()) {
                 float yTop = (float)y + (float)this.height - 5.0f;
                 float yBottom = (float)(y + this.height) + totalItemHeight;
-                float segment = 2.0f;
                 double delayPerPixel = 0.25;
                 float leftX = (float)x + 0.2f;
                 float rightX = (float)(x + this.width);
                 int alpha = ClickGui.getInstance().topAlpha.getValueInt();
-                for (float yy = yTop; yy < yBottom; yy += segment) {
-                    float yy2 = Math.min(yy + segment, yBottom);
-                    int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
-                    Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
-                    Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
+                if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+                    float lineW = 1.0f;
+                    Render2DUtil.drawLutRect(context.getMatrices(), leftX, yTop, lineW, yBottom - yTop, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), alpha);
+                    Render2DUtil.drawLutRect(context.getMatrices(), rightX - lineW, yTop, lineW, yBottom - yTop, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), alpha);
+                } else {
+                    float segment = 2.0f;
+                    for (float yy = yTop; yy < yBottom; yy += segment) {
+                        float yy2 = Math.min(yy + segment, yBottom);
+                        int c = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * delayPerPixel).getRGB(), alpha);
+                        Render2DUtil.drawLine(context.getMatrices(), leftX, yy2, leftX, yy, c);
+                        Render2DUtil.drawLine(context.getMatrices(), rightX, yy2, rightX, yy, c);
+                    }
                 }
                 int bottomColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yBottom * delayPerPixel).getRGB(), alpha);
                 Render2DUtil.drawLine(context.getMatrices(), x, yBottom, x + this.width, yBottom, bottomColor);

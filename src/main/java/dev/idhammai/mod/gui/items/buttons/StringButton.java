@@ -62,7 +62,7 @@ extends Button {
         float h = (float)this.height - 0.5f;
         if (ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum && this.getState()) {
             int a = !hovered ? ClickGui.getInstance().alpha.getValueInt() : ClickGui.getInstance().hoverAlpha.getValueInt();
-            Render2DUtil.drawSegmentedRect(context.getMatrices(), this.x, this.y, w, h, 2.0f, yy -> ColorUtil.injectAlpha(ClickGui.getInstance().getColor((double)yy * 0.25), a).getRGB());
+            Render2DUtil.drawLutRect(context.getMatrices(), this.x, this.y, w, h, ClickGui.getInstance().getSpectrumLutId(), ClickGui.getInstance().getSpectrumLutHeight(), a);
         } else {
             Color color = ClickGui.getInstance().getColor(baseDelay);
             Render2DUtil.rect(context.getMatrices(), this.x, this.y, this.x + w, this.y + (float)this.height - 0.5f, this.getState() ? (!hovered ? ColorUtil.injectAlpha(color, ClickGui.getInstance().alpha.getValueInt()).getRGB() : ColorUtil.injectAlpha(color, ClickGui.getInstance().hoverAlpha.getValueInt()).getRGB()) : (!hovered ? defaultColor : hoverColor));

@@ -107,6 +107,10 @@ extends Screen {
         RenderSystem.setShaderColor((float)1.0f, (float)1.0f, (float)1.0f, (float)keyCodec);
         Item.context = context;
         this.renderBackground(context, mouseX, mouseY, delta);
+        ClickGui clickGui = ClickGui.getInstance();
+        if (clickGui != null && clickGui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            clickGui.updateSpectrumLut(context.getScaledWindowHeight());
+        }
         if (!this.layoutCorrected && Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
             int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
             int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
@@ -255,20 +259,24 @@ extends Screen {
         String tip2 = chinese ? "滚轮是上下移动 SHIFT+滚轮是左右移动" : "Scroll up/down, SHIFT+scroll left/right";
         String tip3 = chinese ? "SHIFT+左键 快捷键按钮 切换功能(按住/松开)触发" : "SHIFT+LMB: toggle hold/release";
         String tip4 = chinese ? "SHIFT+左键 功能按钮 重置设置" : "SHIFT+LMB: reset this setting";
-        double delay1 = (double)tipY / 10.0;
+        boolean spectrumTips = ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum;
+        double delay1 = spectrumTips ? (double)tipY * 0.25 : (double)tipY / 10.0;
         Color c1 = ClickGui.getInstance().getActiveColor(delay1);
         int color1 = ColorUtil.injectAlpha(c1, alpha).getRGB();
         TextUtil.drawString(context, tip1, tipX, tipY, color1, customFont, shadow);
         int tipY2 = (int)((float)tipY + lineHeight);
-        Color c2 = ClickGui.getInstance().getActiveColor((double)tipY2 / 10.0);
+        double delay2 = spectrumTips ? (double)tipY2 * 0.25 : (double)tipY2 / 10.0;
+        Color c2 = ClickGui.getInstance().getActiveColor(delay2);
         int color2 = ColorUtil.injectAlpha(c2, alpha).getRGB();
         TextUtil.drawString(context, tip2, tipX, tipY2, color2, customFont, shadow);
         int tipY3 = (int)((float)tipY + lineHeight * 2.0f);
-        Color c3 = ClickGui.getInstance().getActiveColor((double)tipY3 / 10.0);
+        double delay3 = spectrumTips ? (double)tipY3 * 0.25 : (double)tipY3 / 10.0;
+        Color c3 = ClickGui.getInstance().getActiveColor(delay3);
         int color3 = ColorUtil.injectAlpha(c3, alpha).getRGB();
         TextUtil.drawString(context, tip3, tipX, tipY3, color3, customFont, shadow);
         int tipY4 = (int)((float)tipY + lineHeight * 3.0f);
-        Color c4 = ClickGui.getInstance().getActiveColor((double)tipY4 / 10.0);
+        double delay4 = spectrumTips ? (double)tipY4 * 0.25 : (double)tipY4 / 10.0;
+        Color c4 = ClickGui.getInstance().getActiveColor(delay4);
         int color4 = ColorUtil.injectAlpha(c4, alpha).getRGB();
         TextUtil.drawString(context, tip4, tipX, tipY4, color4, customFont, shadow);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);

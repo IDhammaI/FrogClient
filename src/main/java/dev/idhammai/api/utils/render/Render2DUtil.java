@@ -30,6 +30,7 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 
 public class Render2DUtil
@@ -189,6 +190,36 @@ implements Wrapper {
             int c = colorAtY.apply((double)yy);
             Render2DUtil.drawRect(matrices, x, yy, width, yy2 - yy, c);
         }
+    }
+
+    public static void drawLutRect(MatrixStack matrices, float x, float y, float width, float height, Identifier texture, int lutHeight, int alpha) {
+        if (width == 0.0f || height == 0.0f || lutHeight <= 0) {
+            return;
+        }
+        float x1 = x;
+        float x2 = x + width;
+        float y1 = y;
+        float y2 = y + height;
+        float left = Math.min(x1, x2);
+        float right = Math.max(x1, x2);
+        float top = Math.min(y1, y2);
+        float bottom = Math.max(y1, y2);
+        float denom = (float)Math.max(1, lutHeight - 1);
+        float vTop = Math.max(0.0f, Math.min(1.0f, top / denom));
+        float vBottom = Math.max(0.0f, Math.min(1.0f, bottom / denom));
+        float a = (float)Math.max(0, Math.min(255, alpha)) / 255.0f;
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShaderTexture(0, texture);
+        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        float u = 0.5f;
+        bufferBuilder.vertex(matrix, left, bottom, 0.0f).texture(u, vBottom).color(1.0f, 1.0f, 1.0f, a);
+        bufferBuilder.vertex(matrix, right, bottom, 0.0f).texture(u, vBottom).color(1.0f, 1.0f, 1.0f, a);
+        bufferBuilder.vertex(matrix, right, top, 0.0f).texture(u, vTop).color(1.0f, 1.0f, 1.0f, a);
+        bufferBuilder.vertex(matrix, left, top, 0.0f).texture(u, vTop).color(1.0f, 1.0f, 1.0f, a);
+        BufferRenderer.drawWithGlobalProgram((BuiltBuffer)bufferBuilder.end());
+        RenderSystem.disableBlend();
     }
 
     public static boolean isHovered(double mouseX, double mouseY, double x, double y, double width, double height) {

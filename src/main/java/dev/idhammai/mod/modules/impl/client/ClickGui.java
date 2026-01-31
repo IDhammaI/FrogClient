@@ -31,11 +31,16 @@ import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 import java.awt.Color;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 
 public class ClickGui
 extends Module {
@@ -105,6 +110,10 @@ extends Module {
     public static String key;
     private boolean styleApplied = false;
     private int lastLayoutWidth = -1;
+    private static final Identifier SPECTRUM_LUT_ID = Identifier.of((String)"frogclient", (String)"clickgui_spectrum_lut");
+    private NativeImage spectrumLutImage;
+    private NativeImageBackedTexture spectrumLutTexture;
+    private int spectrumLutHeight = -1;
 
     public ClickGui() {
         super("ClickGui", Module.Category.Client);
@@ -235,6 +244,15 @@ extends Module {
         if (this.guiSound.getValue() && mc.getSoundManager() != null) {
             mc.getSoundManager().play((SoundInstance)PositionedSoundInstance.master((RegistryEntry)SoundEvents.UI_BUTTON_CLICK, (float)this.soundPitch.getValueFloat()));
         }
+        if (mc != null && this.spectrumLutTexture != null) {
+            mc.getTextureManager().destroyTexture(SPECTRUM_LUT_ID);
+            this.spectrumLutTexture = null;
+        }
+        if (this.spectrumLutImage != null) {
+            this.spectrumLutImage.close();
+            this.spectrumLutImage = null;
+        }
+        this.spectrumLutHeight = -1;
     }
 
     @EventListener
@@ -261,6 +279,76 @@ extends Module {
         Button.defaultTextColor = this.defaultTextColor.getValue().getRGB();
         Button.defaultColor = this.defaultColor.getValue().getRGB();
         Button.enableTextColor = this.enableTextColor.getValue().getRGB();
+    }
+
+    public Identifier getSpectrumLutId() {
+        return SPECTRUM_LUT_ID;
+    }
+
+    public int getSpectrumLutHeight() {
+        return this.spectrumLutHeight;
+    }
+
+    public void updateSpectrumLut(int scaledHeight) {
+        if (scaledHeight <= 0 || mc == null) {
+            return;
+        }
+        if (this.spectrumLutTexture == null || this.spectrumLutImage == null || this.spectrumLutHeight != scaledHeight) {
+            this.recreateSpectrumLut(scaledHeight);
+        }
+        if (this.spectrumLutTexture == null || this.spectrumLutImage == null || this.spectrumLutHeight <= 0) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        double speed = this.rainbowSpeed.getValue();
+        double delayMul = this.rainbowDelay.getValue();
+        float sat = this.saturation.getValueFloat() / 255.0f;
+        int h = this.spectrumLutHeight;
+        for (int y = 0; y < h; ++y) {
+            double delay = (double)y * 0.25;
+            double rainbowState = Math.ceil(((double)now * speed + delay * delayMul) / 20.0);
+            int argb = Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), sat, 1.0f).getRGB();
+            this.spectrumLutImage.setColor(0, y, ClickGui.argbToAbgr(argb));
+        }
+        if (RenderSystem.isOnRenderThread()) {
+            this.spectrumLutTexture.upload();
+        } else {
+            RenderSystem.recordRenderCall(() -> this.spectrumLutTexture.upload());
+        }
+    }
+
+    private void recreateSpectrumLut(int scaledHeight) {
+        if (mc == null) {
+            return;
+        }
+        if (this.spectrumLutTexture != null) {
+            mc.getTextureManager().destroyTexture(SPECTRUM_LUT_ID);
+            this.spectrumLutTexture = null;
+        }
+        if (this.spectrumLutImage != null) {
+            this.spectrumLutImage.close();
+            this.spectrumLutImage = null;
+        }
+        this.spectrumLutHeight = scaledHeight;
+        this.spectrumLutImage = new NativeImage(NativeImage.Format.RGBA, 1, scaledHeight, false);
+        this.spectrumLutTexture = new NativeImageBackedTexture(this.spectrumLutImage);
+        if (RenderSystem.isOnRenderThread()) {
+            this.spectrumLutTexture.upload();
+            mc.getTextureManager().registerTexture(SPECTRUM_LUT_ID, (AbstractTexture)this.spectrumLutTexture);
+        } else {
+            RenderSystem.recordRenderCall(() -> {
+                this.spectrumLutTexture.upload();
+                mc.getTextureManager().registerTexture(SPECTRUM_LUT_ID, (AbstractTexture)this.spectrumLutTexture);
+            });
+        }
+    }
+
+    private static int argbToAbgr(int argb) {
+        int a = argb >> 24 & 0xFF;
+        int r = argb >> 16 & 0xFF;
+        int g = argb >> 8 & 0xFF;
+        int b = argb & 0xFF;
+        return a << 24 | b << 16 | g << 8 | r;
     }
 
     public Color getColor() {
