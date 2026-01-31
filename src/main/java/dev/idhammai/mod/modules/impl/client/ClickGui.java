@@ -89,6 +89,7 @@ extends Module {
     public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
     public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
+    public final BooleanSetting recenterLayoutButton = this.add(new BooleanSetting("RecenterLayout", false, this.elements::isOpen).injectTask(this::recenterLayoutCodec));
     public final BooleanSetting colors = this.add(new BooleanSetting("Colors", false).setParent().injectTask(this::elementCodec));
     public final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Custom, this.colors::isOpen));
     public final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.colors.isOpen() && (this.colorMode.getValue() == ColorMode.Rainbow || this.colorMode.getValue() == ColorMode.Spectrum)));
@@ -135,6 +136,11 @@ extends Module {
     public void elementCodec() {
         this.colors.setValueWithoutTask(false);
         this.colors.setOpen(!this.colors.isOpen());
+    }
+
+    public void recenterLayoutCodec() {
+        this.recenterLayoutButton.setValueWithoutTask(false);
+        this.recenterLayout();
     }
 
     private void applyHeights() {
@@ -437,7 +443,7 @@ extends Module {
             this.tint.rainbow = false;
             this.tint.setValue(new Color(0, 120, 212, 36));
             this.endColor.rainbow = false;
-            this.endColor.setValue(new Color(0, 120, 212, 18));
+            this.endColor.setValue(new Color(0, 0, 255, 50));
             this.secondColor.booleanValue = false;
             this.updateBackgroundStyle();
             return;
@@ -455,6 +461,7 @@ extends Module {
             this.tint.booleanValue = true;
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
+            this.endColor.setValue(new Color(255, 255, 255, 50));
             this.secondColor.booleanValue = false;
             this.updateBackgroundStyle();
             return;
@@ -467,6 +474,7 @@ extends Module {
             this.tint.booleanValue = true;
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
+            this.endColor.setValue(new Color(255, 255, 255, 50));
             this.secondColor.booleanValue = false;
             this.updateBackgroundStyle();
             return;
@@ -480,6 +488,7 @@ extends Module {
             this.tint.booleanValue = true;
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
+            this.endColor.setValue(new Color(255, 255, 255, 50));
             this.secondColor.booleanValue = false;
             this.updateBackgroundStyle();
             return;
