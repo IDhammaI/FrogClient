@@ -21,12 +21,16 @@ import dev.idhammai.Frog;
 import dev.idhammai.api.events.eventbus.EventListener;
 import dev.idhammai.api.events.impl.EntitySpawnedEvent;
 import dev.idhammai.api.utils.math.MathUtil;
+import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.Render3DUtil;
+import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.api.utils.world.BlockUtil;
 import dev.idhammai.asm.accessors.IEntity;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
+import dev.idhammai.mod.modules.settings.impl.EnumSetting;
+import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,18 +39,31 @@ import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.EndPortalBlockEntity;
 import net.minecraft.block.entity.EnderChestBlockEntity;
 import net.minecraft.block.entity.ShulkerBoxBlockEntity;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 public class ESP
 extends Module {
     public static ESP INSTANCE;
+    public final EnumSetting<RenderMode> mode = this.add(new EnumSetting<RenderMode>("Mode", RenderMode.ThreeD));
+    private final BooleanSetting twoDOutline = this.add(new BooleanSetting("2DOutline", true, () -> this.mode.getValue() == RenderMode.TwoD));
+    private final BooleanSetting twoDHealth = this.add(new BooleanSetting("2DHealth", true, () -> this.mode.getValue() == RenderMode.TwoD));
+    private final ColorSetting hHealth = this.add(new ColorSetting("HighHealth", new Color(0, 255, 0, 255), () -> this.mode.getValue() == RenderMode.TwoD));
+    private final ColorSetting mHealth = this.add(new ColorSetting("MidHealth", new Color(255, 255, 0, 255), () -> this.mode.getValue() == RenderMode.TwoD));
+    private final ColorSetting lHealth = this.add(new ColorSetting("LowHealth", new Color(255, 0, 0, 255), () -> this.mode.getValue() == RenderMode.TwoD));
+    private final BooleanSetting twoDArmorDura = this.add(new BooleanSetting("2DArmorDura", true, () -> this.mode.getValue() == RenderMode.TwoD));
+    private final ColorSetting armorDuraColor = this.add(new ColorSetting("ArmorDuraColor", new Color(0x2FFF00), () -> this.mode.getValue() == RenderMode.TwoD && this.twoDArmorDura.getValue()));
+    private final SliderSetting duraScale = this.add(new SliderSetting("DuraScale", 1.0, 0.0, 2.0, 0.1, () -> this.mode.getValue() == RenderMode.TwoD && this.twoDArmorDura.getValue()));
     public final BooleanSetting box = this.add(new BooleanSetting("BoxESP", true).setParent());
+    public final BooleanSetting self = this.add(new BooleanSetting("Self", false, this.box::isOpen));
     private final ColorSetting endPortalFill = this.add(new ColorSetting("EndPortalFill", new Color(255, 243, 129, 100), this.box::isOpen).injectBoolean(false));
     private final ColorSetting endPortalOutline = this.add(new ColorSetting("EndPortalOutline", new Color(255, 243, 129, 100), this.box::isOpen).injectBoolean(false));
     private final ColorSetting itemFill = this.add(new ColorSetting("ItemFill", new Color(255, 255, 255, 100), this.box::isOpen).injectBoolean(true));
@@ -73,6 +90,9 @@ extends Module {
 
     @Override
     public void onRender3D(MatrixStack matrixStack) {
+        if (this.mode.getValue() == RenderMode.TwoD) {
+            return;
+        }
         if (this.item.getValue()) {
             for (Entity entity : Frog.THREAD.getEntities()) {
                 if (!(entity instanceof ItemEntity)) continue;
@@ -92,6 +112,7 @@ extends Module {
                         Render3DUtil.draw3DBox(matrixStack, ((IEntity)entity).getDimensions().getBoxAt(new Vec3d(MathUtil.interpolate(entity.lastRenderX, entity.getX(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(entity.lastRenderY, entity.getY(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(entity.lastRenderZ, entity.getZ(), (double)mc.getRenderTickCounter().getTickDelta(true)))), color, this.itemOutline.getValue(), this.itemOutline.booleanValue, this.itemFill.booleanValue);
                         continue;
                     }
+                    if (entity == ESP.mc.player && (!this.self.getValue() || ESP.mc.options.getPerspective().isFirstPerson())) continue;
                     if (!(entity instanceof PlayerEntity) || !this.playerFill.booleanValue && !this.playerOutline.booleanValue) continue;
                     color = this.playerFill.getValue();
                     Render3DUtil.draw3DBox(matrixStack, ((IEntity)entity).getDimensions().getBoxAt(new Vec3d(MathUtil.interpolate(entity.lastRenderX, entity.getX(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(entity.lastRenderY, entity.getY(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(entity.lastRenderZ, entity.getZ(), (double)mc.getRenderTickCounter().getTickDelta(true)))).expand(0.0, 0.1, 0.0), color, this.playerOutline.getValue(), this.playerOutline.booleanValue, this.playerFill.booleanValue);
@@ -120,6 +141,159 @@ extends Module {
                 Render3DUtil.draw3DBox(matrixStack, box, this.endPortalFill.getValue(), this.endPortalOutline.getValue(), this.endPortalOutline.booleanValue, this.endPortalFill.booleanValue);
             }
         }
+    }
+
+    @Override
+    public void onRender2D(DrawContext drawContext, float tickDelta) {
+        if (this.mode.getValue() != RenderMode.TwoD) {
+            return;
+        }
+        if (ESP.nullCheck()) {
+            return;
+        }
+        if (this.box.getValue()) {
+            for (Entity entity : Frog.THREAD.getEntities()) {
+                if (entity instanceof ItemEntity) {
+                    if (this.itemOutline.booleanValue || this.itemFill.booleanValue) {
+                        this.draw2DForEntity(drawContext.getMatrices(), entity, this.itemOutline.getValue(), tickDelta, false);
+                    }
+                    continue;
+                }
+                if (entity == ESP.mc.player && (!this.self.getValue() || ESP.mc.options.getPerspective().isFirstPerson())) continue;
+                if (!(entity instanceof PlayerEntity) || !this.playerOutline.booleanValue && !this.playerFill.booleanValue) continue;
+                this.draw2DForEntity(drawContext.getMatrices(), entity, this.playerOutline.getValue(), tickDelta, true);
+            }
+        }
+        if (this.item.getValue()) {
+            for (Entity entity : Frog.THREAD.getEntities()) {
+                if (!(entity instanceof ItemEntity)) continue;
+                this.draw2DItemText(drawContext, (ItemEntity)entity, tickDelta);
+            }
+        }
+    }
+
+    private void draw2DForEntity(MatrixStack matrices, Entity entity, Color color, float tickDelta, boolean isPlayer) {
+        double[] box = this.getEntity2DBox(entity, tickDelta);
+        if (box == null) {
+            return;
+        }
+        float minX = (float)box[0];
+        float minY = (float)box[1];
+        float maxX = (float)box[2];
+        float maxY = (float)box[3];
+        if (maxX - minX <= 0.0f || maxY - minY <= 0.0f) {
+            return;
+        }
+        this.draw2DBox(matrices, minX, minY, maxX, maxY, color);
+        if (this.twoDHealth.getValue() && entity instanceof LivingEntity) {
+            LivingEntity living = (LivingEntity)entity;
+            if (living.getMaxHealth() > 0.0f && living.getHealth() > 0.0f) {
+                this.draw2DHealthBar(matrices, minX, minY, maxY, living);
+            }
+        }
+        if (isPlayer && this.twoDArmorDura.getValue() && entity instanceof PlayerEntity) {
+            this.draw2DArmorDura(matrices, maxX, minY, maxY, (PlayerEntity)entity);
+        }
+    }
+
+    private void draw2DBox(MatrixStack matrices, float posX, float posY, float endPosX, float endPosY, Color col) {
+        if (this.twoDOutline.getValue()) {
+            Render2DUtil.drawRect(matrices, posX - 1.0f, posY, 1.5f, endPosY - posY + 0.5f, Color.BLACK);
+            Render2DUtil.drawRect(matrices, posX - 1.0f, posY - 0.5f, endPosX - posX + 1.5f, 1.5f, Color.BLACK);
+            Render2DUtil.drawRect(matrices, endPosX - 1.0f, posY, 1.5f, endPosY - posY + 0.5f, Color.BLACK);
+            Render2DUtil.drawRect(matrices, posX - 1.0f, endPosY - 1.0f, endPosX - posX + 1.5f, 1.5f, Color.BLACK);
+        }
+        Render2DUtil.drawRect(matrices, posX - 0.5f, posY, 0.5f, endPosY - posY, col);
+        Render2DUtil.drawRect(matrices, posX, endPosY - 0.5f, endPosX - posX, 0.5f, col);
+        Render2DUtil.drawRect(matrices, posX - 0.5f, posY, endPosX - posX + 0.5f, 0.5f, col);
+        Render2DUtil.drawRect(matrices, endPosX - 0.5f, posY, 0.5f, endPosY - posY, col);
+    }
+
+    private void draw2DHealthBar(MatrixStack matrices, float minX, float minY, float maxY, LivingEntity living) {
+        float height = maxY - minY;
+        float health = living.getHealth();
+        float maxHealth = living.getMaxHealth();
+        float ratio = Math.max(0.0f, Math.min(1.0f, health / maxHealth));
+        Render2DUtil.drawRect(matrices, minX - 4.0f, minY, 1.0f, height, Color.BLACK);
+        Render2DUtil.drawRect(matrices, minX - 4.0f, maxY - height * ratio, 1.0f, height * ratio, this.getHealthColor(health));
+    }
+
+    private Color getHealthColor(float health) {
+        if (health >= 20.0f) {
+            return this.hHealth.getValue();
+        }
+        if (health > 10.0f) {
+            return this.mHealth.getValue();
+        }
+        return this.lHealth.getValue();
+    }
+
+    private void draw2DArmorDura(MatrixStack matrices, float maxX, float minY, float maxY, PlayerEntity player) {
+        float height = maxY - minY;
+        float piece = height / 4.0f;
+        ArrayList<ItemStack> stacks = new ArrayList<ItemStack>();
+        stacks.add((ItemStack)player.getInventory().armor.get(3));
+        stacks.add((ItemStack)player.getInventory().armor.get(2));
+        stacks.add((ItemStack)player.getInventory().armor.get(1));
+        stacks.add((ItemStack)player.getInventory().armor.get(0));
+        for (int i = 0; i < stacks.size(); ++i) {
+            ItemStack armor = stacks.get(i);
+            if (armor.isEmpty() || armor.getMaxDamage() <= 0) continue;
+            float ratio = (float)(armor.getMaxDamage() - armor.getDamage()) / (float)armor.getMaxDamage();
+            ratio = Math.max(0.0f, Math.min(1.0f, ratio));
+            float segmentTop = minY + piece * (float)i;
+            float segmentBottom = segmentTop + piece;
+            float filled = piece * ratio * this.duraScale.getValueFloat();
+            filled = Math.min(piece, filled);
+            Render2DUtil.drawRect(matrices, maxX + 1.5f, segmentBottom - filled, 1.5f, filled, this.armorDuraColor.getValue());
+        }
+    }
+
+    private double[] getEntity2DBox(Entity ent, float tickDelta) {
+        double x = MathUtil.interpolate(ent.lastRenderX, ent.getX(), (double)tickDelta);
+        double y = MathUtil.interpolate(ent.lastRenderY, ent.getY(), (double)tickDelta);
+        double z = MathUtil.interpolate(ent.lastRenderZ, ent.getZ(), (double)tickDelta);
+        Box axisAlignedBB2 = ent.getBoundingBox();
+        Box axisAlignedBB = new Box(axisAlignedBB2.minX - ent.getX() + x - 0.05, axisAlignedBB2.minY - ent.getY() + y, axisAlignedBB2.minZ - ent.getZ() + z - 0.05, axisAlignedBB2.maxX - ent.getX() + x + 0.05, axisAlignedBB2.maxY - ent.getY() + y + 0.15, axisAlignedBB2.maxZ - ent.getZ() + z + 0.05);
+        Vec3d[] vectors = new Vec3d[]{new Vec3d(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ), new Vec3d(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ), new Vec3d(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ), new Vec3d(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ), new Vec3d(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ), new Vec3d(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ), new Vec3d(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ), new Vec3d(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ)};
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        boolean found = false;
+        for (Vec3d vector : vectors) {
+            Vec3d screen = TextUtil.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));
+            if (!(screen.z > 0.0) || !(screen.z < 1.0)) continue;
+            found = true;
+            minX = Math.min(screen.x, minX);
+            minY = Math.min(screen.y, minY);
+            maxX = Math.max(screen.x, maxX);
+            maxY = Math.max(screen.y, maxY);
+        }
+        if (!found) {
+            return null;
+        }
+        return new double[]{minX, minY, maxX, maxY};
+    }
+
+    private void draw2DItemText(DrawContext drawContext, ItemEntity itemEntity, float tickDelta) {
+        double[] box = this.getEntity2DBox((Entity)itemEntity, tickDelta);
+        if (box == null) {
+            return;
+        }
+        int itemCount = itemEntity.getStack().getCount();
+        String s = this.count.getValue() && itemCount > 1 ? " x" + itemCount : "";
+        String name = (this.customName.getValue() ? itemEntity.getStack().getName() : itemEntity.getStack().getItem().getName()).getString();
+        String text = name + s;
+        int width = ESP.mc.textRenderer.getWidth(text);
+        float x = (float)(box[0] + (box[2] - box[0]) / 2.0 - (double)width / 2.0);
+        drawContext.drawText(ESP.mc.textRenderer, text, (int)x, (int)(box[1] - 10.0), this.text.getValue().getRGB(), false);
+    }
+
+    private static enum RenderMode {
+        ThreeD,
+        TwoD;
+
     }
 
     @EventListener
