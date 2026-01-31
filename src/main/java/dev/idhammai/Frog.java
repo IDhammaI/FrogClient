@@ -29,6 +29,7 @@ import net.minecraft.client.MinecraftClient;
 public class Frog implements ModInitializer {
     public static final String NAME = "Frog Client";
     public static final String VERSION = "1.0";
+    public static final String CONFIG_DIR = "frog";
     public static final EventBus EVENT_BUS = new EventBus();
     public static HoleManager HOLE;
     public static PlayerManager PLAYER;
@@ -99,7 +100,7 @@ public class Frog implements ModInitializer {
         initTime = System.currentTimeMillis();
         loaded = true;
         EVENT_BUS.post(new InitEvent());
-        File folder = new File(MinecraftClient.getInstance().runDirectory.getPath() + File.separator + "frog" + File.separator + "cfg");
+        File folder = new File(MinecraftClient.getInstance().runDirectory.getPath() + File.separator + CONFIG_DIR + File.separator + "cfg");
         if (!folder.exists()) {
             folder.mkdirs();
         }

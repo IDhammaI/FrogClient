@@ -18,7 +18,7 @@ public class Manager {
     }
 
     public static File getFolder() {
-        File folder = new File(Manager.mc.runDirectory.getPath() + File.separator + dev.idhammai.Frog.NAME.toLowerCase());
+        File folder = new File(Manager.mc.runDirectory.getPath() + File.separator + dev.idhammai.Frog.CONFIG_DIR);
         if (!folder.exists()) {
             folder.mkdirs();
         }

@@ -250,7 +250,7 @@ extends Screen {
         boolean shadow = FontManager.isShadowEnabled();
         float lineHeight = customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight();
         float marginBottom = 6.0f;
-        int lines = 4;
+        int lines = 5;
         float baseY = (float)context.getScaledWindowHeight() - marginBottom - lineHeight * (float)lines;
         int tipX = 6;
         int tipY = Math.round(baseY);
@@ -259,6 +259,7 @@ extends Screen {
         String tip2 = chinese ? "滚轮是上下移动 SHIFT+滚轮是左右移动" : "Scroll up/down, SHIFT+scroll left/right";
         String tip3 = chinese ? "SHIFT+左键 快捷键按钮 切换功能(按住/松开)触发" : "SHIFT+LMB: toggle hold/release";
         String tip4 = chinese ? "SHIFT+左键 功能按钮 重置设置" : "SHIFT+LMB: reset this setting";
+        String tip5 = chinese ? "文本设置 右键编辑" : "RMB on String setting: edit";
         boolean spectrumTips = ClickGui.getInstance().colorMode.getValue() == ClickGui.ColorMode.Spectrum;
         double delay1 = spectrumTips ? (double)tipY * 0.25 : (double)tipY / 10.0;
         Color c1 = ClickGui.getInstance().getActiveColor(delay1);
@@ -279,6 +280,11 @@ extends Screen {
         Color c4 = ClickGui.getInstance().getActiveColor(delay4);
         int color4 = ColorUtil.injectAlpha(c4, alpha).getRGB();
         TextUtil.drawString(context, tip4, tipX, tipY4, color4, customFont, shadow);
+        int tipY5 = (int)((float)tipY + lineHeight * 4.0f);
+        double delay5 = spectrumTips ? (double)tipY5 * 0.25 : (double)tipY5 / 10.0;
+        Color c5 = ClickGui.getInstance().getActiveColor(delay5);
+        int color5 = ColorUtil.injectAlpha(c5, alpha).getRGB();
+        TextUtil.drawString(context, tip5, tipX, tipY5, color5, customFont, shadow);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
