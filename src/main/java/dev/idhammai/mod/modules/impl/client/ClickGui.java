@@ -46,6 +46,7 @@ public class ClickGui
 extends Module {
     private static ClickGui INSTANCE;
     public final EnumSetting<Style> style = this.add(new EnumSetting<Style>("Style", Style.Static).injectTask(this::updateStyle));
+    public final EnumSetting<BackgroundStyle> backgroundStyle = this.add(new EnumSetting<BackgroundStyle>("BackgroundStyle", BackgroundStyle.Dark).injectTask(this::updateBackgroundStyle));
     public final BooleanSetting disableNotification = this.add(new BooleanSetting("DisableNotification", false));
     public final BooleanSetting sound = this.add(new BooleanSetting("Sound", true).setParent());
     public final SliderSetting soundPitch = this.add(new SliderSetting("SoundPitch", 1.6, 0.0, 2.0, 0.1, this.sound::isOpen));
@@ -388,6 +389,24 @@ extends Module {
         return this.color.getValue();
     }
 
+    public void updateBackgroundStyle() {
+        BackgroundStyle mode = this.backgroundStyle.getValue();
+        if (mode == null) {
+            mode = BackgroundStyle.Dark;
+        }
+        if (mode == BackgroundStyle.Dark) {
+            this.backGround.setValue(new Color(30, 30, 30, 236));
+            this.backGround.booleanValue = true;
+            this.backgroundAlpha.setValue(236.0);
+            return;
+        }
+        if (mode == BackgroundStyle.Transparent) {
+            this.backGround.booleanValue = false;
+            this.defaultColor.setValue(new Color(0, 0, 0, 50));
+            this.backgroundAlpha.setValue(0.0);
+        }
+    }
+
     public void updateStyle() {
         Style mode = this.style.getValue();
         if (mode == null) {
@@ -420,6 +439,7 @@ extends Module {
             this.endColor.rainbow = false;
             this.endColor.setValue(new Color(0, 120, 212, 18));
             this.secondColor.booleanValue = false;
+            this.updateBackgroundStyle();
             return;
         }
 
@@ -436,6 +456,7 @@ extends Module {
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
             this.secondColor.booleanValue = false;
+            this.updateBackgroundStyle();
             return;
         }
 
@@ -447,6 +468,7 @@ extends Module {
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
             this.secondColor.booleanValue = false;
+            this.updateBackgroundStyle();
             return;
         }
 
@@ -459,6 +481,7 @@ extends Module {
             this.tint.rainbow = true;
             this.endColor.rainbow = false;
             this.secondColor.booleanValue = false;
+            this.updateBackgroundStyle();
             return;
         }
 
@@ -475,6 +498,7 @@ extends Module {
             this.tint.setValue(new Color(0, 120, 212, 36));
             this.endColor.rainbow = false;
             this.endColor.setValue(new Color(255, 0, 0, 24));
+            this.updateBackgroundStyle();
         }
     }
 
@@ -488,6 +512,11 @@ extends Module {
         SimpleRainbow,
         Spectrum,
         Pulse
+    }
+
+    public enum BackgroundStyle {
+        Dark,
+        Transparent
     }
 
     public enum ColorMode {
