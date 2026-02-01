@@ -62,20 +62,20 @@ extends Module {
     private final BooleanSetting twoDArmorDura = this.add(new BooleanSetting("2DArmorDura", true, () -> this.mode.getValue() == RenderMode.TwoD));
     private final ColorSetting armorDuraColor = this.add(new ColorSetting("ArmorDuraColor", new Color(0x2FFF00), () -> this.mode.getValue() == RenderMode.TwoD && this.twoDArmorDura.getValue()));
     private final SliderSetting duraScale = this.add(new SliderSetting("DuraScale", 1.0, 0.0, 2.0, 0.1, () -> this.mode.getValue() == RenderMode.TwoD && this.twoDArmorDura.getValue()));
-    public final BooleanSetting box = this.add(new BooleanSetting("BoxESP", true).setParent());
-    public final BooleanSetting self = this.add(new BooleanSetting("Self", false, this.box::isOpen));
-    private final ColorSetting endPortalFill = this.add(new ColorSetting("EndPortalFill", new Color(255, 243, 129, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting endPortalOutline = this.add(new ColorSetting("EndPortalOutline", new Color(255, 243, 129, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting itemFill = this.add(new ColorSetting("ItemFill", new Color(255, 255, 255, 100), this.box::isOpen).injectBoolean(true));
-    private final ColorSetting itemOutline = this.add(new ColorSetting("ItemOutline", new Color(255, 255, 255, 100), this.box::isOpen).injectBoolean(true));
-    private final ColorSetting playerFill = this.add(new ColorSetting("PlayerFill", new Color(255, 255, 255, 100), this.box::isOpen).injectBoolean(true));
-    private final ColorSetting playerOutline = this.add(new ColorSetting("PlayerOutline", new Color(255, 255, 255, 100), this.box::isOpen).injectBoolean(true));
-    private final ColorSetting chestFill = this.add(new ColorSetting("ChestFill", new Color(255, 198, 123, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting chestOutline = this.add(new ColorSetting("ChestOutline", new Color(255, 198, 123, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting enderChestFill = this.add(new ColorSetting("EnderChestFill", new Color(255, 100, 255, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting enderChestOutline = this.add(new ColorSetting("EnderChestOutline", new Color(255, 100, 255, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting shulkerBoxFill = this.add(new ColorSetting("ShulkerBoxFill", new Color(15, 255, 255, 100), this.box::isOpen).injectBoolean(false));
-    private final ColorSetting shulkerBoxOutline = this.add(new ColorSetting("ShulkerBoxOutline", new Color(15, 255, 255, 100), this.box::isOpen).injectBoolean(false));
+    public final BooleanSetting target = this.add(new BooleanSetting("Target", true).setParent());
+    public final BooleanSetting self = this.add(new BooleanSetting("Self", false, this.target::isOpen));
+    private final ColorSetting endPortalFill = this.add(new ColorSetting("EndPortalFill", new Color(255, 243, 129, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting endPortalOutline = this.add(new ColorSetting("EndPortalOutline", new Color(255, 243, 129, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting itemFill = this.add(new ColorSetting("ItemFill", new Color(255, 255, 255, 100), this.target::isOpen).injectBoolean(true));
+    private final ColorSetting itemOutline = this.add(new ColorSetting("ItemOutline", new Color(255, 255, 255, 100), this.target::isOpen).injectBoolean(true));
+    private final ColorSetting playerFill = this.add(new ColorSetting("PlayerFill", new Color(255, 255, 255, 100), this.target::isOpen).injectBoolean(true));
+    private final ColorSetting playerOutline = this.add(new ColorSetting("PlayerOutline", new Color(255, 255, 255, 100), this.target::isOpen).injectBoolean(true));
+    private final ColorSetting chestFill = this.add(new ColorSetting("ChestFill", new Color(255, 198, 123, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting chestOutline = this.add(new ColorSetting("ChestOutline", new Color(255, 198, 123, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting enderChestFill = this.add(new ColorSetting("EnderChestFill", new Color(255, 100, 255, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting enderChestOutline = this.add(new ColorSetting("EnderChestOutline", new Color(255, 100, 255, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting shulkerBoxFill = this.add(new ColorSetting("ShulkerBoxFill", new Color(15, 255, 255, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
+    private final ColorSetting shulkerBoxOutline = this.add(new ColorSetting("ShulkerBoxOutline", new Color(15, 255, 255, 100), () -> this.mode.getValue() != RenderMode.TwoD && this.target.isOpen()).injectBoolean(false));
     public final BooleanSetting item = this.add(new BooleanSetting("ItemName", false).setParent());
     public final BooleanSetting customName = this.add(new BooleanSetting("CustomName", false, this.item::isOpen));
     public final BooleanSetting count = this.add(new BooleanSetting("Count", true, this.item::isOpen));
@@ -103,7 +103,7 @@ extends Module {
                 Render3DUtil.drawText3D(name + s, ((IEntity)itemEntity).getDimensions().getBoxAt(new Vec3d(MathUtil.interpolate(itemEntity.lastRenderX, itemEntity.getX(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(itemEntity.lastRenderY, itemEntity.getY(), (double)mc.getRenderTickCounter().getTickDelta(true)), MathUtil.interpolate(itemEntity.lastRenderZ, itemEntity.getZ(), (double)mc.getRenderTickCounter().getTickDelta(true)))).expand(0.0, 0.1, 0.0).getCenter().add(0.0, 0.5, 0.0), this.text.getValue());
             }
         }
-        if (this.box.getValue()) {
+        if (this.target.getValue()) {
             if (this.itemFill.booleanValue || this.playerFill.booleanValue) {
                 for (Entity entity : Frog.THREAD.getEntities()) {
                     Color color;
@@ -151,17 +151,22 @@ extends Module {
         if (ESP.nullCheck()) {
             return;
         }
-        if (this.box.getValue()) {
+        if (this.target.getValue()) {
             for (Entity entity : Frog.THREAD.getEntities()) {
                 if (entity instanceof ItemEntity) {
-                    if (this.itemOutline.booleanValue || this.itemFill.booleanValue) {
-                        this.draw2DForEntity(drawContext.getMatrices(), entity, this.itemOutline.getValue(), tickDelta, false);
+                    boolean outline = this.itemOutline.booleanValue;
+                    boolean fill = this.itemFill.booleanValue;
+                    if (outline || fill) {
+                        this.draw2DForEntity(drawContext.getMatrices(), entity, this.itemOutline.getValue(), this.itemFill.getValue(), outline, fill, tickDelta, false);
                     }
                     continue;
                 }
                 if (entity == ESP.mc.player && (!this.self.getValue() || ESP.mc.options.getPerspective().isFirstPerson())) continue;
-                if (!(entity instanceof PlayerEntity) || !this.playerOutline.booleanValue && !this.playerFill.booleanValue) continue;
-                this.draw2DForEntity(drawContext.getMatrices(), entity, this.playerOutline.getValue(), tickDelta, true);
+                if (!(entity instanceof PlayerEntity)) continue;
+                boolean outline = this.playerOutline.booleanValue;
+                boolean fill = this.playerFill.booleanValue;
+                if (!outline && !fill) continue;
+                this.draw2DForEntity(drawContext.getMatrices(), entity, this.playerOutline.getValue(), this.playerFill.getValue(), outline, fill, tickDelta, true);
             }
         }
         if (this.item.getValue()) {
@@ -172,7 +177,7 @@ extends Module {
         }
     }
 
-    private void draw2DForEntity(MatrixStack matrices, Entity entity, Color color, float tickDelta, boolean isPlayer) {
+    private void draw2DForEntity(MatrixStack matrices, Entity entity, Color outlineColor, Color fillColor, boolean outline, boolean fill, float tickDelta, boolean isPlayer) {
         double[] box = this.getEntity2DBox(entity, tickDelta);
         if (box == null) {
             return;
@@ -184,7 +189,12 @@ extends Module {
         if (maxX - minX <= 0.0f || maxY - minY <= 0.0f) {
             return;
         }
-        this.draw2DBox(matrices, minX, minY, maxX, maxY, color);
+        if (fill) {
+            Render2DUtil.drawRect(matrices, minX, minY, maxX - minX, maxY - minY, fillColor);
+        }
+        if (outline) {
+            this.draw2DBox(matrices, minX, minY, maxX, maxY, outlineColor);
+        }
         if (this.twoDHealth.getValue() && entity instanceof LivingEntity) {
             LivingEntity living = (LivingEntity)entity;
             if (living.getMaxHealth() > 0.0f && living.getHealth() > 0.0f) {
