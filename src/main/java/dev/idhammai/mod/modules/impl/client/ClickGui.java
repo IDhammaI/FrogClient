@@ -85,6 +85,7 @@ extends Module {
     public final SliderSetting snowSize = this.add(new SliderSetting("SnowSize", 1.8, 0.5, 5.0, 0.1, this.snow::isOpen));
     public final SliderSetting snowAlpha = this.add(new SliderSetting("SnowAlpha", 160, 0, 255, this.snow::isOpen));
     public final SliderSetting snowWind = this.add(new SliderSetting("SnowWind", 10.0, -80.0, 80.0, 1.0, this.snow::isOpen));
+    public final BooleanSetting tips = this.add(new BooleanSetting("Tips", true));
     public final BooleanSetting elements = this.add(new BooleanSetting("Elements", false).setParent().injectTask(this::keyCodec));
     public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
