@@ -18,19 +18,40 @@ import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
+import dev.idhammai.core.Manager;
+import dev.idhammai.core.impl.ConfigManager;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.mod.Mod;
+import dev.idhammai.mod.gui.items.buttons.StringButton;
+import dev.idhammai.mod.modules.impl.client.HUD;
+import dev.idhammai.mod.modules.settings.Setting;
+import dev.idhammai.mod.modules.settings.impl.BindSetting;
+import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
+import dev.idhammai.mod.modules.settings.impl.ColorSetting;
+import dev.idhammai.mod.modules.settings.impl.EnumSetting;
+import dev.idhammai.mod.modules.settings.impl.SliderSetting;
+import dev.idhammai.mod.modules.settings.impl.StringSetting;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
 import dev.idhammai.mod.gui.items.buttons.ModuleButton;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
+import dev.idhammai.mod.modules.impl.client.Fonts;
 import java.awt.Color;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
+import net.minecraft.client.util.SelectionManager;
+import net.minecraft.util.StringHelper;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
@@ -58,6 +79,12 @@ extends Screen {
     private float topTabAnimX;
     private float topTabAnimW;
     private boolean topTabAnimInit;
+    private final ArrayList<String> configNames = new ArrayList();
+    private float configScroll;
+    private String selectedConfigName;
+    private String appliedConfigName;
+    private String configNameInput = "";
+    private boolean configNameListening;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -280,6 +307,7 @@ extends Screen {
         context.getMatrices().translate(0.0f, slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
         this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
+        this.renderConfigPage(context, mouseX, mouseY, delta, scale, slideY, pageOffsetX, pageW, panelX, panelY, panelW, panelH);
         context.getMatrices().pop();
         ClickGui gui = ClickGui.getInstance();
         if (gui != null && gui.tips.getValue()) {
@@ -335,6 +363,10 @@ extends Screen {
         }
         if (this.page == Page.Module) {
             this.components.forEach(components -> components.mouseClicked((int)mouseX, (int)mouseY, clickedButton));
+            return super.mouseClicked(mouseX, mouseY, clickedButton);
+        }
+        if (this.page == Page.Config && this.handleConfigClick((int)mouseX, (int)mouseY, clickedButton)) {
+            return true;
         }
         return super.mouseClicked(mouseX, mouseY, clickedButton);
     }
@@ -359,6 +391,20 @@ extends Screen {
             } else if (verticalAmount > 0.0) {
                 this.components.forEach(component -> component.setY(component.getTargetY() + 15));
             }
+        } else if (this.page == Page.Config) {
+            this.refreshConfigList();
+            int rowH = this.getFontHeight() + 6;
+            float viewH = (float)(Wrapper.mc.getWindow().getScaledHeight() - 44);
+            float totalH = (float)this.configNames.size() * (float)rowH;
+            float max = Math.max(0.0f, totalH - viewH);
+            float next = this.configScroll + (float)(-verticalAmount) * 18.0f;
+            if (next < 0.0f) {
+                next = 0.0f;
+            }
+            if (next > max) {
+                next = max;
+            }
+            this.configScroll = next;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
@@ -366,6 +412,41 @@ extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.page == Page.Module) {
             this.components.forEach(component -> component.onKeyPressed(keyCode));
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        if (this.page == Page.Config && this.configNameListening) {
+            switch (keyCode) {
+                case 256: {
+                    this.configNameListening = false;
+                    return true;
+                }
+                case 257:
+                case 335: {
+                    this.configNameListening = false;
+                    return true;
+                }
+                case 86: {
+                    if (Wrapper.mc != null && Wrapper.mc.getWindow() != null && InputUtil.isKeyPressed((long)Wrapper.mc.getWindow().getHandle(), (int)341)) {
+                        this.configNameInput = this.configNameInput + SelectionManager.getClipboard(Wrapper.mc);
+                        if (this.configNameInput.length() > 64) {
+                            this.configNameInput = this.configNameInput.substring(0, 64);
+                        }
+                        return true;
+                    }
+                    break;
+                }
+                case 259: {
+                    this.configNameInput = StringButton.removeLastChar(this.configNameInput);
+                    return true;
+                }
+                case 32: {
+                    this.configNameInput = this.configNameInput + " ";
+                    if (this.configNameInput.length() > 64) {
+                        this.configNameInput = this.configNameInput.substring(0, 64);
+                    }
+                    return true;
+                }
+            }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -373,6 +454,14 @@ extends Screen {
     public boolean charTyped(char chr, int modifiers) {
         if (this.page == Page.Module) {
             this.components.forEach(component -> component.onKeyTyped(chr, modifiers));
+            return super.charTyped(chr, modifiers);
+        }
+        if (this.page == Page.Config && this.configNameListening && StringHelper.isValidChar(chr)) {
+            this.configNameInput = this.configNameInput + chr;
+            if (this.configNameInput.length() > 64) {
+                this.configNameInput = this.configNameInput.substring(0, 64);
+            }
+            return true;
         }
         return super.charTyped(chr, modifiers);
     }
@@ -397,6 +486,492 @@ extends Screen {
         for (Component c : this.components) {
             c.drag = false;
         }
+        if (page == Page.Config) {
+            this.refreshConfigList();
+            this.configScroll = 0.0f;
+            this.configNameListening = false;
+            if (this.selectedConfigName != null && !this.configNames.contains(this.selectedConfigName)) {
+                this.selectedConfigName = null;
+            }
+            if (this.selectedConfigName == null && !this.configNames.isEmpty()) {
+                this.selectedConfigName = this.configNames.get(0);
+            }
+        }
+    }
+
+    private File getConfigFolder() {
+        if (Wrapper.mc == null) {
+            return null;
+        }
+        return new File(Wrapper.mc.runDirectory.getPath() + File.separator + Frog.CONFIG_DIR + File.separator + "cfg");
+    }
+
+    private void refreshConfigList() {
+        this.configNames.clear();
+        File folder = this.getConfigFolder();
+        if (folder == null) {
+            return;
+        }
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            if (f == null || !f.isFile()) continue;
+            String n = f.getName();
+            if (n == null) continue;
+            String ln = n.toLowerCase();
+            if (!ln.endsWith(".cfg")) continue;
+            String base = n.substring(0, n.length() - 4);
+            if (base.isEmpty()) continue;
+            this.configNames.add(base);
+        }
+        this.configNames.sort(String::compareToIgnoreCase);
+    }
+
+    private File getConfigFile(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        File folder = this.getConfigFolder();
+        if (folder == null) {
+            return null;
+        }
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        return new File(folder, name + ".cfg");
+    }
+
+    private String sanitizeConfigName(String name) {
+        if (name == null) {
+            return "";
+        }
+        String s = name.trim();
+        if (s.isEmpty()) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if (Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == ' ') {
+                out.append(c);
+                continue;
+            }
+            out.append('_');
+        }
+        String r = out.toString().trim();
+        if (r.length() > 32) {
+            r = r.substring(0, 32);
+        }
+        return r;
+    }
+
+    private String uniqueConfigName(String base) {
+        String n = this.sanitizeConfigName(base);
+        if (n.isEmpty()) {
+            return "";
+        }
+        File f = this.getConfigFile(n);
+        if (f != null && !f.exists()) {
+            return n;
+        }
+        for (int i = 1; i < 1000; ++i) {
+            String nn = n + "_" + i;
+            File ff = this.getConfigFile(nn);
+            if (ff != null && !ff.exists()) {
+                return nn;
+            }
+        }
+        return n;
+    }
+
+    private void writeDefaultConfig(File file) {
+        if (file == null) {
+            return;
+        }
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
+            for (Module module : Frog.MODULE.getModules()) {
+                for (Setting setting : module.getSettings()) {
+                    String line = module.getName() + "_" + setting.getName();
+                    if (setting instanceof BooleanSetting) {
+                        BooleanSetting s = (BooleanSetting)setting;
+                        out.println(line + ":" + s.getDefaultValue());
+                    } else if (setting instanceof SliderSetting) {
+                        SliderSetting s = (SliderSetting)setting;
+                        out.println(line + ":" + s.getDefaultValue());
+                    } else if (setting instanceof BindSetting) {
+                        BindSetting s = (BindSetting)setting;
+                        out.println(line + ":" + s.getDefaultValue());
+                        out.println(line + "_hold:" + false);
+                    } else if (setting instanceof EnumSetting) {
+                        EnumSetting s = (EnumSetting)setting;
+                        Enum dv = (Enum)s.getDefaultValue();
+                        out.println(line + ":" + dv.name());
+                    } else if (setting instanceof ColorSetting) {
+                        ColorSetting s = (ColorSetting)setting;
+                        out.println(line + ":" + s.getDefaultValue().getRGB());
+                        out.println(line + "Rainbow:" + s.getDefaultRainbow());
+                        if (s.injectBoolean) {
+                            out.println(line + "Boolean:" + s.getDefaultBooleanValue());
+                        }
+                    } else if (setting instanceof StringSetting) {
+                        StringSetting s = (StringSetting)setting;
+                        out.println(line + ":" + s.getDefaultValue());
+                    }
+                }
+                out.println(module.getName() + "_state:" + (module instanceof HUD));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+    }
+
+    private String createDefaultConfig(String nameInput) {
+        String base = this.sanitizeConfigName(nameInput);
+        if (base.isEmpty()) {
+            return null;
+        }
+        String name = this.uniqueConfigName(base);
+        File file = this.getConfigFile(name);
+        if (file == null) {
+            return null;
+        }
+        this.writeDefaultConfig(file);
+        this.refreshConfigList();
+        return name;
+    }
+
+    private String backupConfig(String fromName, String toNameInput) {
+        if (fromName == null || fromName.isEmpty()) {
+            return null;
+        }
+        File src = this.getConfigFile(fromName);
+        if (src == null || !src.exists()) {
+            return null;
+        }
+        String base = this.sanitizeConfigName(toNameInput);
+        if (base.isEmpty()) {
+            base = fromName + "_backup_" + System.currentTimeMillis();
+        }
+        String name = this.uniqueConfigName(base);
+        File dst = this.getConfigFile(name);
+        if (dst == null) {
+            return null;
+        }
+        try {
+            Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        this.refreshConfigList();
+        return name;
+    }
+
+    private void deleteConfig(String name) {
+        File f = this.getConfigFile(name);
+        if (f == null || !f.exists()) {
+            return;
+        }
+        try {
+            f.delete();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.refreshConfigList();
+    }
+
+    private String saveConfig(String name) {
+        String n = this.sanitizeConfigName(name);
+        if (n.isEmpty()) {
+            return null;
+        }
+        File folder = this.getConfigFolder();
+        if (folder == null) {
+            return null;
+        }
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        try {
+            ConfigManager.options = Manager.getFile("cfg" + File.separator + n + ".cfg");
+            Frog.save();
+            this.refreshConfigList();
+            return n;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        finally {
+            ConfigManager.options = Manager.getFile("options.txt");
+        }
+    }
+
+    private void loadConfig(String name) {
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        try {
+            ConfigManager.options = Manager.getFile("cfg" + File.separator + name + ".cfg");
+            Frog.CONFIG = new ConfigManager();
+            Frog.CONFIG.load();
+            this.appliedConfigName = name;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            ConfigManager.options = Manager.getFile("options.txt");
+            Frog.save();
+            if (Fonts.INSTANCE != null) {
+                Fonts.INSTANCE.refresh();
+            }
+        }
+    }
+
+    private void renderConfigPage(DrawContext context, int mouseX, int mouseY, float delta, float scale, float slideY, float pageOffsetX, int pageW, int panelX, int panelY, int panelW, int panelH) {
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            return;
+        }
+        this.refreshConfigList();
+        if (this.selectedConfigName != null && !this.configNames.contains(this.selectedConfigName)) {
+            this.selectedConfigName = null;
+        }
+        if (this.selectedConfigName == null && !this.configNames.isEmpty()) {
+            this.selectedConfigName = this.configNames.get(0);
+        }
+        float mx = scale == 0.0f ? (float)mouseX : (float)mouseX / scale;
+        float my = scale == 0.0f ? (float)mouseY : ((float)mouseY - slideY) / scale;
+        float pageUnitW = scale == 0.0f ? (float)pageW : (float)pageW / scale;
+        float baseX = pageOffsetX + (float)Page.Config.ordinal() * pageUnitW;
+        float x = baseX + (float)panelX + 10.0f;
+        float w = (float)(panelW - 20);
+        float titleY = (float)panelY + 10.0f;
+        float listY = (float)panelY + 28.0f;
+        float gap = 8.0f;
+        float listW = w * 0.62f;
+        float rightX = x + listW + gap;
+        float rightW = w - listW - gap;
+        boolean customFont = FontManager.isCustomFontEnabled();
+        boolean shadow = FontManager.isShadowEnabled();
+        boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+        String title = chinese ? "配置列表" : "Configs";
+        String hint = chinese ? "选择配置后点击 Apply 才会应用" : "Select a config, then click Apply";
+        String none = chinese ? "无" : "None";
+        TextUtil.drawString(context, title, (double)(x + 2.0f), (double)titleY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        int rowH = this.getFontHeight() + 6;
+        float clipTop = listY - (float)rowH;
+        float clipBottom = (float)context.getScaledWindowHeight() - 20.0f;
+        for (int i = 0; i < this.configNames.size(); ++i) {
+            String name = this.configNames.get(i);
+            float ry = listY + (float)i * (float)rowH - this.configScroll;
+            float rh = (float)rowH - 0.5f;
+            if (ry + rh < clipTop || ry > clipBottom) continue;
+            boolean hovered = mx >= x && mx <= x + listW && my >= ry && my <= ry + rh;
+            boolean selected = this.selectedConfigName != null && name.equalsIgnoreCase(this.selectedConfigName);
+            int bg;
+            if (selected) {
+                Color ac = gui.getActiveColor((double)ry * 0.25);
+                bg = ColorUtil.injectAlpha(ac, gui.alpha.getValueInt()).getRGB();
+            } else {
+                bg = hovered ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
+            }
+            Render2DUtil.rect(context.getMatrices(), x, ry, x + listW, ry + rh, bg);
+            int tc = hovered || selected ? gui.enableTextColor.getValue().getRGB() : gui.defaultTextColor.getValue().getRGB();
+            float textY = this.getCenteredTextY(ry, rh);
+            TextUtil.drawString(context, name, (double)(x + 6.0f), (double)textY, tc, customFont, shadow);
+        }
+        String selLabel = chinese ? "当前选择: " : "Selected: ";
+        String appLabel = chinese ? "已应用: " : "Applied: ";
+        String selectedName = this.selectedConfigName == null ? none : this.selectedConfigName;
+        String appliedName = this.appliedConfigName == null ? none : this.appliedConfigName;
+        TextUtil.drawString(context, selLabel + selectedName, (double)rightX, (double)titleY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+        float infoY2 = (float)titleY + (float)this.getFontHeight() + 4.0f;
+        TextUtil.drawString(context, appLabel + appliedName, (double)rightX, (double)infoY2, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+        float nameLabelY = infoY2 + (float)this.getFontHeight() + 8.0f;
+        String nameLabel = chinese ? "名称" : "Name";
+        TextUtil.drawString(context, nameLabel, (double)rightX, (double)nameLabelY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+        float boxY = nameLabelY + (float)this.getFontHeight() + 4.0f;
+        float boxH = (float)rowH - 0.5f;
+        boolean hoverBox = mx >= rightX && mx <= rightX + rightW && my >= boxY && my <= boxY + boxH;
+        int boxBg = hoverBox || this.configNameListening ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, boxY, rightX + rightW, boxY + boxH, boxBg);
+        String placeholder = chinese ? "输入配置名" : "Type config name";
+        String show = this.configNameInput == null || this.configNameInput.isEmpty() ? placeholder : this.configNameInput;
+        if (this.configNameListening) {
+            show = show + StringButton.getIdleSign();
+        }
+        float boxTextY = this.getCenteredTextY(boxY, boxH);
+        TextUtil.drawString(context, show, (double)(rightX + 6.0f), (double)boxTextY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float btnY = boxY + boxH + 8.0f;
+        float btnH = (float)rowH - 0.5f;
+        String bCreate = chinese ? "创建默认" : "Create Default";
+        String bBackup = chinese ? "备份" : "Backup";
+        String bDelete = chinese ? "删除" : "Delete";
+        String bSave = chinese ? "保存" : "Save";
+        String bApply = chinese ? "Apply 应用" : "Apply";
+        boolean canCreate = !this.sanitizeConfigName(this.configNameInput).isEmpty();
+        boolean canSelect = this.selectedConfigName != null && !this.selectedConfigName.isEmpty();
+        boolean canSave = canSelect || canCreate;
+        boolean canApply = canSelect;
+        boolean canBackup = canSelect;
+        boolean canDelete = canSelect;
+        boolean hCreate = mx >= rightX && mx <= rightX + rightW && my >= btnY && my <= btnY + btnH;
+        int bgCreate = canCreate ? (hCreate ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY, rightX + rightW, btnY + btnH, bgCreate);
+        TextUtil.drawString(context, bCreate, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float btnY2 = btnY + btnH + 4.0f;
+        boolean hBackup = mx >= rightX && mx <= rightX + rightW && my >= btnY2 && my <= btnY2 + btnH;
+        int bgBackup = canBackup ? (hBackup ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY2, rightX + rightW, btnY2 + btnH, bgBackup);
+        TextUtil.drawString(context, bBackup, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY2, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float btnY3 = btnY2 + btnH + 4.0f;
+        boolean hDelete = mx >= rightX && mx <= rightX + rightW && my >= btnY3 && my <= btnY3 + btnH;
+        int bgDelete = canDelete ? (hDelete ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY3, rightX + rightW, btnY3 + btnH, bgDelete);
+        TextUtil.drawString(context, bDelete, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY3, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float btnY4 = btnY3 + btnH + 4.0f;
+        boolean hSave = mx >= rightX && mx <= rightX + rightW && my >= btnY4 && my <= btnY4 + btnH;
+        int bgSave = canSave ? (hSave ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY4, rightX + rightW, btnY4 + btnH, bgSave);
+        TextUtil.drawString(context, bSave, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY4, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float btnY5 = btnY4 + btnH + 4.0f;
+        boolean hApply = mx >= rightX && mx <= rightX + rightW && my >= btnY5 && my <= btnY5 + btnH;
+        int bgApply = canApply ? (hApply ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY5, rightX + rightW, btnY5 + btnH, bgApply);
+        TextUtil.drawString(context, bApply, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY5, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float hintY = btnY5 + btnH + 8.0f;
+        TextUtil.drawString(context, hint, (double)(rightX + 2.0f), (double)hintY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+    }
+
+    private boolean handleConfigClick(int mouseX, int mouseY, int mouseButton) {
+        if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
+            return false;
+        }
+        if (mouseButton != 0) {
+            this.configNameListening = false;
+            return false;
+        }
+        float keyCodec = (float)ClickGui.getInstance().alphaValue;
+        float scale = 0.92f + 0.08f * keyCodec;
+        float slideY = (1.0f - keyCodec) * 20.0f;
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        for (Component c : this.components) {
+            minX = Math.min(minX, c.getX());
+            minY = Math.min(minY, c.getY());
+            maxX = Math.max(maxX, c.getX() + c.getWidth());
+            maxY = Math.max(maxY, c.getY() + c.getHeight());
+        }
+        int margin = 16;
+        int panelX = Math.max(8, minX - margin);
+        int panelY = Math.max(6, minY - margin);
+        int panelW = Math.min(Wrapper.mc.getWindow().getScaledWidth() - panelX - 8, maxX - minX + margin * 2);
+        int panelH = Math.min(Wrapper.mc.getWindow().getScaledHeight() - panelY - 6, maxY - minY + margin * 2 + 24);
+        int screenW = Wrapper.mc.getWindow().getScaledWidth();
+        int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
+        int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        int count = this.components.size();
+        int totalWidth = count > 0 ? count * layoutWidth + (count - 1) : screenW;
+        int pageW = Math.max(screenW, totalWidth + 32);
+        float pageX = (float)this.pageSlide.get(-((double)this.page.ordinal() * (double)pageW), 260L, Easing.SineOut);
+        float pageOffsetX = scale == 0.0f ? pageX : pageX / scale;
+        float mx = scale == 0.0f ? (float)mouseX : (float)mouseX / scale;
+        float my = scale == 0.0f ? (float)mouseY : ((float)mouseY - slideY) / scale;
+        float pageUnitW = scale == 0.0f ? (float)pageW : (float)pageW / scale;
+        float baseX = pageOffsetX + (float)Page.Config.ordinal() * pageUnitW;
+        float x = baseX + (float)panelX + 10.0f;
+        float w = (float)(panelW - 20);
+        float listY = (float)panelY + 28.0f;
+        float gap = 8.0f;
+        float listW = w * 0.62f;
+        float rightX = x + listW + gap;
+        float rightW = w - listW - gap;
+        int rowH = this.getFontHeight() + 6;
+        this.refreshConfigList();
+        for (int i = 0; i < this.configNames.size(); ++i) {
+            String name = this.configNames.get(i);
+            float ry = listY + (float)i * (float)rowH - this.configScroll;
+            float rh = (float)rowH - 0.5f;
+            if (mx >= x && mx <= x + listW && my >= ry && my <= ry + rh) {
+                this.selectedConfigName = name;
+                this.configNameListening = false;
+                return true;
+            }
+        }
+        float nameLabelY = (float)panelY + 10.0f + (float)this.getFontHeight() + 4.0f + (float)this.getFontHeight() + 8.0f;
+        float boxY = nameLabelY + (float)this.getFontHeight() + 4.0f;
+        float boxH = (float)rowH - 0.5f;
+        if (mx >= rightX && mx <= rightX + rightW && my >= boxY && my <= boxY + boxH) {
+            this.configNameListening = true;
+            return true;
+        }
+        this.configNameListening = false;
+        float btnY = boxY + boxH + 8.0f;
+        float btnH = (float)rowH - 0.5f;
+        float btnY2 = btnY + btnH + 4.0f;
+        float btnY3 = btnY2 + btnH + 4.0f;
+        float btnY4 = btnY3 + btnH + 4.0f;
+        float btnY5 = btnY4 + btnH + 4.0f;
+        boolean canCreate = !this.sanitizeConfigName(this.configNameInput).isEmpty();
+        boolean canSelect = this.selectedConfigName != null && !this.selectedConfigName.isEmpty();
+        boolean canSave = canSelect || canCreate;
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY && my <= btnY + btnH && canCreate) {
+            String created = this.createDefaultConfig(this.configNameInput);
+            if (created != null) {
+                this.selectedConfigName = created;
+            }
+            return true;
+        }
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY2 && my <= btnY2 + btnH && canSelect) {
+            String backup = this.backupConfig(this.selectedConfigName, this.configNameInput);
+            if (backup != null) {
+                this.selectedConfigName = backup;
+            }
+            return true;
+        }
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY3 && my <= btnY3 + btnH && canSelect) {
+            String deleting = this.selectedConfigName;
+            this.deleteConfig(deleting);
+            this.selectedConfigName = this.configNames.isEmpty() ? null : this.configNames.get(0);
+            if (deleting != null && deleting.equalsIgnoreCase(this.appliedConfigName)) {
+                this.appliedConfigName = null;
+            }
+            return true;
+        }
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY4 && my <= btnY4 + btnH && canSave) {
+            String inputName = this.sanitizeConfigName(this.configNameInput);
+            String toSave = inputName.isEmpty() ? this.selectedConfigName : inputName;
+            String saved = this.saveConfig(toSave);
+            if (saved != null) {
+                this.selectedConfigName = saved;
+            }
+            return true;
+        }
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY5 && my <= btnY5 + btnH && canSelect) {
+            this.loadConfig(this.selectedConfigName);
+            return true;
+        }
+        return false;
     }
 
     private int getFontHeight() {
