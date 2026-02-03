@@ -50,6 +50,9 @@ extends Screen {
     private final ArrayList<Snowflake> snowflakes = new ArrayList();
     private final ArrayList<TopTab> topTabs = new ArrayList();
     private Page page = Page.Module;
+    private float topTabAnimX;
+    private float topTabAnimW;
+    private boolean topTabAnimInit;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -426,22 +429,58 @@ extends Screen {
         int padX = 8;
         boolean customFont = FontManager.isCustomFontEnabled();
         boolean shadow = FontManager.isShadowEnabled();
+
+        TopTab activeTab = null;
+        for (TopTab tab : this.topTabs) {
+            if (this.page != tab.page) continue;
+            activeTab = tab;
+            break;
+        }
+        if (activeTab == null) {
+            return;
+        }
+
+        float dt = AnimateUtil.deltaTime();
+        if (dt <= 0.0f) {
+            dt = 0.016f;
+        }
+        float a = dt * 18.0f;
+        if (a < 0.0f) {
+            a = 0.0f;
+        }
+        if (a > 0.35f) {
+            a = 0.35f;
+        }
+        float targetX = (float)activeTab.x;
+        float targetW = (float)activeTab.w;
+        if (!this.topTabAnimInit) {
+            this.topTabAnimX = targetX;
+            this.topTabAnimW = targetW;
+            this.topTabAnimInit = true;
+        } else {
+            this.topTabAnimX += (targetX - this.topTabAnimX) * a;
+            this.topTabAnimW += (targetW - this.topTabAnimW) * a;
+        }
+
+        for (TopTab tab : this.topTabs) {
+            boolean hovered = mouseX >= tab.x && mouseX <= tab.x + tab.w && mouseY >= tab.y && mouseY <= tab.y + tab.h;
+            int base = gui.defaultColor.getValue().getRGB();
+            int hov = gui.hoverColor.getValue().getRGB();
+            Render2DUtil.rect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)(tab.x + tab.w), (float)tab.y + (float)tab.h - 0.5f, hovered ? hov : base);
+        }
+
+        boolean hoveredActive = mouseX >= activeTab.x && mouseX <= activeTab.x + activeTab.w && mouseY >= activeTab.y && mouseY <= activeTab.y + activeTab.h;
+        int activeAlpha = hoveredActive ? gui.hoverAlpha.getValueInt() : gui.alpha.getValueInt();
+        if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawLutRect(context.getMatrices(), this.topTabAnimX, (float)activeTab.y, this.topTabAnimW, (float)activeTab.h - 0.5f, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), activeAlpha);
+        } else {
+            Color c = gui.getActiveColor((double)activeTab.y * 0.25);
+            Render2DUtil.rect(context.getMatrices(), this.topTabAnimX, (float)activeTab.y, this.topTabAnimX + this.topTabAnimW, (float)activeTab.y + (float)activeTab.h - 0.5f, ColorUtil.injectAlpha(c, activeAlpha).getRGB());
+        }
+
         for (TopTab tab : this.topTabs) {
             boolean hovered = mouseX >= tab.x && mouseX <= tab.x + tab.w && mouseY >= tab.y && mouseY <= tab.y + tab.h;
             boolean active = this.page == tab.page;
-            if (active) {
-                int a = hovered ? gui.hoverAlpha.getValueInt() : gui.alpha.getValueInt();
-                if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
-                    Render2DUtil.drawLutRect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)tab.w, (float)tab.h - 0.5f, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), a);
-                } else {
-                    Color c = gui.getActiveColor((double)tab.y * 0.25);
-                    Render2DUtil.rect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)(tab.x + tab.w), (float)tab.y + (float)tab.h - 0.5f, ColorUtil.injectAlpha(c, a).getRGB());
-                }
-            } else {
-                int base = gui.defaultColor.getValue().getRGB();
-                int hov = gui.hoverColor.getValue().getRGB();
-                Render2DUtil.rect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)(tab.x + tab.w), (float)tab.y + (float)tab.h - 0.5f, hovered ? hov : base);
-            }
             int textColor = active || hovered ? gui.enableTextColor.getValue().getRGB() : gui.defaultTextColor.getValue().getRGB();
             float textY = this.getCenteredTextY((float)tab.y, (float)tab.h - 0.5f);
             TextUtil.drawString(context, tab.label, (double)(tab.x + padX), (double)textY, textColor, customFont, shadow);
