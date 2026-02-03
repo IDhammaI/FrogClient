@@ -48,6 +48,8 @@ extends Screen {
     private boolean layoutCorrected = false;
     private final Random snowRandom = new Random();
     private final ArrayList<Snowflake> snowflakes = new ArrayList();
+    private final ArrayList<TopTab> topTabs = new ArrayList();
+    private Page page = Page.Module;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -67,6 +69,11 @@ extends Screen {
     }
 
     private void load() {
+        this.topTabs.clear();
+        this.topTabs.add(new TopTab(Page.Module, "Module"));
+        this.topTabs.add(new TopTab(Page.Config, "Config"));
+        this.topTabs.add(new TopTab(Page.Hud, "HUD"));
+        this.topTabs.add(new TopTab(Page.AiAssistant, "AI Assistant"));
         int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
         int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
         int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
@@ -233,6 +240,7 @@ extends Screen {
             Frog.BLUR.applyBlur(blurRadius, 0.0f, 0.0f, (float)context.getScaledWindowWidth(), (float)context.getScaledWindowHeight(), (float)ClickGui.getInstance().blurType.getValue().ordinal());
         }
         this.renderSnow(context);
+        this.renderTopTabs(context, mouseX, mouseY);
         context.getMatrices().push();
         context.getMatrices().translate((float)panelX + (float)panelW / 2.0f, (float)panelY + (float)panelH / 2.0f + slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
@@ -244,10 +252,12 @@ extends Screen {
         context.getMatrices().push();
         context.getMatrices().translate(0.0f, slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
-        this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
+        if (this.page == Page.Module) {
+            this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
+        }
         context.getMatrices().pop();
         ClickGui gui = ClickGui.getInstance();
-        if (gui != null && gui.tips.getValue()) {
+        if (this.page == Page.Module && gui != null && gui.tips.getValue()) {
             boolean customFont = FontManager.isCustomFontEnabled();
             boolean shadow = FontManager.isShadowEnabled();
             float lineHeight = customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight();
@@ -292,37 +302,50 @@ extends Screen {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int clickedButton) {
-        this.components.forEach(components -> components.mouseClicked((int)mouseX, (int)mouseY, clickedButton));
+        if (clickedButton == 0 && this.handleTopTabClick((int)mouseX, (int)mouseY)) {
+            return true;
+        }
+        if (this.page == Page.Module) {
+            this.components.forEach(components -> components.mouseClicked((int)mouseX, (int)mouseY, clickedButton));
+        }
         return super.mouseClicked(mouseX, mouseY, clickedButton);
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int releaseButton) {
-        this.components.forEach(components -> components.mouseReleased((int)mouseX, (int)mouseY, releaseButton));
+        if (this.page == Page.Module) {
+            this.components.forEach(components -> components.mouseReleased((int)mouseX, (int)mouseY, releaseButton));
+        }
         return super.mouseReleased(mouseX, mouseY, releaseButton);
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (InputUtil.isKeyPressed((long)Wrapper.mc.getWindow().getHandle(), (int)340)) {
-            if (verticalAmount < 0.0) {
-                this.components.forEach(component -> component.setX(component.getTargetX() - 15));
+        if (this.page == Page.Module) {
+            if (InputUtil.isKeyPressed((long)Wrapper.mc.getWindow().getHandle(), (int)340)) {
+                if (verticalAmount < 0.0) {
+                    this.components.forEach(component -> component.setX(component.getTargetX() - 15));
+                } else if (verticalAmount > 0.0) {
+                    this.components.forEach(component -> component.setX(component.getTargetX() + 15));
+                }
+            } else if (verticalAmount < 0.0) {
+                this.components.forEach(component -> component.setY(component.getTargetY() - 15));
             } else if (verticalAmount > 0.0) {
-                this.components.forEach(component -> component.setX(component.getTargetX() + 15));
+                this.components.forEach(component -> component.setY(component.getTargetY() + 15));
             }
-        } else if (verticalAmount < 0.0) {
-            this.components.forEach(component -> component.setY(component.getTargetY() - 15));
-        } else if (verticalAmount > 0.0) {
-            this.components.forEach(component -> component.setY(component.getTargetY() + 15));
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        this.components.forEach(component -> component.onKeyPressed(keyCode));
+        if (this.page == Page.Module) {
+            this.components.forEach(component -> component.onKeyPressed(keyCode));
+        }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     public boolean charTyped(char chr, int modifiers) {
-        this.components.forEach(component -> component.onKeyTyped(chr, modifiers));
+        if (this.page == Page.Module) {
+            this.components.forEach(component -> component.onKeyTyped(chr, modifiers));
+        }
         return super.charTyped(chr, modifiers);
     }
 
@@ -336,6 +359,107 @@ extends Screen {
 
     public int getTextOffset() {
         return -ClickGui.getInstance().textOffset.getValueInt() - 6;
+    }
+
+    private void setPage(Page page) {
+        if (page == null) {
+            return;
+        }
+        this.page = page;
+        for (Component c : this.components) {
+            c.drag = false;
+        }
+    }
+
+    private int getFontHeight() {
+        if (FontManager.isCustomFontEnabled()) {
+            return (int)FontManager.ui.getFontHeight();
+        }
+        return 9;
+    }
+
+    private int getTextWidth(String s) {
+        if (FontManager.isCustomFontEnabled()) {
+            return (int)FontManager.ui.getWidth(s);
+        }
+        return Wrapper.mc != null ? Wrapper.mc.textRenderer.getWidth(s) : 0;
+    }
+
+    private float getCenteredTextY(float baseY, float boxHeight) {
+        return baseY + (boxHeight - (float)this.getFontHeight()) / 2.0f + (float)ClickGui.getInstance().textOffset.getValueInt();
+    }
+
+    private void updateTopTabsLayout(int screenWidth) {
+        int gap = 0;
+        int padX = 8;
+        int y = 6;
+        int h = this.getFontHeight() + 6;
+        int total = 0;
+        for (int i = 0; i < this.topTabs.size(); ++i) {
+            TopTab tab = this.topTabs.get(i);
+            int w = this.getTextWidth(tab.label) + padX * 2;
+            tab.w = w;
+            tab.h = h;
+            tab.y = y;
+            total += w;
+            if (i != this.topTabs.size() - 1) {
+                total += gap;
+            }
+        }
+        int x = Math.round(((float)screenWidth - (float)total) / 2.0f);
+        for (int i = 0; i < this.topTabs.size(); ++i) {
+            TopTab tab = this.topTabs.get(i);
+            tab.x = x;
+            x += tab.w + gap;
+        }
+    }
+
+    private void renderTopTabs(DrawContext context, int mouseX, int mouseY) {
+        if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
+            return;
+        }
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            return;
+        }
+        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth());
+        int padX = 8;
+        boolean customFont = FontManager.isCustomFontEnabled();
+        boolean shadow = FontManager.isShadowEnabled();
+        for (TopTab tab : this.topTabs) {
+            boolean hovered = mouseX >= tab.x && mouseX <= tab.x + tab.w && mouseY >= tab.y && mouseY <= tab.y + tab.h;
+            boolean active = this.page == tab.page;
+            if (active) {
+                int a = hovered ? gui.hoverAlpha.getValueInt() : gui.alpha.getValueInt();
+                if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+                    Render2DUtil.drawLutRect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)tab.w, (float)tab.h - 0.5f, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), a);
+                } else {
+                    Color c = gui.getActiveColor((double)tab.y * 0.25);
+                    Render2DUtil.rect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)(tab.x + tab.w), (float)tab.y + (float)tab.h - 0.5f, ColorUtil.injectAlpha(c, a).getRGB());
+                }
+            } else {
+                int base = gui.defaultColor.getValue().getRGB();
+                int hov = gui.hoverColor.getValue().getRGB();
+                Render2DUtil.rect(context.getMatrices(), (float)tab.x, (float)tab.y, (float)(tab.x + tab.w), (float)tab.y + (float)tab.h - 0.5f, hovered ? hov : base);
+            }
+            int textColor = active || hovered ? gui.enableTextColor.getValue().getRGB() : gui.defaultTextColor.getValue().getRGB();
+            float textY = this.getCenteredTextY((float)tab.y, (float)tab.h - 0.5f);
+            TextUtil.drawString(context, tab.label, (double)(tab.x + padX), (double)textY, textColor, customFont, shadow);
+        }
+    }
+
+    private boolean handleTopTabClick(int mouseX, int mouseY) {
+        if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
+            return false;
+        }
+        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth());
+        for (TopTab tab : this.topTabs) {
+            if (mouseX >= tab.x && mouseX <= tab.x + tab.w && mouseY >= tab.y && mouseY <= tab.y + tab.h) {
+                this.setPage(tab.page);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void renderSnow(DrawContext context) {
@@ -416,6 +540,28 @@ extends Screen {
         float speedMul = 0.55f + this.snowRandom.nextFloat() * 1.05f;
         float sizeMul = 0.6f + this.snowRandom.nextFloat() * 1.2f;
         return new Snowflake(x, y, phase, drift, speedMul, sizeMul);
+    }
+
+    private static enum Page {
+        Module,
+        Config,
+        Hud,
+        AiAssistant;
+
+    }
+
+    private static final class TopTab {
+        private final Page page;
+        private final String label;
+        private int x;
+        private int y;
+        private int w;
+        private int h;
+
+        private TopTab(Page page, String label) {
+            this.page = page;
+            this.label = label;
+        }
     }
 
     private static final class Snowflake {
