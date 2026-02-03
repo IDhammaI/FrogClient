@@ -62,6 +62,8 @@
     "mixins.MixinInGameOverlayRenderer",
     "mixins.MixinKeyboard",
     "mixins.MixinKeyboardInput",
+    "mixins.MixinLightStorage",
+    "mixins.MixinLightingProvider",
     "mixins.MixinLightmapTextureManager",
     "mixins.MixinLivingEntity",
     "mixins.MixinLivingEntityRenderer",
