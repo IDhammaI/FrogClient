@@ -13,6 +13,7 @@
 package dev.idhammai.asm.mixins;
 
 import dev.idhammai.mod.modules.impl.render.NoRender;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.light.LightingProvider;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,17 +24,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value={LightingProvider.class})
 public class MixinLightingProvider {
+    private boolean shouldBlockLightUpdates() {
+        if (NoRender.INSTANCE == null) {
+            return false;
+        }
+        if (!NoRender.INSTANCE.isOn() || !NoRender.INSTANCE.lightsUpdate.getValue()) {
+            return false;
+        }
+        MinecraftClient mc = MinecraftClient.getInstance();
+        return mc != null && mc.isOnThread();
+    }
+
     @Inject(at={@At(value="HEAD")}, method={"checkBlock"}, cancellable=true)
     public void checkBlock(BlockPos pos, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isOn() && NoRender.INSTANCE.lightsUpdate.getValue()) {
+        if (this.shouldBlockLightUpdates()) {
             ci.cancel();
         }
     }
 
-    @Inject(at={@At(value="RETURN")}, method={"doLightUpdates"}, cancellable=true)
+    @Inject(at={@At(value="HEAD")}, method={"doLightUpdates"}, cancellable=true)
     public void doLightUpdates(CallbackInfoReturnable<Integer> cir) {
-        if (NoRender.INSTANCE.isOn() && NoRender.INSTANCE.lightsUpdate.getValue()) {
+        if (this.shouldBlockLightUpdates()) {
             cir.setReturnValue(0);
+            cir.cancel();
         }
     }
 }
