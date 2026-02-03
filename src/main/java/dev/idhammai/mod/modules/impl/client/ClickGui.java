@@ -241,6 +241,7 @@ extends Module {
             mc.getSoundManager().play((SoundInstance)PositionedSoundInstance.master((RegistryEntry)SoundEvents.UI_BUTTON_CLICK, (float)this.soundPitch.getValueFloat()));
         }
         this.applyHeights();
+        this.recenterLayout();
         mc.setScreen((Screen)ClickGuiScreen.getInstance());
     }
 
