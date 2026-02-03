@@ -4,10 +4,8 @@
 package dev.idhammai.mod.commands.impl;
 
 import dev.idhammai.Frog;
-import dev.idhammai.core.Manager;
 import dev.idhammai.core.impl.ConfigManager;
 import dev.idhammai.mod.commands.Command;
-import java.io.File;
 import java.util.List;
 
 public class SaveCommand
@@ -20,13 +18,7 @@ extends Command {
     public void runCommand(String[] parameters) {
         if (parameters.length == 1) {
             this.sendChatMessage("\u00a7fSaving config named " + parameters[0]);
-            File folder = new File(SaveCommand.mc.runDirectory.getPath() + File.separator + Frog.CONFIG_DIR + File.separator + "cfg");
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-            ConfigManager.options = Manager.getFile("cfg" + File.separator + parameters[0] + ".cfg");
-            Frog.save();
-            ConfigManager.options = Manager.getFile("options.txt");
+            ConfigManager.saveCfg(parameters[0]);
         } else {
             this.sendChatMessage("\u00a7fSaving..");
         }

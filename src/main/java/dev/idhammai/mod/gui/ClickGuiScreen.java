@@ -85,6 +85,8 @@ extends Screen {
     private String appliedConfigName;
     private String configNameInput = "";
     private boolean configNameListening;
+    private String lastSavedConfigName;
+    private long lastSavedConfigTime;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -499,248 +501,41 @@ extends Screen {
         }
     }
 
-    private File getConfigFolder() {
-        if (Wrapper.mc == null) {
-            return null;
-        }
-        return new File(Wrapper.mc.runDirectory.getPath() + File.separator + Frog.CONFIG_DIR + File.separator + "cfg");
-    }
-
     private void refreshConfigList() {
         this.configNames.clear();
-        File folder = this.getConfigFolder();
-        if (folder == null) {
-            return;
-        }
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-        File[] files = folder.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File f : files) {
-            if (f == null || !f.isFile()) continue;
-            String n = f.getName();
-            if (n == null) continue;
-            String ln = n.toLowerCase();
-            if (!ln.endsWith(".cfg")) continue;
-            String base = n.substring(0, n.length() - 4);
-            if (base.isEmpty()) continue;
-            this.configNames.add(base);
-        }
-        this.configNames.sort(String::compareToIgnoreCase);
-    }
-
-    private File getConfigFile(String name) {
-        if (name == null || name.isEmpty()) {
-            return null;
-        }
-        File folder = this.getConfigFolder();
-        if (folder == null) {
-            return null;
-        }
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-        return new File(folder, name + ".cfg");
+        this.configNames.addAll(ConfigManager.listCfgNames());
     }
 
     private String sanitizeConfigName(String name) {
-        if (name == null) {
-            return "";
-        }
-        String s = name.trim();
-        if (s.isEmpty()) {
-            return "";
-        }
-        StringBuilder out = new StringBuilder();
-        for (int i = 0; i < s.length(); ++i) {
-            char c = s.charAt(i);
-            if (Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == ' ') {
-                out.append(c);
-                continue;
-            }
-            out.append('_');
-        }
-        String r = out.toString().trim();
-        if (r.length() > 32) {
-            r = r.substring(0, 32);
-        }
-        return r;
-    }
-
-    private String uniqueConfigName(String base) {
-        String n = this.sanitizeConfigName(base);
-        if (n.isEmpty()) {
-            return "";
-        }
-        File f = this.getConfigFile(n);
-        if (f != null && !f.exists()) {
-            return n;
-        }
-        for (int i = 1; i < 1000; ++i) {
-            String nn = n + "_" + i;
-            File ff = this.getConfigFile(nn);
-            if (ff != null && !ff.exists()) {
-                return nn;
-            }
-        }
-        return n;
-    }
-
-    private void writeDefaultConfig(File file) {
-        if (file == null) {
-            return;
-        }
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-            for (Module module : Frog.MODULE.getModules()) {
-                for (Setting setting : module.getSettings()) {
-                    String line = module.getName() + "_" + setting.getName();
-                    if (setting instanceof BooleanSetting) {
-                        BooleanSetting s = (BooleanSetting)setting;
-                        out.println(line + ":" + s.getDefaultValue());
-                    } else if (setting instanceof SliderSetting) {
-                        SliderSetting s = (SliderSetting)setting;
-                        out.println(line + ":" + s.getDefaultValue());
-                    } else if (setting instanceof BindSetting) {
-                        BindSetting s = (BindSetting)setting;
-                        out.println(line + ":" + s.getDefaultValue());
-                        out.println(line + "_hold:" + false);
-                    } else if (setting instanceof EnumSetting) {
-                        EnumSetting s = (EnumSetting)setting;
-                        Enum dv = (Enum)s.getDefaultValue();
-                        out.println(line + ":" + dv.name());
-                    } else if (setting instanceof ColorSetting) {
-                        ColorSetting s = (ColorSetting)setting;
-                        out.println(line + ":" + s.getDefaultValue().getRGB());
-                        out.println(line + "Rainbow:" + s.getDefaultRainbow());
-                        if (s.injectBoolean) {
-                            out.println(line + "Boolean:" + s.getDefaultBooleanValue());
-                        }
-                    } else if (setting instanceof StringSetting) {
-                        StringSetting s = (StringSetting)setting;
-                        out.println(line + ":" + s.getDefaultValue());
-                    }
-                }
-                out.println(module.getName() + "_state:" + (module instanceof HUD));
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            if (out != null) {
-                out.close();
-            }
-        }
+        return ConfigManager.sanitizeCfgName(name);
     }
 
     private String createDefaultConfig(String nameInput) {
-        String base = this.sanitizeConfigName(nameInput);
-        if (base.isEmpty()) {
-            return null;
-        }
-        String name = this.uniqueConfigName(base);
-        File file = this.getConfigFile(name);
-        if (file == null) {
-            return null;
-        }
-        this.writeDefaultConfig(file);
+        String name = ConfigManager.createDefaultCfg(nameInput);
         this.refreshConfigList();
         return name;
     }
 
     private String backupConfig(String fromName, String toNameInput) {
-        if (fromName == null || fromName.isEmpty()) {
-            return null;
-        }
-        File src = this.getConfigFile(fromName);
-        if (src == null || !src.exists()) {
-            return null;
-        }
-        String base = this.sanitizeConfigName(toNameInput);
-        if (base.isEmpty()) {
-            base = fromName + "_backup_" + System.currentTimeMillis();
-        }
-        String name = this.uniqueConfigName(base);
-        File dst = this.getConfigFile(name);
-        if (dst == null) {
-            return null;
-        }
-        try {
-            Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        String name = ConfigManager.backupCfg(fromName, toNameInput);
         this.refreshConfigList();
         return name;
     }
 
     private void deleteConfig(String name) {
-        File f = this.getConfigFile(name);
-        if (f == null || !f.exists()) {
-            return;
-        }
-        try {
-            f.delete();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        ConfigManager.deleteCfg(name);
         this.refreshConfigList();
     }
 
     private String saveConfig(String name) {
-        String n = this.sanitizeConfigName(name);
-        if (n.isEmpty()) {
-            return null;
-        }
-        File folder = this.getConfigFolder();
-        if (folder == null) {
-            return null;
-        }
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-        try {
-            ConfigManager.options = Manager.getFile("cfg" + File.separator + n + ".cfg");
-            Frog.save();
-            this.refreshConfigList();
-            return n;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        finally {
-            ConfigManager.options = Manager.getFile("options.txt");
-        }
+        String n = ConfigManager.saveCfg(name);
+        this.refreshConfigList();
+        return n;
     }
 
     private void loadConfig(String name) {
-        if (name == null || name.isEmpty()) {
-            return;
-        }
-        try {
-            ConfigManager.options = Manager.getFile("cfg" + File.separator + name + ".cfg");
-            Frog.CONFIG = new ConfigManager();
-            Frog.CONFIG.load();
+        if (ConfigManager.loadCfg(name)) {
             this.appliedConfigName = name;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            ConfigManager.options = Manager.getFile("options.txt");
-            Frog.save();
-            if (Fonts.INSTANCE != null) {
-                Fonts.INSTANCE.refresh();
-            }
         }
     }
 
@@ -858,6 +653,14 @@ extends Screen {
         TextUtil.drawString(context, bApply, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY5, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
         float hintY = btnY5 + btnH + 8.0f;
         TextUtil.drawString(context, hint, (double)(rightX + 2.0f), (double)hintY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+        if (this.lastSavedConfigName != null && !this.lastSavedConfigName.isEmpty()) {
+            long now = System.currentTimeMillis();
+            if (now - this.lastSavedConfigTime <= 2500L) {
+                String savedMsg = chinese ? "已保存: cfg/" + this.lastSavedConfigName + ".cfg" : "Saved: cfg/" + this.lastSavedConfigName + ".cfg";
+                float savedY = hintY + (float)this.getFontHeight() + 4.0f;
+                TextUtil.drawString(context, savedMsg, (double)(rightX + 2.0f), (double)savedY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+            }
+        }
     }
 
     private boolean handleConfigClick(int mouseX, int mouseY, int mouseButton) {
@@ -964,6 +767,8 @@ extends Screen {
             String saved = this.saveConfig(toSave);
             if (saved != null) {
                 this.selectedConfigName = saved;
+                this.lastSavedConfigName = saved;
+                this.lastSavedConfigTime = System.currentTimeMillis();
             }
             return true;
         }
