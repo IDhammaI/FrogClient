@@ -30,6 +30,8 @@ import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import java.awt.Color;
+import java.awt.Desktop;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
@@ -70,6 +72,12 @@ extends Screen {
     private boolean configNameListening;
     private String lastSavedConfigName;
     private long lastSavedConfigTime;
+    private float configSelectAnimY;
+    private boolean configSelectAnimInit;
+    private boolean confirmOpen;
+    private String confirmTitle;
+    private String confirmMessage;
+    private Runnable confirmYesAction;
 
     public ClickGuiScreen() {
         super((Text)Text.literal((String)"Frog"));
@@ -339,10 +347,16 @@ extends Screen {
             TextUtil.drawString(context, tip5, tipX, tipY5, color5, customFont, shadow);
             context.getMatrices().pop();
         }
+        if (this.confirmOpen) {
+            this.renderConfirmDialog(context, mouseX, mouseY);
+        }
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int clickedButton) {
+        if (this.confirmOpen) {
+            return this.handleConfirmClick((int)mouseX, (int)mouseY, clickedButton);
+        }
         if (clickedButton == 0 && this.handleTopTabClick((int)mouseX, (int)mouseY)) {
             return true;
         }
@@ -395,6 +409,17 @@ extends Screen {
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.confirmOpen) {
+            if (keyCode == 256) {
+                this.closeConfirm();
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 335) {
+                this.confirmYes();
+                return true;
+            }
+            return true;
+        }
         if (this.page == Page.Module) {
             this.components.forEach(component -> component.onKeyPressed(keyCode));
             return super.keyPressed(keyCode, scanCode, modifiers);
@@ -451,6 +476,139 @@ extends Screen {
         return super.charTyped(chr, modifiers);
     }
 
+    private void openConfirm(String title, String message, Runnable yesAction) {
+        this.confirmOpen = true;
+        this.confirmTitle = title;
+        this.confirmMessage = message;
+        this.confirmYesAction = yesAction;
+        this.configNameListening = false;
+    }
+
+    private void closeConfirm() {
+        this.confirmOpen = false;
+        this.confirmTitle = null;
+        this.confirmMessage = null;
+        this.confirmYesAction = null;
+    }
+
+    private void confirmYes() {
+        if (this.confirmYesAction != null) {
+            try {
+                this.confirmYesAction.run();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        this.closeConfirm();
+    }
+
+    private boolean containsCfgNameIgnoreCase(String name) {
+        if (name == null || name.isEmpty()) {
+            return false;
+        }
+        for (String n : this.configNames) {
+            if (n == null || !n.equalsIgnoreCase(name)) continue;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleConfirmClick(int mouseX, int mouseY, int clickedButton) {
+        if (clickedButton != 0) {
+            this.closeConfirm();
+            return true;
+        }
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            this.closeConfirm();
+            return true;
+        }
+        int sw = Item.context != null ? Item.context.getScaledWindowWidth() : (Wrapper.mc != null && Wrapper.mc.getWindow() != null ? Wrapper.mc.getWindow().getScaledWidth() : 0);
+        int sh = Item.context != null ? Item.context.getScaledWindowHeight() : (Wrapper.mc != null && Wrapper.mc.getWindow() != null ? Wrapper.mc.getWindow().getScaledHeight() : 0);
+        if (sw <= 0 || sh <= 0) {
+            this.closeConfirm();
+            return true;
+        }
+        boolean customFont = FontManager.isCustomFontEnabled();
+        float lineH = (float)(customFont ? (int)FontManager.ui.getFontHeight() : TextUtil.getHeight());
+        float pad = 10.0f;
+        float boxW = Math.min(340.0f, (float)sw - 40.0f);
+        float btnH = lineH + 6.0f;
+        float boxH = pad + lineH + 6.0f + lineH + 12.0f + btnH + pad;
+        float x = ((float)sw - boxW) / 2.0f;
+        float y = ((float)sh - boxH) / 2.0f;
+        float gap = 8.0f;
+        float btnW = (boxW - pad * 2.0f - gap) / 2.0f;
+        float btnY = y + boxH - pad - btnH;
+        float yesX = x + pad;
+        float noX = yesX + btnW + gap;
+        boolean inYes = (float)mouseX >= yesX && (float)mouseX <= yesX + btnW && (float)mouseY >= btnY && (float)mouseY <= btnY + btnH;
+        boolean inNo = (float)mouseX >= noX && (float)mouseX <= noX + btnW && (float)mouseY >= btnY && (float)mouseY <= btnY + btnH;
+        if (inYes) {
+            this.confirmYes();
+            return true;
+        }
+        if (inNo) {
+            this.closeConfirm();
+            return true;
+        }
+        this.closeConfirm();
+        return true;
+    }
+
+    private void renderConfirmDialog(DrawContext context, int mouseX, int mouseY) {
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            return;
+        }
+        boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+        boolean customFont = FontManager.isCustomFontEnabled();
+        boolean shadow = FontManager.isShadowEnabled();
+        int sw = context.getScaledWindowWidth();
+        int sh = context.getScaledWindowHeight();
+        Render2DUtil.rect(context.getMatrices(), 0.0f, 0.0f, (float)sw, (float)sh, new Color(0, 0, 0, 140).getRGB());
+        float lineH = (float)(customFont ? (int)FontManager.ui.getFontHeight() : TextUtil.getHeight());
+        float pad = 10.0f;
+        float boxW = Math.min(340.0f, (float)sw - 40.0f);
+        float btnH = lineH + 6.0f;
+        float boxH = pad + lineH + 6.0f + lineH + 12.0f + btnH + pad;
+        float x = ((float)sw - boxW) / 2.0f;
+        float y = ((float)sh - boxH) / 2.0f;
+        Render2DUtil.rect(context.getMatrices(), x, y, x + boxW, y + boxH, gui.defaultColor.getValue().getRGB());
+        String title = this.confirmTitle == null || this.confirmTitle.isEmpty() ? (chinese ? "确认" : "Confirm") : this.confirmTitle;
+        String msg = this.confirmMessage == null ? "" : this.confirmMessage;
+        float titleY = y + pad;
+        float msgY = titleY + lineH + 6.0f;
+        float titleX = x + (boxW - (float)this.getTextWidth(title)) / 2.0f;
+        float msgX = x + (boxW - (float)this.getTextWidth(msg)) / 2.0f;
+        TextUtil.drawString(context, title, (double)titleX, (double)titleY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        TextUtil.drawString(context, msg, (double)msgX, (double)msgY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
+        float gap = 8.0f;
+        float btnW = (boxW - pad * 2.0f - gap) / 2.0f;
+        float btnY = y + boxH - pad - btnH;
+        float yesX = x + pad;
+        float noX = yesX + btnW + gap;
+        boolean hYes = (float)mouseX >= yesX && (float)mouseX <= yesX + btnW && (float)mouseY >= btnY && (float)mouseY <= btnY + btnH;
+        boolean hNo = (float)mouseX >= noX && (float)mouseX <= noX + btnW && (float)mouseY >= btnY && (float)mouseY <= btnY + btnH;
+        int activeAlpha = hYes ? gui.hoverAlpha.getValueInt() : gui.alpha.getValueInt();
+        if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawLutRect(context.getMatrices(), yesX, btnY, btnW, btnH, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), activeAlpha);
+        } else {
+            Color ac = gui.getActiveColor((double)btnY * 0.25);
+            Render2DUtil.rect(context.getMatrices(), yesX, btnY, yesX + btnW, btnY + btnH, ColorUtil.injectAlpha(ac, activeAlpha).getRGB());
+        }
+        int bgNo = hNo ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), noX, btnY, noX + btnW, btnY + btnH, bgNo);
+        String yes = chinese ? "确认" : "Yes";
+        String no = chinese ? "取消" : "No";
+        float yesTx = yesX + (btnW - (float)this.getTextWidth(yes)) / 2.0f;
+        float noTx = noX + (btnW - (float)this.getTextWidth(no)) / 2.0f;
+        float btnTy = this.getCenteredTextY(btnY, btnH);
+        TextUtil.drawString(context, yes, (double)yesTx, (double)btnTy, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        TextUtil.drawString(context, no, (double)noTx, (double)btnTy, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+    }
+
     public boolean shouldPause() {
         return false;
     }
@@ -475,6 +633,7 @@ extends Screen {
             this.refreshConfigList();
             this.configScroll = 0.0f;
             this.configNameListening = false;
+            this.configSelectAnimInit = false;
             if (this.selectedConfigName != null && !this.configNames.contains(this.selectedConfigName)) {
                 this.selectedConfigName = null;
             }
@@ -522,6 +681,39 @@ extends Screen {
         }
     }
 
+    private void openConfigFolder() {
+        try {
+            File folder = ConfigManager.getCfgFolder();
+            if (folder == null) {
+                return;
+            }
+            if (Desktop.isDesktopSupported()) {
+                Desktop d = Desktop.getDesktop();
+                if (d != null && d.isSupported(Desktop.Action.OPEN)) {
+                    d.open(folder);
+                    return;
+                }
+            }
+            String os = System.getProperty("os.name");
+            String path = folder.getAbsolutePath();
+            if (os != null) {
+                String lower = os.toLowerCase();
+                if (lower.contains("win")) {
+                    Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", "", path});
+                    return;
+                }
+                if (lower.contains("mac")) {
+                    Runtime.getRuntime().exec(new String[]{"open", path});
+                    return;
+                }
+            }
+            Runtime.getRuntime().exec(new String[]{"xdg-open", path});
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void renderConfigPage(DrawContext context, int mouseX, int mouseY, float delta, float scale, float slideY, float pageOffsetX, int pageW, int panelX, int panelY, int panelW, int panelH) {
         ClickGui gui = ClickGui.getInstance();
         if (gui == null) {
@@ -556,23 +748,71 @@ extends Screen {
         String none = chinese ? "无" : "None";
         TextUtil.drawString(context, title, (double)(x + 2.0f), (double)titleY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
         int rowH = this.getFontHeight() + 6;
+        float rh = (float)rowH - 0.5f;
         float clipTop = listY - (float)rowH;
         float clipBottom = (float)context.getScaledWindowHeight() - 20.0f;
+
+        int selectedIndex = -1;
+        if (this.selectedConfigName != null && !this.selectedConfigName.isEmpty()) {
+            for (int i = 0; i < this.configNames.size(); ++i) {
+                String n = this.configNames.get(i);
+                if (n != null && n.equalsIgnoreCase(this.selectedConfigName)) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        float targetY = 0.0f;
+        if (selectedIndex >= 0) {
+            targetY = listY + (float)selectedIndex * (float)rowH - this.configScroll;
+            float dt = AnimateUtil.deltaTime();
+            if (dt <= 0.0f) {
+                dt = 0.016f;
+            }
+            float a = dt * 18.0f;
+            if (a < 0.0f) {
+                a = 0.0f;
+            }
+            if (a > 0.35f) {
+                a = 0.35f;
+            }
+            if (!this.configSelectAnimInit) {
+                this.configSelectAnimY = targetY;
+                this.configSelectAnimInit = true;
+            } else {
+                this.configSelectAnimY += (targetY - this.configSelectAnimY) * a;
+            }
+        }
+
+        for (int i = 0; i < this.configNames.size(); ++i) {
+            float ry = listY + (float)i * (float)rowH - this.configScroll;
+            if (ry + rh < clipTop || ry > clipBottom) continue;
+            boolean hovered = mx >= x && mx <= x + listW && my >= ry && my <= ry + rh;
+            int bg = hovered ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
+            Render2DUtil.rect(context.getMatrices(), x, ry, x + listW, ry + rh, bg);
+        }
+
+        if (selectedIndex >= 0) {
+            float ay = this.configSelectAnimY;
+            boolean hoveredSelected = mx >= x && mx <= x + listW && my >= ay && my <= ay + rh;
+            int activeAlpha = hoveredSelected ? gui.hoverAlpha.getValueInt() : gui.alpha.getValueInt();
+            if (!(ay + rh < clipTop || ay > clipBottom)) {
+                if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+                    Render2DUtil.drawLutRect(context.getMatrices(), x, ay, listW, rh, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), activeAlpha);
+                } else {
+                    Color ac = gui.getActiveColor((double)ay * 0.25);
+                    Render2DUtil.rect(context.getMatrices(), x, ay, x + listW, ay + rh, ColorUtil.injectAlpha(ac, activeAlpha).getRGB());
+                }
+            }
+        }
+
         for (int i = 0; i < this.configNames.size(); ++i) {
             String name = this.configNames.get(i);
             float ry = listY + (float)i * (float)rowH - this.configScroll;
-            float rh = (float)rowH - 0.5f;
             if (ry + rh < clipTop || ry > clipBottom) continue;
             boolean hovered = mx >= x && mx <= x + listW && my >= ry && my <= ry + rh;
-            boolean selected = this.selectedConfigName != null && name.equalsIgnoreCase(this.selectedConfigName);
-            int bg;
-            if (selected) {
-                Color ac = gui.getActiveColor((double)ry * 0.25);
-                bg = ColorUtil.injectAlpha(ac, gui.alpha.getValueInt()).getRGB();
-            } else {
-                bg = hovered ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
-            }
-            Render2DUtil.rect(context.getMatrices(), x, ry, x + listW, ry + rh, bg);
+            boolean selected = this.selectedConfigName != null && name != null && name.equalsIgnoreCase(this.selectedConfigName);
             int tc = hovered || selected ? gui.enableTextColor.getValue().getRGB() : gui.defaultTextColor.getValue().getRGB();
             float textY = this.getCenteredTextY(ry, rh);
             TextUtil.drawString(context, name, (double)(x + 6.0f), (double)textY, tc, customFont, shadow);
@@ -592,7 +832,7 @@ extends Screen {
         boolean hoverBox = mx >= rightX && mx <= rightX + rightW && my >= boxY && my <= boxY + boxH;
         int boxBg = hoverBox || this.configNameListening ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
         Render2DUtil.rect(context.getMatrices(), rightX, boxY, rightX + rightW, boxY + boxH, boxBg);
-        String placeholder = chinese ? "输入配置名" : "Type config name";
+        String placeholder = chinese ? "请输入配置名" : "Please type config name";
         String show = this.configNameInput == null || this.configNameInput.isEmpty() ? placeholder : this.configNameInput;
         if (this.configNameListening) {
             show = show + StringButton.getIdleSign();
@@ -601,11 +841,12 @@ extends Screen {
         TextUtil.drawString(context, show, (double)(rightX + 6.0f), (double)boxTextY, gui.enableTextColor.getValue().getRGB(), customFont, shadow);
         float btnY = boxY + boxH + 8.0f;
         float btnH = (float)rowH - 0.5f;
-        String bCreate = chinese ? "创建默认" : "Create Default";
+        String bCreate = chinese ? "创建新配置" : "Create New Config";
         String bBackup = chinese ? "备份" : "Backup";
         String bDelete = chinese ? "删除" : "Delete";
         String bSave = chinese ? "保存" : "Save";
-        String bApply = chinese ? "Apply 应用" : "Apply";
+        String bApply = chinese ? "应用" : "Apply";
+        String bOpenFolder = chinese ? "打开配置文件夹" : "Open Folder";
         boolean canCreate = !this.sanitizeConfigName(this.configNameInput).isEmpty();
         boolean canSelect = this.selectedConfigName != null && !this.selectedConfigName.isEmpty();
         boolean canSave = canSelect || canCreate;
@@ -636,7 +877,12 @@ extends Screen {
         int bgApply = canApply ? (hApply ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : gui.defaultColor.getValue().getRGB();
         Render2DUtil.rect(context.getMatrices(), rightX, btnY5, rightX + rightW, btnY5 + btnH, bgApply);
         TextUtil.drawString(context, bApply, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY5, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
-        float hintY = btnY5 + btnH + 8.0f;
+        float btnY6 = btnY5 + btnH + 4.0f;
+        boolean hOpenFolder = mx >= rightX && mx <= rightX + rightW && my >= btnY6 && my <= btnY6 + btnH;
+        int bgOpenFolder = hOpenFolder ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB();
+        Render2DUtil.rect(context.getMatrices(), rightX, btnY6, rightX + rightW, btnY6 + btnH, bgOpenFolder);
+        TextUtil.drawString(context, bOpenFolder, (double)(rightX + 6.0f), (double)this.getCenteredTextY(btnY6, btnH), gui.enableTextColor.getValue().getRGB(), customFont, shadow);
+        float hintY = btnY6 + btnH + 8.0f;
         TextUtil.drawString(context, hint, (double)(rightX + 2.0f), (double)hintY, gui.defaultTextColor.getValue().getRGB(), customFont, shadow);
         if (this.lastSavedConfigName != null && !this.lastSavedConfigName.isEmpty()) {
             long now = System.currentTimeMillis();
@@ -722,6 +968,7 @@ extends Screen {
         float btnY3 = btnY2 + btnH + 4.0f;
         float btnY4 = btnY3 + btnH + 4.0f;
         float btnY5 = btnY4 + btnH + 4.0f;
+        float btnY6 = btnY5 + btnH + 4.0f;
         boolean canCreate = !this.sanitizeConfigName(this.configNameInput).isEmpty();
         boolean canSelect = this.selectedConfigName != null && !this.selectedConfigName.isEmpty();
         boolean canSave = canSelect || canCreate;
@@ -740,27 +987,65 @@ extends Screen {
             return true;
         }
         if (mx >= rightX && mx <= rightX + rightW && my >= btnY3 && my <= btnY3 + btnH && canSelect) {
-            String deleting = this.selectedConfigName;
-            this.deleteConfig(deleting);
-            this.selectedConfigName = this.configNames.isEmpty() ? null : this.configNames.get(0);
-            if (deleting != null && deleting.equalsIgnoreCase(this.appliedConfigName)) {
-                this.appliedConfigName = null;
-            }
+            final String deleting = this.selectedConfigName;
+            boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+            String title = chinese ? "确认删除" : "Confirm Delete";
+            String msg = chinese ? "确定删除配置: " + deleting + " ?" : "Delete config: " + deleting + " ?";
+            this.openConfirm(title, msg, new Runnable(){
+
+                @Override
+                public void run() {
+                    ClickGuiScreen.this.deleteConfig(deleting);
+                    ClickGuiScreen.this.selectedConfigName = ClickGuiScreen.this.configNames.isEmpty() ? null : (String)ClickGuiScreen.this.configNames.get(0);
+                    if (deleting != null && deleting.equalsIgnoreCase(ClickGuiScreen.this.appliedConfigName)) {
+                        ClickGuiScreen.this.appliedConfigName = null;
+                    }
+                }
+            });
             return true;
         }
         if (mx >= rightX && mx <= rightX + rightW && my >= btnY4 && my <= btnY4 + btnH && canSave) {
             String inputName = this.sanitizeConfigName(this.configNameInput);
-            String toSave = inputName.isEmpty() ? this.selectedConfigName : inputName;
-            String saved = this.saveConfig(toSave);
-            if (saved != null) {
-                this.selectedConfigName = saved;
-                this.lastSavedConfigName = saved;
-                this.lastSavedConfigTime = System.currentTimeMillis();
+            final String toSave = inputName.isEmpty() ? this.selectedConfigName : inputName;
+            final Runnable doSave = new Runnable(){
+
+                @Override
+                public void run() {
+                    String saved = ClickGuiScreen.this.saveConfig(toSave);
+                    if (saved != null) {
+                        ClickGuiScreen.this.selectedConfigName = saved;
+                        ClickGuiScreen.this.lastSavedConfigName = saved;
+                        ClickGuiScreen.this.lastSavedConfigTime = System.currentTimeMillis();
+                    }
+                }
+            };
+            this.refreshConfigList();
+            if (toSave != null && !toSave.isEmpty() && this.containsCfgNameIgnoreCase(toSave)) {
+                boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+                String title = chinese ? "确认覆盖保存" : "Confirm Overwrite";
+                String msg = chinese ? "将覆盖配置: " + toSave : "Overwrite config: " + toSave;
+                this.openConfirm(title, msg, doSave);
+            } else {
+                doSave.run();
             }
             return true;
         }
         if (mx >= rightX && mx <= rightX + rightW && my >= btnY5 && my <= btnY5 + btnH && canSelect) {
-            this.loadConfig(this.selectedConfigName);
+            final String applyName = this.selectedConfigName;
+            boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+            String title = chinese ? "确认应用" : "Confirm Apply";
+            String msg = chinese ? "应用配置: " + applyName : "Apply config: " + applyName;
+            this.openConfirm(title, msg, new Runnable(){
+
+                @Override
+                public void run() {
+                    ClickGuiScreen.this.loadConfig(applyName);
+                }
+            });
+            return true;
+        }
+        if (mx >= rightX && mx <= rightX + rightW && my >= btnY6 && my <= btnY6 + btnH) {
+            this.openConfigFolder();
             return true;
         }
         return false;

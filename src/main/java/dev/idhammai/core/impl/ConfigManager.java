@@ -34,6 +34,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -315,11 +316,27 @@ extends Manager {
         if (src == null || !src.exists()) {
             return null;
         }
-        String base = ConfigManager.sanitizeCfgName(toNameInput);
-        if (base.isEmpty()) {
-            base = fromName + "_backup_" + System.currentTimeMillis();
+        String baseName = ConfigManager.sanitizeCfgName(toNameInput);
+        if (baseName.isEmpty()) {
+            baseName = ConfigManager.sanitizeCfgName(fromName);
         }
-        String name = ConfigManager.uniqueCfgName(base);
+        if (baseName.isEmpty()) {
+            return null;
+        }
+        LocalDate d = LocalDate.now();
+        String prefix = baseName + "_" + d.getYear() + "_" + d.getMonthValue() + "_" + d.getDayOfMonth();
+        String name = null;
+        for (int i = 1; i < 100000; ++i) {
+            String candidate = prefix + "_[" + i + "]";
+            File f = ConfigManager.getCfgFile(candidate);
+            if (f != null && !f.exists()) {
+                name = candidate;
+                break;
+            }
+        }
+        if (name == null) {
+            return null;
+        }
         File dst = ConfigManager.getCfgFile(name);
         if (dst == null) {
             return null;
