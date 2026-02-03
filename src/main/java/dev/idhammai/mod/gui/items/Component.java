@@ -34,6 +34,7 @@ extends Mod {
     private float animY;
     private float mouseMoveOffsetX;
     private float mouseMoveOffsetY;
+    private float pageOffsetX;
     private final Animation xAnimation = new Animation();
     private final Animation yAnimation = new Animation();
     private final Animation openAnimation = new Animation();
@@ -243,7 +244,7 @@ extends Mod {
     }
 
     public int getX() {
-        return (int)(this.animX + this.mouseMoveOffsetX);
+        return (int)(this.animX + this.mouseMoveOffsetX + this.pageOffsetX);
     }
 
     public int getTargetX() {
@@ -301,6 +302,10 @@ extends Mod {
     public void setMouseMoveOffset(float x, float y) {
         this.mouseMoveOffsetX = x;
         this.mouseMoveOffsetY = y;
+    }
+
+    public void setPageOffsetX(float x) {
+        this.pageOffsetX = x;
     }
 
     private boolean isHovering(int mouseX, int mouseY) {

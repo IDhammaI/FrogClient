@@ -14,6 +14,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.Frog;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.AnimateUtil;
+import dev.idhammai.api.utils.math.Animation;
+import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.core.impl.FontManager;
@@ -46,10 +48,13 @@ extends Screen {
     private float walkShakeOffsetY;
     private float walkShakeTime;
     private boolean layoutCorrected = false;
+    private int lastLayoutScreenW = -1;
+    private int lastLayoutScreenH = -1;
     private final Random snowRandom = new Random();
     private final ArrayList<Snowflake> snowflakes = new ArrayList();
     private final ArrayList<TopTab> topTabs = new ArrayList();
     private Page page = Page.Module;
+    private final Animation pageSlide = new Animation();
     private float topTabAnimX;
     private float topTabAnimW;
     private boolean topTabAnimInit;
@@ -120,6 +125,15 @@ extends Screen {
         ClickGui clickGui = ClickGui.getInstance();
         if (clickGui != null && clickGui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
             clickGui.updateSpectrumLut(context.getScaledWindowHeight());
+        }
+        if (Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
+            int sw = Wrapper.mc.getWindow().getScaledWidth();
+            int sh = Wrapper.mc.getWindow().getScaledHeight();
+            if (sw != this.lastLayoutScreenW || sh != this.lastLayoutScreenH) {
+                this.layoutCorrected = false;
+                this.lastLayoutScreenW = sw;
+                this.lastLayoutScreenH = sh;
+            }
         }
         if (!this.layoutCorrected && Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
             int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
@@ -252,15 +266,25 @@ extends Screen {
         int strokeA = Math.max(0, Math.min(255, (int)Math.round((double)alpha * 0.22)));
         // Render2DUtil.drawRoundedStroke(context.getMatrices(), panelX, panelY, panelW, panelH, r, new Color(220, 224, 230, strokeA), 48);
         context.getMatrices().pop();
+        int screenW = context.getScaledWindowWidth();
+        int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
+        int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        int count = this.components.size();
+        int totalWidth = count > 0 ? count * layoutWidth + (count - 1) : screenW;
+        int pageW = Math.max(screenW, totalWidth + 32);
+        float pageX = (float)this.pageSlide.get(-((double)this.page.ordinal() * (double)pageW), 260L, Easing.SineOut);
+        float pageOffsetX = scale == 0.0f ? pageX : pageX / scale;
+        this.components.forEach(c -> c.setPageOffsetX(pageOffsetX));
         context.getMatrices().push();
         context.getMatrices().translate(0.0f, slideY, 0.0f);
         context.getMatrices().scale(scale, scale, 1.0f);
-        if (this.page == Page.Module) {
-            this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
-        }
+        this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
         context.getMatrices().pop();
         ClickGui gui = ClickGui.getInstance();
-        if (this.page == Page.Module && gui != null && gui.tips.getValue()) {
+        if (gui != null && gui.tips.getValue()) {
+            context.getMatrices().push();
+            context.getMatrices().translate(pageX, 0.0f, 0.0f);
             boolean customFont = FontManager.isCustomFontEnabled();
             boolean shadow = FontManager.isShadowEnabled();
             float lineHeight = customFont ? FontManager.ui.getFontHeight() : TextUtil.getHeight();
@@ -300,6 +324,7 @@ extends Screen {
             Color c5 = gui.getActiveColor(delay5);
             int color5 = ColorUtil.injectAlpha(c5, alpha).getRGB();
             TextUtil.drawString(context, tip5, tipX, tipY5, color5, customFont, shadow);
+            context.getMatrices().pop();
         }
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
