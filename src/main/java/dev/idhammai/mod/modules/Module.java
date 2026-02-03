@@ -393,5 +393,34 @@ extends Mod {
 
 
         public abstract String getIcon();
+
+        public String getDisplayName() {
+            if (ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue()) {
+                switch (this) {
+                    case Combat: {
+                        return "战斗类";
+                    }
+                    case Misc: {
+                        return "杂项";
+                    }
+                    case Render: {
+                        return "渲染类";
+                    }
+                    case Movement: {
+                        return "移动类";
+                    }
+                    case Player: {
+                        return "玩家类";
+                    }
+                    case Exploit: {
+                        return "漏洞类";
+                    }
+                    case Client: {
+                        return "客户端类";
+                    }
+                }
+            }
+            return this.name();
+        }
     }
 }

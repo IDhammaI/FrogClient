@@ -153,7 +153,7 @@ extends Mod {
         FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)(headerX + 6.0f), (double)iconY, Button.enableTextColor);
         float nameFontHeight = FontManager.isCustomFontEnabled() ? FontManager.ui.getFontHeight() : 9.0f;
         float nameY = headerY + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
-        this.drawString(this.getName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
+        this.drawString(this.category.getDisplayName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
         if (openProgress > 0.01) {
             int panelX1 = x - 1;
             int panelY1 = (int)((float)y + (float)this.height - 6.0f);
