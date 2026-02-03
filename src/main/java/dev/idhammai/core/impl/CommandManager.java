@@ -16,7 +16,6 @@ import dev.idhammai.mod.commands.impl.BindCommand;
 import dev.idhammai.mod.commands.impl.BindsCommand;
 import dev.idhammai.mod.commands.impl.CleanerCommand;
 import dev.idhammai.mod.commands.impl.ClipCommand;
-import dev.idhammai.mod.commands.impl.EsuCommand;
 import dev.idhammai.mod.commands.impl.FakePlayerCommand;
 import dev.idhammai.mod.commands.impl.FriendCommand;
 import dev.idhammai.mod.commands.impl.GamemodeCommand;
@@ -54,7 +53,6 @@ implements Wrapper {
         this.registerCommand(new BindsCommand());
         this.registerCommand(new CleanerCommand());
         this.registerCommand(new ClipCommand());
-        this.registerCommand(new EsuCommand());
         this.registerCommand(new FakePlayerCommand());
         this.registerCommand(new FriendCommand());
         this.registerCommand(new XrayCommand());
