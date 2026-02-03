@@ -98,10 +98,10 @@ extends Screen {
 
     private void load() {
         this.topTabs.clear();
-        this.topTabs.add(new TopTab(Page.Module, "Module"));
-        this.topTabs.add(new TopTab(Page.Config, "Config"));
-        this.topTabs.add(new TopTab(Page.Hud, "HUD"));
-        this.topTabs.add(new TopTab(Page.AiAssistant, "AI Assistant"));
+        this.topTabs.add(new TopTab(Page.Module, "Module", "模块"));
+        this.topTabs.add(new TopTab(Page.Config, "Config", "配置"));
+        this.topTabs.add(new TopTab(Page.Hud, "HUD", "HUD"));
+        this.topTabs.add(new TopTab(Page.AiAssistant, "AI Assistant", "AI助手"));
         int categoryWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().categoryWidth.getValueInt() : 101;
         int moduleButtonWidth = ClickGui.getInstance() != null ? ClickGui.getInstance().moduleButtonWidth.getValueInt() : 93;
         int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
@@ -1069,7 +1069,7 @@ extends Screen {
         return baseY + (boxHeight - (float)this.getFontHeight()) / 2.0f + (float)ClickGui.getInstance().textOffset.getValueInt();
     }
 
-    private void updateTopTabsLayout(int screenWidth) {
+    private void updateTopTabsLayout(int screenWidth, boolean chinese) {
         int gap = 0;
         int padX = 8;
         int y = 6;
@@ -1077,7 +1077,8 @@ extends Screen {
         int total = 0;
         for (int i = 0; i < this.topTabs.size(); ++i) {
             TopTab tab = this.topTabs.get(i);
-            int w = this.getTextWidth(tab.label) + padX * 2;
+            String label = tab.getLabel(chinese);
+            int w = this.getTextWidth(label) + padX * 2;
             tab.w = w;
             tab.h = h;
             tab.y = y;
@@ -1102,7 +1103,8 @@ extends Screen {
         if (gui == null) {
             return;
         }
-        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth());
+        boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth(), chinese);
         int padX = 8;
         boolean customFont = FontManager.isCustomFontEnabled();
         boolean shadow = FontManager.isShadowEnabled();
@@ -1160,7 +1162,7 @@ extends Screen {
             boolean active = this.page == tab.page;
             int textColor = active || hovered ? gui.enableTextColor.getValue().getRGB() : gui.defaultTextColor.getValue().getRGB();
             float textY = this.getCenteredTextY((float)tab.y, (float)tab.h - 0.5f);
-            TextUtil.drawString(context, tab.label, (double)(tab.x + padX), (double)textY, textColor, customFont, shadow);
+            TextUtil.drawString(context, tab.getLabel(chinese), (double)(tab.x + padX), (double)textY, textColor, customFont, shadow);
         }
     }
 
@@ -1168,7 +1170,8 @@ extends Screen {
         if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
             return false;
         }
-        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth());
+        boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+        this.updateTopTabsLayout(Wrapper.mc.getWindow().getScaledWidth(), chinese);
         for (TopTab tab : this.topTabs) {
             if (mouseX >= tab.x && mouseX <= tab.x + tab.w && mouseY >= tab.y && mouseY <= tab.y + tab.h) {
                 this.setPage(tab.page);
@@ -1268,15 +1271,24 @@ extends Screen {
 
     private static final class TopTab {
         private final Page page;
-        private final String label;
+        private final String labelEn;
+        private final String labelZh;
         private int x;
         private int y;
         private int w;
         private int h;
 
-        private TopTab(Page page, String label) {
+        private TopTab(Page page, String labelEn, String labelZh) {
             this.page = page;
-            this.label = label;
+            this.labelEn = labelEn;
+            this.labelZh = labelZh;
+        }
+
+        private String getLabel(boolean chinese) {
+            if (chinese) {
+                return this.labelZh == null ? this.labelEn : this.labelZh;
+            }
+            return this.labelEn;
         }
     }
 
