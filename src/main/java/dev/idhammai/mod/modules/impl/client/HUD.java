@@ -141,7 +141,11 @@ extends Module {
             double playerSpeed = dist / div * (double)timer;
             return String.format("Speed \u00a7f%skm/h", this.decimal.format(playerSpeed));
         }, this.speed::getValue));
-        this.infoList.add(new Info(() -> "Time \u00a7f" + new SimpleDateFormat("h:mm keyCodec", Locale.ENGLISH).format(new Date()), this.time::getValue));
+        this.infoList.add(new Info(() -> {
+            boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+            String label = chinese ? "\u65f6\u95f4" : "Time";
+            return label + " \u00a7f" + new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH).format(new Date());
+        }, this.time::getValue));
         this.infoList.add(new Info(() -> {
             PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(HUD.mc.player.getUuid());
             Object playerPing = playerListEntry == null ? "Unknown" : playerListEntry.getLatency() + "ms";
@@ -213,6 +217,9 @@ extends Module {
     }
 
     private int getWidth(String s) {
+        if (s == null) {
+            return 0;
+        }
         if (this.lowerCase.getValue()) {
             s = s.toLowerCase();
         }
@@ -314,10 +321,11 @@ extends Module {
             this.info = info;
             this.drawn = drawn;
             try {
-                this.string = this.info.call();
+                String s = this.info.call();
+                this.string = s == null ? "" : s;
             }
             catch (Exception exception) {
-                // empty catch block
+                this.string = "";
             }
         }
 
@@ -345,17 +353,23 @@ extends Module {
             this.isOn = this.drawn.getAsBoolean();
             if (this.isOn) {
                 try {
-                    this.string = HUD.this.lowerCase.getValue() ? this.info.call().toLowerCase() : this.info.call();
+                    String s = this.info.call();
+                    if (s == null) {
+                        s = "";
+                    }
+                    this.string = HUD.this.lowerCase.getValue() ? s.toLowerCase() : s;
                 }
                 catch (Exception e) {
                     e.printStackTrace();
+                    this.string = "";
                 }
             }
         }
 
         public void draw(DrawContext context) {
             if (this.currentX > 0.0 || this.isOn) {
-                this.currentX = this.animation.get(this.isOn ? (double)(HUD.this.getWidth(this.string) + 1) : 0.0, this.isOn ? (long)HUD.this.enableLength.getValueInt() : (long)HUD.this.disableLength.getValueInt(), HUD.this.easing.getValue());
+                String text = this.string == null ? "" : this.string;
+                this.currentX = this.animation.get(this.isOn ? (double)(HUD.this.getWidth(text) + 1) : 0.0, this.isOn ? (long)HUD.this.enableLength.getValueInt() : (long)HUD.this.disableLength.getValueInt(), HUD.this.easing.getValue());
                 double width = this.currentX + (double)HUD.this.xOffset.getValueFloat();
                 double fade = this.fadeAnimation.get(this.isOn ? 1.0 : 0.0, HUD.this.fadeLength.getValueInt(), HUD.this.easing.getValue());
                 if (fade > 0.04) {
