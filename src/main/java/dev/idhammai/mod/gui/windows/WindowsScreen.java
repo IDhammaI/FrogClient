@@ -10,7 +10,7 @@ package dev.idhammai.mod.gui.windows;
 
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.render.Render2DUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.modules.Module;
 import java.util.ArrayList;
 import java.util.Arrays;

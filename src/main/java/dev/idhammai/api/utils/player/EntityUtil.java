@@ -33,7 +33,7 @@ package dev.idhammai.api.utils.player;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.world.BlockPosX;
 import dev.idhammai.api.utils.world.BlockUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.gui.PeekScreen;
 import dev.idhammai.mod.modules.impl.client.AntiCheat;
 import dev.idhammai.mod.modules.settings.enums.SwingSide;
@@ -145,4 +145,3 @@ implements Wrapper {
         }
     }
 }
-

@@ -27,7 +27,7 @@ package dev.idhammai.mod.gui.fonts;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.render.Render3DUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;

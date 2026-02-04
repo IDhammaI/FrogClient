@@ -8,7 +8,7 @@ package dev.idhammai.mod.gui.items.buttons;
 
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
 import dev.idhammai.mod.modules.impl.client.ClickGui;

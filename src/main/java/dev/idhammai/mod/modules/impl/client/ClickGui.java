@@ -19,7 +19,7 @@ import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
 import dev.idhammai.mod.gui.items.buttons.Button;

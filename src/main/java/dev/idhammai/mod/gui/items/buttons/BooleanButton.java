@@ -10,7 +10,7 @@ import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import java.awt.Color;

@@ -12,7 +12,7 @@ import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.Mod;
-import dev.idhammai.mod.gui.ClickGuiScreen;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.gui.items.buttons.Button;
 import dev.idhammai.mod.gui.items.buttons.ModuleButton;
 import dev.idhammai.mod.modules.Module;
