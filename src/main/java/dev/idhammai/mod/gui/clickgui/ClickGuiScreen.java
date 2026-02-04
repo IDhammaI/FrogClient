@@ -26,8 +26,11 @@ import dev.idhammai.mod.gui.clickgui.pages.ClickGuiHudPage;
 import dev.idhammai.mod.gui.clickgui.pages.ClickGuiModulePage;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
+import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
+import dev.idhammai.core.impl.CommandManager;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Random;
@@ -80,6 +83,10 @@ extends Screen {
         return INSTANCE;
     }
 
+    public Page getPage() {
+        return this.page;
+    }
+
     private void setInstance() {
         INSTANCE = this;
     }
@@ -94,6 +101,20 @@ extends Screen {
         this.hudPage.init();
     }
 
+    private void renderHudModules(DrawContext context, float delta) {
+        for (Module module : Frog.MODULE.getModules()) {
+            if (!(module instanceof HudModule) || !module.isOn()) continue;
+            try {
+                module.onRender2D(context, delta);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                if (ClientSetting.INSTANCE == null || !ClientSetting.INSTANCE.debug.getValue()) continue;
+                CommandManager.sendMessage("\u00a74An error has occurred (" + module.getName() + " [onRender2D]) Message: [" + e.getMessage() + "]");
+            }
+        }
+    }
+
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         float keyCodec = (float)ClickGui.getInstance().alphaValue;
         float scale = 0.92f + 0.08f * keyCodec;
@@ -101,6 +122,9 @@ extends Screen {
         RenderSystem.setShaderColor((float)1.0f, (float)1.0f, (float)1.0f, (float)keyCodec);
         Item.context = context;
         this.renderBackground(context, mouseX, mouseY, delta);
+        if (this.page == Page.Hud) {
+            this.renderHudModules(context, delta);
+        }
         ClickGui clickGui = ClickGui.getInstance();
         if (clickGui != null && clickGui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
             clickGui.updateSpectrumLut(context.getScaledWindowHeight());

@@ -13,10 +13,9 @@ package dev.idhammai.mod.modules.impl.client;
 
 import dev.idhammai.Frog;
 import dev.idhammai.core.impl.FontManager;
-import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
-import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 import java.awt.Color;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -30,13 +29,11 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 
 public class TextRadar
-extends Module {
+extends HudModule {
     public static TextRadar INSTANCE;
     private final DecimalFormat df = new DecimalFormat("0.0");
     private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
     private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
-    private final SliderSetting x = this.add(new SliderSetting("X", 0, 0, 1500));
-    private final SliderSetting y = this.add(new SliderSetting("Y", 100, 0, 1000));
     private final ColorSetting color = this.add(new ColorSetting("Color", new Color(255, 255, 255)));
     private final ColorSetting friend = this.add(new ColorSetting("Friend").injectBoolean(true));
     private final BooleanSetting doubleBlank = this.add(new BooleanSetting("Double", false));
@@ -47,14 +44,17 @@ extends Module {
     private final BooleanSetting effects = this.add(new BooleanSetting("Effects", true));
 
     public TextRadar() {
-        super("TextRadar", Module.Category.Client);
-        this.setChinese("\u6587\u5b57\u96f7\u8fbe");
+        super("TextRadar", "\u6587\u5b57\u96f7\u8fbe", 0, 100);
         INSTANCE = this;
     }
 
     @Override
     public void onRender2D(DrawContext drawContext, float tickDelta) {
-        int currentY = this.y.getValueInt();
+        int startX = this.getHudX();
+        int startY = this.getHudY();
+        int currentY = startY;
+        int maxW = 0;
+        int lines = 0;
         ArrayList<AbstractClientPlayerEntity> players = new ArrayList<AbstractClientPlayerEntity>(TextRadar.mc.world.getPlayers());
         players.sort(Comparator.comparingDouble(player -> TextRadar.mc.player.distanceTo((Entity)player)));
         for (PlayerEntity playerEntity : players) {
@@ -125,10 +125,13 @@ extends Module {
             }
             if ((isFriend = Frog.FRIEND.isFriend(playerEntity)) && !this.friend.booleanValue) continue;
             int n2 = color = isFriend ? this.friend.getValue().getRGB() : this.color.getValue().getRGB();
+            String s = stringBuilder.toString();
+            int w = this.font.getValue() ? (int)FontManager.ui.getWidth(s) : TextRadar.mc.textRenderer.getWidth(s);
+            maxW = Math.max(maxW, w);
             if (this.font.getValue()) {
-                FontManager.ui.drawString(drawContext.getMatrices(), stringBuilder.toString(), (double)this.x.getValueInt(), (double)currentY, color, this.shadow.getValue());
+                FontManager.ui.drawString(drawContext.getMatrices(), s, (double)startX, (double)currentY, color, this.shadow.getValue());
             } else {
-                drawContext.drawText(TextRadar.mc.textRenderer, stringBuilder.toString(), this.x.getValueInt(), currentY, color, this.shadow.getValue());
+                drawContext.drawText(TextRadar.mc.textRenderer, s, startX, currentY, color, this.shadow.getValue());
             }
             if (this.font.getValue()) {
                 n = (int)FontManager.ui.getFontHeight();
@@ -137,7 +140,13 @@ extends Module {
                 n = 9;
             }
             currentY += n;
+            ++lines;
         }
+        if (lines <= 0) {
+            this.clearHudBounds();
+            return;
+        }
+        this.setHudBounds(startX, startY, Math.max(1, maxW), Math.max(1, currentY - startY));
     }
 
     public static Formatting getHealthColor(PlayerEntity player) {

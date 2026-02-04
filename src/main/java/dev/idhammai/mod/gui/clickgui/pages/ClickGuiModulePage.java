@@ -5,6 +5,7 @@ import dev.idhammai.mod.Mod;
 import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.buttons.ModuleButton;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import java.util.ArrayList;
@@ -45,7 +46,12 @@ public final class ClickGuiModulePage {
                 @Override
                 public void setupItems() {
                     for (Module module : Frog.MODULE.getModules()) {
-                        if (!module.getCategory().equals(category)) continue;
+                        if (!module.getCategory().equals(category)) {
+                            continue;
+                        }
+                        if (ClickGuiModulePage.this.isHudComponentModule(module)) {
+                            continue;
+                        }
                         this.addButton(new ModuleButton(module));
                     }
                 }
@@ -89,5 +95,9 @@ public final class ClickGuiModulePage {
         } else if (verticalAmount > 0.0) {
             this.host.getComponents().forEach(component -> component.setY(component.getTargetY() + 15));
         }
+    }
+
+    private boolean isHudComponentModule(Module module) {
+        return module instanceof HudModule;
     }
 }

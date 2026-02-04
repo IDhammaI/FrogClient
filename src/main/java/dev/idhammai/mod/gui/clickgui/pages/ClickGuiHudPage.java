@@ -11,8 +11,8 @@ import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.Mod;
 import dev.idhammai.mod.gui.clickgui.ClickGuiFrame;
 import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
-import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.buttons.ModuleButton;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
@@ -20,6 +20,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
 import net.minecraft.client.gui.DrawContext;
+import org.lwjgl.glfw.GLFW;
 
 public final class ClickGuiHudPage {
     private final ClickGuiScreen host;
@@ -33,6 +34,9 @@ public final class ClickGuiHudPage {
     private boolean hudDragging;
     private float hudDragDx;
     private float hudDragDy;
+    private HudModule elementDragging;
+    private int elementDragDx;
+    private int elementDragDy;
 
     public ClickGuiHudPage(ClickGuiScreen host) {
         this.host = host;
@@ -53,6 +57,7 @@ public final class ClickGuiHudPage {
     public void mouseReleased(int mouseX, int mouseY, int releaseButton) {
         if (releaseButton == 0) {
             this.hudDragging = false;
+            this.elementDragging = null;
         }
         this.hudButtons.forEach(b -> b.mouseReleased(mouseX, mouseY, releaseButton));
     }
@@ -70,6 +75,7 @@ public final class ClickGuiHudPage {
         if (gui == null) {
             return;
         }
+        this.dragHudElements(mouseX, mouseY);
         float mx = frame.unitMouseX(mouseX);
         float my = frame.unitMouseY(mouseY);
         float baseX = frame.baseX(ClickGuiScreen.Page.Hud);
@@ -117,7 +123,7 @@ public final class ClickGuiHudPage {
         float yTop = y + (float)height - 5.0f;
         float viewTop = y + (float)height - 3.0f;
         float viewBottom = (float)context.getScaledWindowHeight() - 20.0f + frame.totalOffsetY;
-        float viewH = Math.max(0.0f, viewBottom - viewTop);
+        float maxViewH = Math.max(0.0f, viewBottom - viewTop);
         double totalTarget = 0.0;
         for (ModuleButton b : this.hudButtons) {
             b.update();
@@ -125,6 +131,7 @@ public final class ClickGuiHudPage {
             b.itemHeight = b.getVisibleItemHeight() * itemOpen;
             totalTarget += (double)b.getButtonHeight() + 1.5 + b.itemHeight;
         }
+        float viewH = Math.max(0.0f, Math.min(maxViewH, (float)totalTarget));
         float maxScroll = (float)Math.max(0.0, totalTarget - (double)viewH);
         if (this.hudScroll > maxScroll) {
             this.hudScroll = maxScroll;
@@ -221,10 +228,21 @@ public final class ClickGuiHudPage {
         float openProgress = (float)openProgressD;
         float viewTop = y + (float)height - 3.0f;
         float viewBottom = (float)Wrapper.mc.getWindow().getScaledHeight() - 20.0f + frame.totalOffsetY;
-        float viewH = Math.max(0.0f, viewBottom - viewTop);
+        float maxViewH = Math.max(0.0f, viewBottom - viewTop);
+        double totalTarget = 0.0;
+        for (ModuleButton b : this.hudButtons) {
+            b.update();
+            double itemOpen = b.animation.get(b.subOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+            b.itemHeight = b.getVisibleItemHeight() * itemOpen;
+            totalTarget += (double)b.getButtonHeight() + 1.5 + b.itemHeight;
+        }
+        float viewH = Math.max(0.0f, Math.min(maxViewH, (float)totalTarget));
         float openH = viewH * openProgress;
         boolean inColumn = mx >= x && mx <= x + (float)width && my >= y && my <= viewTop + openH;
         if (!inColumn) {
+            if (!inHeader && mouseButton == 0 && this.tryBeginDragHudElement(mouseX, mouseY)) {
+                return true;
+            }
             return inHeader;
         }
         if (openProgress <= 0.01f) {
@@ -266,21 +284,45 @@ public final class ClickGuiHudPage {
     }
 
     private boolean isHudComponentModule(Module module) {
-        if (module == null) {
-            return false;
-        }
-        if (module.getCategory() != Module.Category.Client) {
-            return false;
-        }
-        try {
-            module.getClass().getDeclaredMethod("onRender2D", DrawContext.class, Float.TYPE);
+        return module instanceof HudModule;
+    }
+
+    private boolean tryBeginDragHudElement(int mouseX, int mouseY) {
+        for (ModuleButton b : this.hudButtons) {
+            Module m = b.getModule();
+            if (!(m instanceof HudModule)) {
+                continue;
+            }
+            HudModule hm = (HudModule)m;
+            if (!hm.isOn()) {
+                continue;
+            }
+            if (!hm.isHudHit(mouseX, mouseY)) {
+                continue;
+            }
+            this.elementDragging = hm;
+            this.elementDragDx = mouseX - hm.getHudX();
+            this.elementDragDy = mouseY - hm.getHudY();
             return true;
         }
-        catch (NoSuchMethodException e) {
-            return false;
+        return false;
+    }
+
+    private void dragHudElements(int mouseX, int mouseY) {
+        if (this.elementDragging == null) {
+            return;
         }
-        catch (Throwable t) {
-            return false;
+        if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
+            this.elementDragging = null;
+            return;
         }
+        long handle = Wrapper.mc.getWindow().getHandle();
+        if (GLFW.glfwGetMouseButton(handle, 0) != 1) {
+            this.elementDragging = null;
+            return;
+        }
+        int nx = mouseX - this.elementDragDx;
+        int ny = mouseY - this.elementDragDy;
+        this.elementDragging.setHudPos(nx, ny);
     }
 }

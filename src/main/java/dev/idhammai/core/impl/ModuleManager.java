@@ -24,15 +24,18 @@ import dev.idhammai.api.utils.path.BaritoneUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.mod.Mod;
+import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.impl.client.ItemCounterHudModule;
 import dev.idhammai.mod.modules.impl.client.AntiCheat;
 import dev.idhammai.mod.modules.impl.client.BaritoneModule;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
+import dev.idhammai.api.utils.player.InventoryUtil;
 import dev.idhammai.mod.modules.impl.client.Fonts;
 import dev.idhammai.mod.modules.impl.client.HUD;
 import dev.idhammai.mod.modules.impl.client.IRC;
-import dev.idhammai.mod.modules.impl.client.ItemsCounter;
 import dev.idhammai.mod.modules.impl.client.TextRadar;
 import dev.idhammai.mod.modules.impl.combat.AntiCrawl;
 import dev.idhammai.mod.modules.impl.combat.AntiPhase;
@@ -164,19 +167,18 @@ import dev.idhammai.mod.modules.settings.impl.BindSetting;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
+import net.minecraft.block.PistonBlock;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.item.Items;
 import org.lwjgl.opengl.GL11;
 
 public class ModuleManager
 implements Wrapper {
     private final ArrayList<Module> modules = new ArrayList();
     private final ArrayList<ToggleBanner> toggleBanners = new ArrayList();
-    private boolean notificationMouseWasDown = false;
-    private boolean interactiveToggleInBanner = false;
-
     public ArrayList<Module> getModules() {
         return this.modules;
     }
@@ -243,7 +245,20 @@ implements Wrapper {
         this.addModule(new Clip());
         this.addModule(new AntiCheat());
         this.addModule(new IRC());
-        this.addModule(new ItemsCounter());
+        this.addModule(new ItemCounterHudModule("ItemsCrystal", "水晶", Items.END_CRYSTAL, 100, 100));
+        this.addModule(new ItemCounterHudModule("ItemsXP", "经验瓶", Items.EXPERIENCE_BOTTLE, 118, 100));
+        this.addModule(new ItemCounterHudModule("ItemsPearl", "珍珠", Items.ENDER_PEARL, 136, 100));
+        this.addModule(new ItemCounterHudModule("ItemsObsidian", "黑曜石", Items.OBSIDIAN, 154, 100));
+        this.addModule(new ItemCounterHudModule("ItemsEGApple", "附魔金苹果", Items.ENCHANTED_GOLDEN_APPLE, 172, 100));
+        this.addModule(new ItemCounterHudModule("ItemsGApple", "金苹果", Items.GOLDEN_APPLE, 190, 100));
+        this.addModule(new ItemCounterHudModule("ItemsTotem", "不死图腾", Items.TOTEM_OF_UNDYING, 208, 100));
+        this.addModule(new ItemCounterHudModule("ItemsWeb", "蜘蛛网", Items.COBWEB, 226, 100));
+        this.addModule(new ItemCounterHudModule("ItemsAnchor", "重生锚", Items.RESPAWN_ANCHOR, 244, 100));
+        this.addModule(new ItemCounterHudModule("ItemsGlowstone", "萤石", Items.GLOWSTONE, 262, 100));
+        this.addModule(new ItemCounterHudModule("ItemsPiston", "活塞", Items.PISTON, 280, 100, () -> InventoryUtil.getItemCount(PistonBlock.class)));
+        this.addModule(new ItemCounterHudModule("ItemsRedstone", "红石块", Items.REDSTONE_BLOCK, 298, 100));
+        this.addModule(new ItemCounterHudModule("ItemsEnderChest", "末影箱", Items.ENDER_CHEST, 316, 100));
+        this.addModule(new ItemCounterHudModule("ItemsFirework", "烟花火箭", Items.FIREWORK_ROCKET, 334, 100));
         this.addModule(new Fov());
         this.addModule(new Criticals());
         this.addModule(new CevBreaker());
@@ -373,9 +388,14 @@ implements Wrapper {
     }
 
     public void onRender2D(DrawContext drawContext) {
+        boolean skipHudModules = false;
+        if (ModuleManager.mc.currentScreen instanceof ClickGuiScreen) {
+            skipHudModules = ((ClickGuiScreen)ModuleManager.mc.currentScreen).getPage() == ClickGuiScreen.Page.Hud;
+        }
         block5: {
             for (Module module : this.modules) {
                 if (!module.isOn()) continue;
+                if (skipHudModules && module instanceof HudModule) continue;
                 try {
                     module.onRender2D(drawContext, mc.getRenderTickCounter().getTickDelta(true));
                 }

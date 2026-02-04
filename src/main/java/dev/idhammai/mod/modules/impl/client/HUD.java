@@ -14,7 +14,6 @@
 package dev.idhammai.mod.modules.impl.client;
 
 import dev.idhammai.Frog;
-import dev.idhammai.Frog;
 import dev.idhammai.api.events.eventbus.EventListener;
 import dev.idhammai.api.events.impl.ClientTickEvent;
 import dev.idhammai.api.events.impl.InitEvent;
@@ -26,6 +25,7 @@ import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.asm.accessors.ISimpleRegistry;
 import dev.idhammai.core.impl.FontManager;
+import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
@@ -55,7 +55,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 
 public class HUD
-extends Module {
+extends HudModule {
     public static HUD INSTANCE;
     public final EnumSetting<Page> page = this.add(new EnumSetting<Page>("Page", Page.General));
     public final BooleanSetting renderingUp = this.add(new BooleanSetting("RenderingUp", false, () -> this.page.is(Page.General)));
@@ -110,8 +110,7 @@ extends Module {
     private final ArrayList<Info> moduleList = new ArrayList();
 
     public HUD() {
-        super("HUD", Module.Category.Client);
-        this.setChinese("\u754c\u9762");
+        super("HUD", "\u754c\u9762", 0, 0);
         INSTANCE = this;
         Frog.EVENT_BUS.subscribe(new InitHandler());
         for (StatusEffect potionEffect : Registries.STATUS_EFFECT) {
