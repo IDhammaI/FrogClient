@@ -74,6 +74,16 @@ extends Screen {
     private long lastSavedConfigTime;
     private float configSelectAnimY;
     private boolean configSelectAnimInit;
+    private final ArrayList<ModuleButton> hudButtons = new ArrayList();
+    private float hudScroll;
+    private boolean hudOpen = true;
+    private final Animation hudOpenAnim = new Animation();
+    private boolean hudPosInit;
+    private float hudLocalX;
+    private float hudLocalY;
+    private boolean hudDragging;
+    private float hudDragDx;
+    private float hudDragDy;
     private boolean confirmOpen;
     private String confirmTitle;
     private String confirmMessage;
@@ -133,6 +143,7 @@ extends Screen {
             });
         }
         this.components.forEach(components -> components.getItems().sort(Comparator.comparing(Mod::getName)));
+        this.initHudButtons();
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -301,6 +312,7 @@ extends Screen {
         context.getMatrices().scale(scale, scale, 1.0f);
         this.components.forEach(components -> components.drawScreen(context, mouseX, mouseY, delta));
         this.renderConfigPage(context, mouseX, mouseY, delta, scale, slideY, pageOffsetX, pageW, panelX, panelY, panelW, panelH);
+        this.renderHudPage(context, mouseX, mouseY, delta, scale, slideY, pageOffsetX, pageW, panelX, panelY, panelW, panelH);
         context.getMatrices().pop();
         ClickGui gui = ClickGui.getInstance();
         if (gui != null && gui.tips.getValue()) {
@@ -367,12 +379,25 @@ extends Screen {
         if (this.page == Page.Config && this.handleConfigClick((int)mouseX, (int)mouseY, clickedButton)) {
             return true;
         }
+        if (this.page == Page.Hud && this.handleHudClick((int)mouseX, (int)mouseY, clickedButton)) {
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, clickedButton);
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int releaseButton) {
         if (this.page == Page.Module) {
             this.components.forEach(components -> components.mouseReleased((int)mouseX, (int)mouseY, releaseButton));
+        } else if (this.page == Page.Hud) {
+            if (releaseButton == 0) {
+                this.hudDragging = false;
+            }
+            float keyCodec = (float)ClickGui.getInstance().alphaValue;
+            float scale = 0.92f + 0.08f * keyCodec;
+            float slideY = (1.0f - keyCodec) * 20.0f;
+            int mX = scale == 0.0f ? (int)mouseX : (int)((double)mouseX / (double)scale);
+            int mY = scale == 0.0f ? (int)mouseY : (int)(((double)mouseY - (double)slideY) / (double)scale);
+            this.hudButtons.forEach(b -> b.mouseReleased(mX, mY, releaseButton));
         }
         return super.mouseReleased(mouseX, mouseY, releaseButton);
     }
@@ -404,6 +429,12 @@ extends Screen {
                 next = max;
             }
             this.configScroll = next;
+        } else if (this.page == Page.Hud) {
+            float next = this.hudScroll + (float)(-verticalAmount) * 18.0f;
+            if (next < 0.0f) {
+                next = 0.0f;
+            }
+            this.hudScroll = next;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
@@ -422,6 +453,10 @@ extends Screen {
         }
         if (this.page == Page.Module) {
             this.components.forEach(component -> component.onKeyPressed(keyCode));
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        if (this.page == Page.Hud) {
+            this.hudButtons.forEach(b -> b.onKeyPressed(keyCode));
             return super.keyPressed(keyCode, scanCode, modifiers);
         }
         if (this.page == Page.Config && this.configNameListening) {
@@ -464,6 +499,10 @@ extends Screen {
     public boolean charTyped(char chr, int modifiers) {
         if (this.page == Page.Module) {
             this.components.forEach(component -> component.onKeyTyped(chr, modifiers));
+            return super.charTyped(chr, modifiers);
+        }
+        if (this.page == Page.Hud) {
+            this.hudButtons.forEach(b -> b.onKeyTyped(chr, modifiers));
             return super.charTyped(chr, modifiers);
         }
         if (this.page == Page.Config && this.configNameListening && StringHelper.isValidChar(chr)) {
@@ -1259,6 +1298,258 @@ extends Screen {
         float speedMul = 0.55f + this.snowRandom.nextFloat() * 1.05f;
         float sizeMul = 0.6f + this.snowRandom.nextFloat() * 1.2f;
         return new Snowflake(x, y, phase, drift, speedMul, sizeMul);
+    }
+
+    private void initHudButtons() {
+        this.hudButtons.clear();
+        this.hudScroll = 0.0f;
+        ArrayList<Module> modules = new ArrayList();
+        for (Module m : Frog.MODULE.getModules()) {
+            if (!this.isHudComponentModule(m)) continue;
+            modules.add(m);
+        }
+        modules.sort(Comparator.comparing(Mod::getName));
+        for (Module m : modules) {
+            this.hudButtons.add(new ModuleButton(m));
+        }
+    }
+
+    private boolean isHudComponentModule(Module module) {
+        if (module == null) {
+            return false;
+        }
+        if (module.getCategory() != Module.Category.Client) {
+            return false;
+        }
+        try {
+            module.getClass().getDeclaredMethod("onRender2D", DrawContext.class, Float.TYPE);
+            return true;
+        }
+        catch (NoSuchMethodException e) {
+            return false;
+        }
+        catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private void renderHudPage(DrawContext context, int mouseX, int mouseY, float delta, float scale, float slideY, float pageOffsetX, int pageW, int panelX, int panelY, int panelW, int panelH) {
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            return;
+        }
+        float totalOffsetX = this.mouseMoveOffsetX + this.walkShakeOffsetX;
+        float totalOffsetY = this.mouseMoveOffsetY + this.walkShakeOffsetY;
+        float mx = scale == 0.0f ? (float)mouseX : (float)mouseX / scale;
+        float my = scale == 0.0f ? (float)mouseY : ((float)mouseY - slideY) / scale;
+        float pageUnitW = scale == 0.0f ? (float)pageW : (float)pageW / scale;
+        float baseX = pageOffsetX + (float)Page.Hud.ordinal() * pageUnitW;
+        float screenUnitW = scale == 0.0f ? (float)context.getScaledWindowWidth() : (float)context.getScaledWindowWidth() / scale;
+        float panelXf = Math.max(8.0f, (screenUnitW - (float)panelW) / 2.0f);
+        float defaultLocalX = panelXf + 10.0f;
+        float defaultLocalY = (float)panelY + 10.0f;
+        if (!this.hudPosInit) {
+            this.hudLocalX = defaultLocalX;
+            this.hudLocalY = defaultLocalY;
+            this.hudPosInit = true;
+        }
+        if (this.hudDragging) {
+            this.hudLocalX = mx - this.hudDragDx - baseX - totalOffsetX;
+            this.hudLocalY = my - this.hudDragDy - totalOffsetY;
+        }
+        float x = baseX + this.hudLocalX + totalOffsetX;
+        float y = this.hudLocalY + totalOffsetY;
+        int width = gui.moduleButtonWidth.getValueInt();
+        int headerH = gui.categoryBarHeight.getValueInt();
+        int height = headerH + 5;
+        float headerX = x + ((float)width - (float)gui.categoryWidth.getValueInt()) / 2.0f;
+        float headerY = y;
+        float headerW = (float)gui.categoryWidth.getValueInt();
+        float headerHf = (float)headerH;
+        int topAlpha = gui.topAlpha.getValueInt();
+        if (gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawLutRect(context.getMatrices(), headerX, headerY, headerW, headerHf, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), topAlpha);
+        } else {
+            Color topColor = ColorUtil.injectAlpha(gui.getColor((double)headerY / 10.0), topAlpha);
+            Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerHf, topColor);
+        }
+        Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerHf, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+        boolean customFont = FontManager.isCustomFontEnabled();
+        boolean shadow = FontManager.isShadowEnabled();
+        boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
+        float iconY = headerY + (headerHf - FontManager.icon.getFontHeight()) / 2.0f;
+        FontManager.icon.drawString(context.getMatrices(), Module.Category.Client.getIcon(), (double)(headerX + 6.0f), (double)iconY, dev.idhammai.mod.gui.items.buttons.Button.enableTextColor);
+        float nameFontHeight = customFont ? FontManager.ui.getFontHeight() : 9.0f;
+        float nameY = headerY + (headerHf - nameFontHeight) / 2.0f + (float)gui.titleOffset.getValueInt();
+        String title = chinese ? "HUD" : "HUD";
+        TextUtil.drawString(context, title, (double)(headerX + 20.0f), (double)nameY, dev.idhammai.mod.gui.items.buttons.Button.enableTextColor, customFont, shadow);
+        double openProgressD = this.hudOpenAnim.get(this.hudOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+        float openProgress = (float)openProgressD;
+        float yTop = y + (float)height - 5.0f;
+        float viewTop = y + (float)height - 3.0f;
+        float viewBottom = (float)context.getScaledWindowHeight() - 20.0f + totalOffsetY;
+        float viewH = Math.max(0.0f, viewBottom - viewTop);
+        double totalTarget = 0.0;
+        for (ModuleButton b : this.hudButtons) {
+            b.update();
+            double itemOpen = b.animation.get(b.subOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+            b.itemHeight = b.getVisibleItemHeight() * itemOpen;
+            totalTarget += (double)b.getButtonHeight() + 1.5 + b.itemHeight;
+        }
+        float maxScroll = (float)Math.max(0.0, totalTarget - (double)viewH);
+        if (this.hudScroll > maxScroll) {
+            this.hudScroll = maxScroll;
+        }
+        if (this.hudScroll < 0.0f) {
+            this.hudScroll = 0.0f;
+        }
+        float openH = viewH * openProgress;
+        if (openH <= 0.5f) {
+            return;
+        }
+        if (gui.backGround.booleanValue) {
+            float bgH = ((viewTop + viewH) - yTop) * openProgress;
+            Render2DUtil.drawRect(context.getMatrices(), x, yTop, (float)width, bgH, ColorUtil.injectAlpha(gui.backGround.getValue(), gui.backgroundAlpha.getValueInt()));
+            Render2DUtil.drawRectWithOutline(context.getMatrices(), x, yTop, (float)width, bgH, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+        }
+        int scX1 = (int)x - 1;
+        int scY1 = (int)viewTop - 1;
+        int scX2 = (int)(x + (float)width) + 1;
+        int scY2 = (int)(viewTop + openH) + 1;
+        context.enableScissor(scX1, scY1, scX2, scY2);
+        float slide = (1.0f - openProgress) * 6.0f;
+        float yOff = viewTop - this.hudScroll + slide;
+        int imx = (int)mx;
+        int imy = (int)my;
+        for (ModuleButton b : this.hudButtons) {
+            b.setLocation(x + 2.0f, yOff);
+            b.setWidth(width - 4);
+            if (b.itemHeight > 0.0 || b.subOpen) {
+                int sX1 = (int)b.getX() - 1;
+                int sY1 = (int)b.getY() - 1;
+                int sX2 = (int)(b.getX() + (float)b.getWidth() + 1.0f);
+                int sY2 = (int)((double)(yOff + (float)b.getButtonHeight() + 1.5f) + b.itemHeight) + 1;
+                int iX1 = Math.max(scX1, sX1);
+                int iY1 = Math.max(scY1, sY1);
+                int iX2 = Math.min(scX2, sX2);
+                int iY2 = Math.min(scY2, sY2);
+                if (iX2 > iX1 && iY2 > iY1) {
+                    context.enableScissor(iX1, iY1, iX2, iY2);
+                    b.drawScreen(context, imx, imy, delta);
+                    context.disableScissor();
+                }
+            } else {
+                b.drawScreen(context, imx, imy, delta);
+            }
+            yOff += (float)b.getButtonHeight() + 1.5f + (float)b.itemHeight;
+        }
+        context.disableScissor();
+    }
+
+    private boolean handleHudClick(int mouseX, int mouseY, int mouseButton) {
+        if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
+            return false;
+        }
+        ClickGui gui = ClickGui.getInstance();
+        if (gui == null) {
+            return false;
+        }
+        float totalOffsetX = this.mouseMoveOffsetX + this.walkShakeOffsetX;
+        float totalOffsetY = this.mouseMoveOffsetY + this.walkShakeOffsetY;
+        float keyCodec = (float)ClickGui.getInstance().alphaValue;
+        float scale = 0.92f + 0.08f * keyCodec;
+        float slideY = (1.0f - keyCodec) * 20.0f;
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        for (Component c : this.components) {
+            minX = Math.min(minX, c.getX());
+            minY = Math.min(minY, c.getY());
+            maxX = Math.max(maxX, c.getX() + c.getWidth());
+            maxY = Math.max(maxY, c.getY() + c.getHeight());
+        }
+        int margin = 16;
+        int panelX = Math.max(8, minX - margin);
+        int panelY = Math.max(6, minY - margin);
+        int panelW = Math.min(Wrapper.mc.getWindow().getScaledWidth() - panelX - 8, maxX - minX + margin * 2);
+        int panelH = Math.min(Wrapper.mc.getWindow().getScaledHeight() - panelY - 6, maxY - minY + margin * 2 + 24);
+        int screenW = Wrapper.mc.getWindow().getScaledWidth();
+        int categoryWidth = gui.categoryWidth.getValueInt();
+        int moduleButtonWidth = gui.moduleButtonWidth.getValueInt();
+        int layoutWidth = Math.max(categoryWidth, moduleButtonWidth);
+        int count = this.components.size();
+        int totalWidth = count > 0 ? count * layoutWidth + (count - 1) : screenW;
+        int pageW = Math.max(screenW, totalWidth + 32);
+        float pageX = (float)this.pageSlide.get(-((double)this.page.ordinal() * (double)pageW), 260L, Easing.SineOut);
+        float pageOffsetX = scale == 0.0f ? pageX : pageX / scale;
+        float mx = scale == 0.0f ? (float)mouseX : (float)mouseX / scale;
+        float my = scale == 0.0f ? (float)mouseY : ((float)mouseY - slideY) / scale;
+        float pageUnitW = scale == 0.0f ? (float)pageW : (float)pageW / scale;
+        float baseX = pageOffsetX + (float)Page.Hud.ordinal() * pageUnitW;
+        float screenUnitW = scale == 0.0f ? (float)screenW : (float)screenW / scale;
+        float panelXf = Math.max(8.0f, (screenUnitW - (float)panelW) / 2.0f);
+        float defaultLocalX = panelXf + 10.0f;
+        float defaultLocalY = (float)panelY + 10.0f;
+        if (!this.hudPosInit) {
+            this.hudLocalX = defaultLocalX;
+            this.hudLocalY = defaultLocalY;
+            this.hudPosInit = true;
+        }
+        float x = baseX + this.hudLocalX + totalOffsetX;
+        float y = this.hudLocalY + totalOffsetY;
+        int width = gui.moduleButtonWidth.getValueInt();
+        int headerH = gui.categoryBarHeight.getValueInt();
+        int height = headerH + 5;
+        float headerX = x + ((float)width - (float)categoryWidth) / 2.0f;
+        float headerY = y;
+        float headerW = (float)categoryWidth;
+        float headerHf = (float)headerH;
+        boolean inHeader = mx >= headerX && mx <= headerX + headerW && my >= headerY && my <= headerY + headerHf;
+        if (inHeader && mouseButton == 0) {
+            this.components.forEach(c -> c.drag = false);
+            this.hudDragging = true;
+            this.hudDragDx = mx - x;
+            this.hudDragDy = my - y;
+            return true;
+        }
+        if (inHeader && mouseButton == 1) {
+            this.hudOpen = !this.hudOpen;
+            dev.idhammai.mod.gui.items.Item.sound();
+            return true;
+        }
+        double openProgressD = this.hudOpenAnim.get(this.hudOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+        float openProgress = (float)openProgressD;
+        float viewTop = y + (float)height - 3.0f;
+        float viewBottom = (float)Wrapper.mc.getWindow().getScaledHeight() - 20.0f + totalOffsetY;
+        float viewH = Math.max(0.0f, viewBottom - viewTop);
+        float openH = viewH * openProgress;
+        boolean inColumn = mx >= x && mx <= x + (float)width && my >= y && my <= viewTop + openH;
+        if (!inColumn) {
+            return inHeader;
+        }
+        if (openProgress <= 0.01f) {
+            return true;
+        }
+        for (ModuleButton b : this.hudButtons) {
+            b.update();
+            double itemOpen = b.animation.get(b.subOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
+            b.itemHeight = b.getVisibleItemHeight() * itemOpen;
+        }
+        float slide = (1.0f - openProgress) * 6.0f;
+        float yOff = viewTop - this.hudScroll + slide;
+        int imx = (int)mx;
+        int imy = (int)my;
+        for (ModuleButton b : this.hudButtons) {
+            b.setLocation(x + 2.0f, yOff);
+            b.setWidth(width - 4);
+            b.mouseClicked(imx, imy, mouseButton);
+            yOff += (float)b.getButtonHeight() + 1.5f + (float)b.itemHeight;
+            if (yOff > viewTop + viewH + 40.0f) {
+                break;
+            }
+        }
+        return true;
     }
 
     private static enum Page {
