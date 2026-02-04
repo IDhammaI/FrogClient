@@ -1,22 +1,8 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  net.minecraft.client.gui.DrawContext
- *  net.minecraft.client.gui.screen.ChatScreen
- *  net.minecraft.client.network.PlayerListEntry
- *  net.minecraft.entity.effect.StatusEffect
- *  net.minecraft.entity.effect.StatusEffectInstance
- *  net.minecraft.registry.Registries
- *  net.minecraft.registry.entry.RegistryEntry
- *  net.minecraft.world.World
- */
-package dev.idhammai.mod.modules.impl.client;
+package dev.idhammai.mod.modules.impl.client.hud;
 
 import dev.idhammai.Frog;
 import dev.idhammai.api.events.eventbus.EventListener;
 import dev.idhammai.api.events.impl.ClientTickEvent;
-import dev.idhammai.api.events.impl.InitEvent;
 import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
@@ -26,12 +12,12 @@ import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.asm.accessors.ISimpleRegistry;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.modules.HudModule;
-import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.impl.client.ClickGui;
+import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
 import dev.idhammai.mod.modules.settings.impl.EnumSetting;
 import dev.idhammai.mod.modules.settings.impl.SliderSetting;
-import dev.idhammai.mod.modules.settings.impl.StringSetting;
 import java.awt.Color;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -53,25 +39,28 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 
-public class HUD
-extends HudModule {
-    public static HUD INSTANCE;
+public class InfoHudModule extends HudModule {
+    public static InfoHudModule INSTANCE;
+
     public final EnumSetting<Page> page = this.add(new EnumSetting<Page>("Page", Page.General));
+
     public final BooleanSetting renderingUp = this.add(new BooleanSetting("RenderingUp", false, () -> this.page.is(Page.General)));
     public final BooleanSetting font = this.add(new BooleanSetting("Font", true, () -> this.page.is(Page.General)));
     public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true, () -> this.page.is(Page.General)));
     public final BooleanSetting lowerCase = this.add(new BooleanSetting("LowerCase", false, () -> this.page.is(Page.General)));
     public final BooleanSetting sort = this.add(new BooleanSetting("Sort", false, () -> this.page.is(Page.General)));
+    public final BooleanSetting rightAlign = this.add(new BooleanSetting("RightAlign", true, () -> this.page.is(Page.General)));
+
     public final SliderSetting xOffset = this.add(new SliderSetting("XOffset", 0.0, 0.0, 50.0, 0.1, () -> this.page.is(Page.General)));
     public final SliderSetting yOffset = this.add(new SliderSetting("YOffset", 0.0, 0.0, 50.0, 0.1, () -> this.page.is(Page.General)));
     public final SliderSetting textOffset = this.add(new SliderSetting("TextOffset", 0.0, -10.0, 10.0, 0.1, () -> this.page.is(Page.General)));
     public final SliderSetting interval = this.add(new SliderSetting("Interval", 0.0, 0.0, 15.0, 0.1, () -> this.page.is(Page.General)));
+
     public final SliderSetting enableLength = this.add(new SliderSetting("EnableLength", 200, 0, 1000, () -> this.page.is(Page.General)));
     public final SliderSetting disableLength = this.add(new SliderSetting("DisableLength", 200, 0, 1000, () -> this.page.is(Page.General)));
     public final SliderSetting fadeLength = this.add(new SliderSetting("FadeLength", 200, 0, 1000, () -> this.page.is(Page.General)));
     public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.CircInOut, () -> this.page.is(Page.General)));
-    public final BooleanSetting arrayList = this.add(new BooleanSetting("ArrayList", true, () -> this.page.is(Page.Element)).setParent());
-    public final BooleanSetting listSort = this.add(new BooleanSetting("ListSort", true, () -> this.page.is(Page.Element) && this.arrayList.isOpen()));
+
     public final BooleanSetting fps = this.add(new BooleanSetting("FPS", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting ping = this.add(new BooleanSetting("Ping", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting tps = this.add(new BooleanSetting("TPS", true, () -> this.page.is(Page.Element)));
@@ -80,72 +69,89 @@ extends HudModule {
     public final BooleanSetting speed = this.add(new BooleanSetting("Speed", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting brand = this.add(new BooleanSetting("Brand", false, () -> this.page.is(Page.Element)));
     public final BooleanSetting potions = this.add(new BooleanSetting("Potions", true, () -> this.page.is(Page.Element)));
+
     private final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Pulse, () -> this.page.is(Page.Color)));
     public final ColorSetting color = this.add(new ColorSetting("Color", new Color(208, 0, 0), () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Custom));
+
     private final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Rainbow));
     private final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Rainbow));
     private final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 220, 0, 1000, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Rainbow));
+
     private final ColorSetting endColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
     private final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Pulse));
     private final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Pulse));
+
     public final BooleanSetting blur = this.add(new BooleanSetting("Blur", false, () -> this.page.is(Page.Color)).setParent());
     public final SliderSetting radius = this.add(new SliderSetting("Radius", 10.0, 0.0, 100.0, () -> this.page.is(Page.Color) && this.blur.isOpen()));
+
     private final BooleanSetting backGround = this.add(new BooleanSetting("BackGround", false, () -> this.page.is(Page.Color)).setParent());
     public final SliderSetting width = this.add(new SliderSetting("Width", 0.0, 0.0, 15.0, () -> this.page.is(Page.Color) && this.backGround.isOpen()));
     private final ColorSetting bgColor = this.add(new ColorSetting("BGColor", new Color(0, 0, 0, 100), () -> this.page.is(Page.Color) && this.backGround.isOpen()));
+
     private final ColorSetting rect = this.add(new ColorSetting("Rect", new Color(208, 0, 0), () -> this.page.is(Page.Color)).injectBoolean(false));
     private final ColorSetting glow = this.add(new ColorSetting("Glow", new Color(208, 0, 100), () -> this.page.is(Page.Color)).injectBoolean(false));
-    private final DecimalFormat decimal = new DecimalFormat("0.0");
-    private final ArrayList<Info> infoList = new ArrayList();
-    private final ArrayList<Info> moduleList = new ArrayList();
 
-    public HUD() {
-        super("HUD", "\u754c\u9762", 0, 0);
+    private final DecimalFormat decimal = new DecimalFormat("0.0");
+    private final ArrayList<Info> infoList = new ArrayList<>();
+
+    public InfoHudModule() {
+        super("Info", "信息", 0, 0);
         INSTANCE = this;
-        Frog.EVENT_BUS.subscribe(new InitHandler());
+
         for (StatusEffect potionEffect : Registries.STATUS_EFFECT) {
             try {
                 RegistryEntry effectRegistryEntry = (RegistryEntry)((ISimpleRegistry)Registries.STATUS_EFFECT).getValueToEntry().get(potionEffect);
                 this.infoList.add(new Info(() -> {
-                    StatusEffectInstance effect = HUD.mc.player.getStatusEffect(effectRegistryEntry);
+                    StatusEffectInstance effect = InfoHudModule.mc.player.getStatusEffect(effectRegistryEntry);
                     if (effect != null) {
                         String s = potionEffect.getName().getString() + " " + (effect.getAmplifier() + 1);
-                        String s2 = HUD.getDuration(effect);
-                        return s + " \u00a7f" + s2;
+                        String s2 = InfoHudModule.getDuration(effect);
+                        return s + " §f" + s2;
                     }
                     return "";
-                }, () -> HUD.mc.player.hasStatusEffect(effectRegistryEntry) && this.potions.getValue()));
+                }, () -> InfoHudModule.mc.player != null && InfoHudModule.mc.player.hasStatusEffect(effectRegistryEntry) && this.potions.getValue()));
+            } catch (Exception ignored) {
             }
-            catch (Exception exception) {}
         }
-        this.infoList.add(new Info(() -> "ServerBrand \u00a7f" + (mc.isInSingleplayer() ? "Vanilla" : mc.getNetworkHandler().getBrand().replaceAll("\\(.*?\\)", "")), this.brand::getValue));
-        this.infoList.add(new Info(() -> "Server \u00a7f" + (mc.isInSingleplayer() ? "SinglePlayer" : HUD.mc.getCurrentServerEntry().address), this.ip::getValue));
-        this.infoList.add(new Info(() -> "TPS \u00a7f" + Frog.SERVER.getTPS() + " [" + Frog.SERVER.getCurrentTPS() + "]", this.tps::getValue));
+
+        this.infoList.add(new Info(() -> "ServerBrand §f" + (mc.isInSingleplayer() || mc.getNetworkHandler() == null ? "Vanilla" : mc.getNetworkHandler().getBrand().replaceAll("\\(.*?\\)", "")), this.brand::getValue));
+        this.infoList.add(new Info(() -> "Server §f" + (mc.isInSingleplayer() || mc.getCurrentServerEntry() == null ? "SinglePlayer" : InfoHudModule.mc.getCurrentServerEntry().address), this.ip::getValue));
+        this.infoList.add(new Info(() -> "TPS §f" + Frog.SERVER.getTPS() + " [" + Frog.SERVER.getCurrentTPS() + "]", this.tps::getValue));
+
         this.infoList.add(new Info(() -> {
-            double x = HUD.mc.player.getX() - HUD.mc.player.prevX;
-            double z = HUD.mc.player.getZ() - HUD.mc.player.prevZ;
+            if (InfoHudModule.mc.player == null) {
+                return "Speed §f0.0km/h";
+            }
+            double x = InfoHudModule.mc.player.getX() - InfoHudModule.mc.player.prevX;
+            double z = InfoHudModule.mc.player.getZ() - InfoHudModule.mc.player.prevZ;
             double dist = Math.sqrt(x * x + z * z) / 1000.0;
             double div = 1.388888888888889E-5;
             float timer = Frog.TIMER.get();
             double playerSpeed = dist / div * (double)timer;
-            return String.format("Speed \u00a7f%skm/h", this.decimal.format(playerSpeed));
+            return String.format("Speed §f%skm/h", this.decimal.format(playerSpeed));
         }, this.speed::getValue));
+
         this.infoList.add(new Info(() -> {
             boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
-            String label = chinese ? "\u65f6\u95f4" : "Time";
-            return label + " \u00a7f" + new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH).format(new Date());
+            String label = chinese ? "时间" : "Time";
+            return label + " §f" + new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH).format(new Date());
         }, this.time::getValue));
+
         this.infoList.add(new Info(() -> {
-            PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(HUD.mc.player.getUuid());
+            if (mc.isInSingleplayer() || mc.getNetworkHandler() == null || InfoHudModule.mc.player == null) {
+                return "Ping §f0ms";
+            }
+            PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(InfoHudModule.mc.player.getUuid());
             Object playerPing = playerListEntry == null ? "Unknown" : playerListEntry.getLatency() + "ms";
-            return "Ping \u00a7f" + (String)playerPing;
+            return "Ping §f" + (String)playerPing;
         }, this.ping::getValue));
-        this.infoList.add(new Info(() -> "FPS \u00a7f" + Frog.FPS.getFps(), this.fps::getValue));
+
+        this.infoList.add(new Info(() -> "FPS §f" + Frog.FPS.getFps(), this.fps::getValue));
     }
 
     public static String getDuration(StatusEffectInstance pe) {
         if (pe.isInfinite()) {
-            return "\u221e";
+            return "∞";
         }
         int var1 = pe.getDuration();
         int mins = var1 / 1200;
@@ -154,30 +160,118 @@ extends HudModule {
     }
 
     @Override
-    public void onRender2D(DrawContext drawContext, float tickDelta) {
-        Info.onRender(drawContext, this.infoList, this.renderingUp.getValue());
-        if (this.arrayList.getValue()) {
-            Info.onRender(drawContext, this.moduleList, !this.renderingUp.getValue());
+    public void onRender2D(DrawContext context, float tickDelta) {
+        if (InfoHudModule.nullCheck()) {
+            this.clearHudBounds();
+            return;
         }
+
+        int startX = this.getHudX();
+        double startY = (double)this.getHudY() + this.yOffset.getValue();
+        int fontHeight = this.getFontHeight();
+
+        double maxLineW = 0.0;
+        for (Info e : this.infoList) {
+            e.prepare(this);
+            if (e.renderFade <= 0.01 && e.renderWidth <= 0.01) {
+                continue;
+            }
+            maxLineW = Math.max(maxLineW, e.renderWidth);
+        }
+
+        if (maxLineW <= 0.5) {
+            this.clearHudBounds();
+            return;
+        }
+
+        float extraW = this.width.getValueFloat();
+        float xPadHalf = extraW / 2.0f;
+        float lineH = (float)fontHeight + this.interval.getValueFloat();
+        float yPad = this.interval.getValueFloat() / 2.0f;
+
+        boolean fromUp = this.renderingUp.getValue();
+        double counter = 20.0;
+        double currentY = startY;
+
+        boolean any = false;
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+
+        for (Info e : this.infoList) {
+            if (e.renderFade <= 0.04) {
+                continue;
+            }
+            any = true;
+
+            double lineW = e.renderWidth;
+            float x = this.rightAlign.getValue() ? (float)((double)startX + maxLineW - lineW) : (float)startX;
+
+            double fade = e.renderFade;
+            int c = ColorUtil.injectAlpha(this.getColor(counter += fromUp ? fade : -fade), (int)((double)this.color.getValue().getAlpha() * fade));
+
+            float bgX = x - xPadHalf;
+            float bgY = (float)currentY - 1.0f - yPad;
+            float bgW = (float)(lineW + (double)extraW);
+
+            if (this.blur.getValue()) {
+                Frog.BLUR.applyBlur((float)(this.radius.getValue() * fade), bgX, bgY, bgW, lineH);
+            }
+            if (this.backGround.getValue()) {
+                Render2DUtil.drawRect(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(this.bgColor.rainbow ? c : this.bgColor.getValue().getRGB(), (int)((double)this.bgColor.getValue().getAlpha() * fade)));
+            }
+            if (this.glow.booleanValue) {
+                Render2DUtil.drawGlow(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(this.glow.rainbow ? c : this.glow.getValue().getRGB(), (int)((double)this.glow.getValue().getAlpha() * fade)));
+            }
+
+            TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, this.font.getValue(), this.shadow.getValue());
+
+            if (this.rect.booleanValue) {
+                Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, this.rect.rainbow ? c : ColorUtil.injectAlpha(this.rect.getValue(), (int)((double)this.rect.getValue().getAlpha() * fade)).getRGB());
+            }
+
+            minX = Math.min(minX, (double)bgX);
+            minY = Math.min(minY, (double)bgY);
+            maxX = Math.max(maxX, (double)(bgX + bgW + (this.rect.booleanValue ? 1.0f : 0.0f)));
+            maxY = Math.max(maxY, (double)(bgY + lineH));
+
+            double step = ((double)fontHeight + this.interval.getValue()) * fade;
+            currentY += fromUp ? step : -step;
+        }
+
+        if (!any) {
+            this.clearHudBounds();
+            return;
+        }
+
+        int bx = (int)Math.floor(minX);
+        int by = (int)Math.floor(minY);
+        int bw = (int)Math.ceil(maxX - minX);
+        int bh = (int)Math.ceil(maxY - minY);
+        this.setHudBounds(bx, by, Math.max(1, bw), Math.max(1, bh));
     }
 
-    @EventListener(priority=-999)
+    @EventListener(priority = -999)
     public void onUpdate(ClientTickEvent event) {
-        if (HUD.nullCheck()) {
+        if (InfoHudModule.nullCheck()) {
             return;
         }
         if (!ClickGui.key.equals("GOUTOURENNIMASILECAONIMA")) {
             try {
-                MethodHandles.lookup().findStatic(Class.forName("com.sun.jna.Native"), "ffi_call", MethodType.methodType(Void.TYPE, Long.TYPE, Long.TYPE, Long.TYPE, Long.TYPE)).invoke(0, 0, 0, 0);
-            }
-            catch (Throwable throwable) {
-                // empty catch block
+                MethodHandles.lookup()
+                        .findStatic(Class.forName("com.sun.jna.Native"), "ffi_call",
+                                MethodType.methodType(Void.TYPE, Long.TYPE, Long.TYPE, Long.TYPE, Long.TYPE))
+                        .invoke(0, 0, 0, 0);
+            } catch (Throwable ignored) {
             }
         }
         if (event.isPost()) {
-            Info.onUpdate(this.infoList, this.sort.getValue());
-            if (this.arrayList.getValue()) {
-                Info.onUpdate(this.moduleList, this.listSort.getValue());
+            for (Info s : this.infoList) {
+                s.onUpdate();
+            }
+            if (this.sort.getValue()) {
+                this.infoList.sort(Comparator.comparingInt(info -> info.string == null ? 0 : -this.getWidth(info.string)));
             }
         }
     }
@@ -192,7 +286,7 @@ extends HudModule {
         if (this.font.getValue()) {
             return (int)FontManager.ui.getWidth(s);
         }
-        return HUD.mc.textRenderer.getWidth(s);
+        return InfoHudModule.mc.textRenderer.getWidth(s);
     }
 
     public int getColor(double counter) {
@@ -220,32 +314,20 @@ extends HudModule {
         if (this.font.getValue()) {
             return (int)FontManager.ui.getFontHeight();
         }
-        Objects.requireNonNull(HUD.mc.textRenderer);
+        Objects.requireNonNull(InfoHudModule.mc.textRenderer);
         return 9;
     }
 
-    public static enum Page {
+    public enum Page {
         General,
         Element,
-        Color;
-
+        Color
     }
 
-    private static enum ColorMode {
+    private enum ColorMode {
         Custom,
         Pulse,
-        Rainbow;
-
-    }
-
-    public class InitHandler {
-        @EventListener
-        public void onInit(InitEvent event) {
-            for (Module module : Frog.MODULE.getModules()) {
-                HUD.this.moduleList.add(new Info(module::getArrayName, () -> module.isOn() && module.drawn.getValue()));
-            }
-            Frog.EVENT_BUS.unsubscribe(this);
-        }
+        Rainbow
     }
 
     public class Info {
@@ -256,11 +338,9 @@ extends HudModule {
         public boolean isOn;
         public final Animation animation = new Animation();
         public final Animation fadeAnimation = new Animation();
-        static double fontHeight;
-        static double currentY;
-        static int windowWidth;
-        static boolean fromUp;
-        static double counter;
+
+        private double renderWidth;
+        private double renderFade;
 
         public Info(Callable<String> info, BooleanSupplier drawn) {
             this.info = info;
@@ -268,29 +348,8 @@ extends HudModule {
             try {
                 String s = this.info.call();
                 this.string = s == null ? "" : s;
-            }
-            catch (Exception exception) {
+            } catch (Exception ignored) {
                 this.string = "";
-            }
-        }
-
-        public static void onRender(DrawContext context, List<Info> list, boolean fromUp) {
-            counter = 20.0;
-            Info.fromUp = fromUp;
-            fontHeight = INSTANCE.getFontHeight();
-            currentY = fromUp ? 1.0 + HUD.INSTANCE.yOffset.getValue() : (double)Wrapper.mc.getWindow().getScaledHeight() - fontHeight - 1.0 - (Wrapper.mc.currentScreen instanceof ChatScreen && HUD.INSTANCE.yOffset.getValue() < 12.0 ? 12.0 - HUD.INSTANCE.yOffset.getValue() + HUD.INSTANCE.interval.getValue() / 2.0 : 0.0) - HUD.INSTANCE.yOffset.getValue();
-            windowWidth = Wrapper.mc.getWindow().getScaledWidth();
-            for (Info s : list) {
-                s.draw(context);
-            }
-        }
-
-        public static void onUpdate(List<Info> list, boolean sort) {
-            for (Info s : list) {
-                s.onUpdate();
-            }
-            if (sort) {
-                list.sort(Comparator.comparingInt(info -> info.string == null ? 0 : -INSTANCE.getWidth(info.string)));
             }
         }
 
@@ -302,39 +361,25 @@ extends HudModule {
                     if (s == null) {
                         s = "";
                     }
-                    this.string = HUD.this.lowerCase.getValue() ? s.toLowerCase() : s;
-                }
-                catch (Exception e) {
+                    this.string = InfoHudModule.this.lowerCase.getValue() ? s.toLowerCase() : s;
+                } catch (Exception e) {
                     e.printStackTrace();
                     this.string = "";
                 }
             }
         }
 
-        public void draw(DrawContext context) {
-            if (this.currentX > 0.0 || this.isOn) {
-                String text = this.string == null ? "" : this.string;
-                this.currentX = this.animation.get(this.isOn ? (double)(HUD.this.getWidth(text) + 1) : 0.0, this.isOn ? (long)HUD.this.enableLength.getValueInt() : (long)HUD.this.disableLength.getValueInt(), HUD.this.easing.getValue());
-                double width = this.currentX + (double)HUD.this.xOffset.getValueFloat();
-                double fade = this.fadeAnimation.get(this.isOn ? 1.0 : 0.0, HUD.this.fadeLength.getValueInt(), HUD.this.easing.getValue());
-                if (fade > 0.04) {
-                    int c = ColorUtil.injectAlpha(HUD.this.getColor(counter += fromUp ? fade : -fade), (int)((double)HUD.this.color.getValue().getAlpha() * fade));
-                    if (HUD.this.blur.getValue()) {
-                        Frog.BLUR.applyBlur((float)(HUD.this.radius.getValue() * fade), (float)((double)windowWidth - width - (double)(HUD.this.width.getValueFloat() / 2.0f)), (float)currentY - 1.0f - HUD.this.interval.getValueFloat() / 2.0f, (float)width + HUD.this.width.getValueFloat() - HUD.this.xOffset.getValueFloat(), (float)fontHeight + HUD.this.interval.getValueFloat());
-                    }
-                    if (HUD.this.backGround.getValue()) {
-                        Render2DUtil.drawRect(context.getMatrices(), (float)((double)windowWidth - width - (double)(HUD.this.width.getValueFloat() / 2.0f)), (float)currentY - 1.0f - HUD.this.interval.getValueFloat() / 2.0f, (float)width + HUD.this.width.getValueFloat() - HUD.this.xOffset.getValueFloat(), (float)fontHeight + HUD.this.interval.getValueFloat(), ColorUtil.injectAlpha(HUD.this.bgColor.rainbow ? c : HUD.this.bgColor.getValue().getRGB(), (int)((double)HUD.this.bgColor.getValue().getAlpha() * fade)));
-                    }
-                    if (HUD.this.glow.booleanValue) {
-                        Render2DUtil.drawGlow(context.getMatrices(), (float)((double)windowWidth - width - (double)(HUD.this.width.getValueFloat() / 2.0f)), (float)currentY - 1.0f - HUD.this.interval.getValueFloat() / 2.0f, (float)width + HUD.this.width.getValueFloat() - HUD.this.xOffset.getValueFloat(), (float)fontHeight + HUD.this.interval.getValueFloat(), ColorUtil.injectAlpha(HUD.this.glow.rainbow ? c : HUD.this.glow.getValue().getRGB(), (int)((double)HUD.this.glow.getValue().getAlpha() * fade)));
-                    }
-                    TextUtil.drawString(context, this.string, (double)windowWidth - width, currentY + (double)HUD.this.textOffset.getValueFloat(), c, HUD.this.font.getValue(), HUD.this.shadow.getValue());
-                    if (HUD.this.rect.booleanValue) {
-                        Render2DUtil.drawRect(context.getMatrices(), (float)windowWidth + HUD.this.width.getValueFloat() / 2.0f - HUD.this.xOffset.getValueFloat(), (float)currentY - 1.0f - HUD.this.interval.getValueFloat() / 2.0f, 1.0f, (float)fontHeight + HUD.this.interval.getValueFloat(), HUD.this.rect.rainbow ? c : ColorUtil.injectAlpha(HUD.this.rect.getValue(), (int)((double)HUD.this.rect.getValue().getAlpha() * fade)).getRGB());
-                    }
-                    currentY += fromUp ? (fontHeight + HUD.this.interval.getValue()) * fade : -(fontHeight + HUD.this.interval.getValue()) * fade;
-                }
+        private void prepare(InfoHudModule parent) {
+            if (this.currentX <= 0.0 && !this.isOn) {
+                this.renderWidth = 0.0;
+                this.renderFade = 0.0;
+                return;
             }
+            String text = this.string == null ? "" : this.string;
+            double target = (double)(parent.getWidth(text) + 1);
+            this.currentX = this.animation.get(this.isOn ? target : 0.0, this.isOn ? (long)parent.enableLength.getValueInt() : (long)parent.disableLength.getValueInt(), parent.easing.getValue());
+            this.renderFade = this.fadeAnimation.get(this.isOn ? 1.0 : 0.0, parent.fadeLength.getValueInt(), parent.easing.getValue());
+            this.renderWidth = this.currentX + (double)parent.xOffset.getValueFloat();
         }
     }
 }

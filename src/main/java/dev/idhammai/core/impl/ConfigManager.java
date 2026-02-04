@@ -13,7 +13,6 @@ import dev.idhammai.Frog;
 import dev.idhammai.core.Manager;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.Fonts;
-import dev.idhammai.mod.modules.impl.client.HUD;
 import dev.idhammai.mod.modules.settings.Setting;
 import dev.idhammai.mod.modules.settings.impl.BindSetting;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
@@ -107,7 +106,7 @@ extends Manager {
                     s.setValue(Frog.CONFIG.getString(line, s.getDefaultValue()));
                 }
             }
-            module.setState(Frog.CONFIG.getBoolean(module.getName() + "_state", module instanceof HUD));
+            module.setState(Frog.CONFIG.getBoolean(module.getName() + "_state", module.getName().equals("Info")));
         }
     }
 
@@ -281,7 +280,7 @@ extends Manager {
                         out.println(line + ":" + s.getDefaultValue());
                     }
                 }
-                out.println(module.getName() + "_state:" + (module instanceof HUD));
+                out.println(module.getName() + "_state:" + module.getName().equals("Info"));
             }
         }
         catch (Exception e) {

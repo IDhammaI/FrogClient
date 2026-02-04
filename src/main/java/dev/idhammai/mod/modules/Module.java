@@ -18,7 +18,6 @@ import dev.idhammai.mod.modules.impl.client.BaritoneModule;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import dev.idhammai.mod.modules.impl.client.ColorsModule;
-import dev.idhammai.mod.modules.impl.client.HUD;
 import dev.idhammai.mod.modules.settings.Setting;
 import dev.idhammai.mod.modules.settings.impl.BindSetting;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
@@ -61,7 +60,7 @@ extends Mod {
     }
 
     private boolean hideInModuleList() {
-        return this instanceof ColorsModule || this instanceof BaritoneModule || this instanceof AntiCheat || this instanceof ClientSetting || this instanceof HUD;
+        return this instanceof ColorsModule || this instanceof BaritoneModule || this instanceof AntiCheat || this instanceof ClientSetting || this.getName().equals("Info");
     }
 
     public void setChinese(String chinese) {
