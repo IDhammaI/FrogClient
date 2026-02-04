@@ -38,7 +38,7 @@ import dev.idhammai.api.utils.math.MathUtil;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.mod.modules.Module;
-import dev.idhammai.mod.modules.impl.client.TextRadar;
+import dev.idhammai.mod.modules.impl.client.hud.TextRadar;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
 import dev.idhammai.mod.modules.settings.impl.SliderSetting;

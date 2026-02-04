@@ -25,7 +25,7 @@ import dev.idhammai.api.utils.render.ModelPlayer;
 import dev.idhammai.api.utils.render.Render3DUtil;
 import dev.idhammai.asm.accessors.IEntity;
 import dev.idhammai.mod.modules.Module;
-import dev.idhammai.mod.modules.impl.client.TextRadar;
+import dev.idhammai.mod.modules.impl.client.hud.TextRadar;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
 import dev.idhammai.mod.modules.settings.impl.ColorSetting;
 import java.awt.Color;

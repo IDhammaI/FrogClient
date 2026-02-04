@@ -27,7 +27,6 @@ import dev.idhammai.mod.Mod;
 import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
 import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
-import dev.idhammai.mod.modules.impl.client.ItemCounterHudModule;
 import dev.idhammai.mod.modules.impl.client.AntiCheat;
 import dev.idhammai.mod.modules.impl.client.BaritoneModule;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
@@ -36,7 +35,11 @@ import dev.idhammai.api.utils.player.InventoryUtil;
 import dev.idhammai.mod.modules.impl.client.Fonts;
 import dev.idhammai.mod.modules.impl.client.HUD;
 import dev.idhammai.mod.modules.impl.client.IRC;
-import dev.idhammai.mod.modules.impl.client.TextRadar;
+import dev.idhammai.mod.modules.impl.client.hud.ArmorHudModule;
+import dev.idhammai.mod.modules.impl.client.hud.CoordsHudModule;
+import dev.idhammai.mod.modules.impl.client.hud.ItemCounterHudModule;
+import dev.idhammai.mod.modules.impl.client.hud.TextRadar;
+import dev.idhammai.mod.modules.impl.client.hud.WaterMarkHudModule;
 import dev.idhammai.mod.modules.impl.combat.AntiCrawl;
 import dev.idhammai.mod.modules.impl.combat.AntiPhase;
 import dev.idhammai.mod.modules.impl.combat.AntiRegear;
@@ -293,6 +296,9 @@ implements Wrapper {
         this.addModule(new Tips());
         this.addModule(new ClientSetting());
         this.addModule(new TextRadar());
+        this.addModule(new ArmorHudModule());
+        this.addModule(new WaterMarkHudModule());
+        this.addModule(new CoordsHudModule());
         this.addModule(new HUD());
         this.addModule(new NoResourcePack());
         this.addModule(new RocketExtend());
@@ -483,24 +489,6 @@ implements Wrapper {
             if (++idx < 5) continue;
             break;
         }
-    }
-
-    private void renderPotionBanners(DrawContext ctx) {
-    }
-
-    private String formatDuration(int ticks) {
-        int totalSec = Math.max(0, ticks / 20);
-        int mm = totalSec / 60;
-        int ss = totalSec % 60;
-        return String.format("%d:%02d", mm, ss);
-    }
-
-    private Module getModuleByDisplayName(String name) {
-        for (Module m : this.modules) {
-            if (!m.getDisplayName().equalsIgnoreCase(name) && !m.getName().equalsIgnoreCase(name)) continue;
-            return m;
-        }
-        return null;
     }
 
     public void addModule(Module module) {

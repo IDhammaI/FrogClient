@@ -4,7 +4,8 @@
 package dev.idhammai.mod.commands.impl;
 
 import dev.idhammai.mod.commands.Command;
-import dev.idhammai.mod.modules.impl.client.HUD;
+import dev.idhammai.mod.modules.impl.client.hud.WaterMarkHudModule;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,7 +31,7 @@ extends Command {
             }
             text.append(" ").append(s);
         }
-        HUD.INSTANCE.waterMarkString.setValue(text.toString());
+        WaterMarkHudModule.INSTANCE.title.setValue(text.toString());
     }
 
     @Override

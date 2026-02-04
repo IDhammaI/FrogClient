@@ -9,7 +9,7 @@
  *  net.minecraft.entity.player.PlayerEntity
  *  net.minecraft.util.Formatting
  */
-package dev.idhammai.mod.modules.impl.client;
+package dev.idhammai.mod.modules.impl.client.hud;
 
 import dev.idhammai.Frog;
 import dev.idhammai.core.impl.FontManager;

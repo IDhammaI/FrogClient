@@ -52,7 +52,6 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.World;
 
 public class HUD
 extends HudModule {
@@ -73,13 +72,6 @@ extends HudModule {
     public final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.CircInOut, () -> this.page.is(Page.General)));
     public final BooleanSetting arrayList = this.add(new BooleanSetting("ArrayList", true, () -> this.page.is(Page.Element)).setParent());
     public final BooleanSetting listSort = this.add(new BooleanSetting("ListSort", true, () -> this.page.is(Page.Element) && this.arrayList.isOpen()));
-    public final BooleanSetting armor = this.add(new BooleanSetting("Armor", true, () -> this.page.is(Page.Element)).setParent());
-    public final SliderSetting armorOffset = this.add(new SliderSetting("ArmorOffset", 1.0, 0.0, 100.0, -1.0, () -> this.page.is(Page.Element) && this.armor.isOpen()));
-    public final BooleanSetting durability = this.add(new BooleanSetting("Durability", true, () -> this.page.is(Page.Element) && this.armor.isOpen()));
-    public final BooleanSetting waterMark = this.add(new BooleanSetting("WaterMark", true, () -> this.page.is(Page.Element)).setParent());
-    public final ColorSetting pulse = this.add(new ColorSetting("Pulse", new Color(79, 0, 0), () -> this.page.is(Page.Element) && this.waterMark.isOpen()).injectBoolean(true));
-    public final StringSetting waterMarkString = this.add(new StringSetting("Title", "%hackname% %version%", () -> this.page.is(Page.Element) && this.waterMark.isOpen()));
-    public final SliderSetting waterMarkOffset = this.add(new SliderSetting("Offset", 1.0, 0.0, 100.0, -1.0, () -> this.page.is(Page.Element) && this.waterMark.isOpen()));
     public final BooleanSetting fps = this.add(new BooleanSetting("FPS", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting ping = this.add(new BooleanSetting("Ping", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting tps = this.add(new BooleanSetting("TPS", true, () -> this.page.is(Page.Element)));
@@ -88,9 +80,7 @@ extends HudModule {
     public final BooleanSetting speed = this.add(new BooleanSetting("Speed", true, () -> this.page.is(Page.Element)));
     public final BooleanSetting brand = this.add(new BooleanSetting("Brand", false, () -> this.page.is(Page.Element)));
     public final BooleanSetting potions = this.add(new BooleanSetting("Potions", true, () -> this.page.is(Page.Element)));
-    public final BooleanSetting coords = this.add(new BooleanSetting("Coords", true, () -> this.page.is(Page.Element)).setParent());
-    public final BooleanSetting colorSync = this.add(new BooleanSetting("ColorSync", true, () -> this.page.is(Page.Element) && this.coords.isOpen()));
-        private final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Pulse, () -> this.page.is(Page.Color)));
+    private final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Pulse, () -> this.page.is(Page.Color)));
     public final ColorSetting color = this.add(new ColorSetting("Color", new Color(208, 0, 0), () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Custom));
     private final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Rainbow));
     private final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.page.is(Page.Color) && this.colorMode.getValue() == ColorMode.Rainbow));
@@ -165,18 +155,6 @@ extends HudModule {
 
     @Override
     public void onRender2D(DrawContext drawContext, float tickDelta) {
-        if (this.waterMark.getValue()) {
-            if (this.pulse.booleanValue) {
-                TextUtil.drawStringPulse(drawContext, this.waterMarkString.getValue().replaceAll("%version%", Frog.VERSION).replaceAll("%hackname%", Frog.NAME), this.waterMarkOffset.getValueInt(), this.waterMarkOffset.getValueInt(), this.color.getValue(), this.pulse.getValue(), this.pulseSpeed.getValue(), this.pulseCounter.getValueInt(), this.font.getValue(), this.shadow.getValue());
-            } else {
-                TextUtil.drawString(drawContext, this.waterMarkString.getValue().replaceAll("%version%", Frog.VERSION).replaceAll("%hackname%", Frog.NAME), this.waterMarkOffset.getValueInt(), this.waterMarkOffset.getValueInt(), this.color.getValue().getRGB(), this.font.getValue(), this.shadow.getValue());
-            }
-        }
-        int fontHeight = this.getHeight();
-        if (this.coords.getValue()) {
-            String coordsString = HUD.getCoords();
-            this.drawCoord(drawContext, coordsString, mc.getWindow().getScaledHeight() - fontHeight - (HUD.mc.currentScreen instanceof ChatScreen ? 15 : 0));
-        }
         Info.onRender(drawContext, this.infoList, this.renderingUp.getValue());
         if (this.arrayList.getValue()) {
             Info.onRender(drawContext, this.moduleList, !this.renderingUp.getValue());
@@ -204,17 +182,6 @@ extends HudModule {
         }
     }
 
-    private static String getCoords() {
-        boolean inNether = HUD.mc.world.getRegistryKey().equals(World.NETHER);
-        int posX = HUD.mc.player.getBlockX();
-        int posY = HUD.mc.player.getBlockY();
-        int posZ = HUD.mc.player.getBlockZ();
-        float factor = !inNether ? 0.125f : 8.0f;
-        int anotherWorldX = (int)(HUD.mc.player.getX() * (double)factor);
-        int anotherWorldZ = (int)(HUD.mc.player.getZ() * (double)factor);
-        return "XYZ \u00a7f" + (inNether ? posX + ", " + posY + ", " + posZ + " \u00a77[\u00a7f" + anotherWorldX + ", " + anotherWorldZ + "\u00a77]\u00a7f" : posX + ", " + posY + ", " + posZ + "\u00a77 [\u00a7f" + anotherWorldX + ", " + anotherWorldZ + "\u00a77]");
-    }
-
     private int getWidth(String s) {
         if (s == null) {
             return 0;
@@ -226,27 +193,6 @@ extends HudModule {
             return (int)FontManager.ui.getWidth(s);
         }
         return HUD.mc.textRenderer.getWidth(s);
-    }
-
-    private int getHeight() {
-        if (this.font.getValue()) {
-            return (int)FontManager.ui.getFontHeight();
-        }
-        Objects.requireNonNull(HUD.mc.textRenderer);
-        return 9;
-    }
-
-    private void drawCoord(DrawContext drawContext, String s, int y) {
-        if (this.colorSync.getValue()) {
-            if (this.lowerCase.getValue()) {
-                s = s.toLowerCase();
-            }
-            TextUtil.drawString(drawContext, s, 2.0, y, this.getColor(20.0), this.font.getValue(), this.shadow.getValue());
-        } else if (this.pulse.booleanValue) {
-            TextUtil.drawStringPulse(drawContext, s, 2.0, y, this.color.getValue(), this.pulse.getValue(), this.pulseSpeed.getValue(), this.pulseCounter.getValueInt(), this.font.getValue(), this.shadow.getValue());
-        } else {
-            TextUtil.drawString(drawContext, s, 2.0, y, this.color.getValue().getRGB(), this.font.getValue(), this.shadow.getValue());
-        }
     }
 
     public int getColor(double counter) {

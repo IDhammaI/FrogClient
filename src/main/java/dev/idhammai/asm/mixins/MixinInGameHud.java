@@ -74,47 +74,6 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @Inject(method={"renderMainHud"}, at={@At(value="TAIL")})
-    private void onRenderMainHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        PlayerEntity player;
-        if (HUD.INSTANCE.isOn() && HUD.INSTANCE.armor.getValue() && (player = this.getCameraPlayer()) != null) {
-            int t;
-            int x = context.getScaledWindowWidth() / 2 + 91;
-            int y = context.getScaledWindowHeight() - 28 - HUD.INSTANCE.armorOffset.getValueInt();
-            if (this.client.interactionManager.hasStatusBars()) {
-                y -= 16;
-            }
-            if ((t = this.getHeartCount(this.getRiddenEntity())) == 0) {
-                y -= 10;
-            }
-            int maxAir = player.getMaxAir();
-            int air = Math.min(player.getAir(), maxAir);
-            if (player.isSubmergedIn(FluidTags.WATER) || air < maxAir) {
-                int w = this.getHeartRows(t) - 1;
-                y += w * 10;
-            }
-            for (ItemStack armor : this.client.player.getInventory().armor) {
-                x -= 20;
-                if (armor.isEmpty()) continue;
-                context.getMatrices().push();
-                int damage = EntityUtil.getDamagePercent(armor);
-                context.drawItem(armor, x, y);
-                context.drawItemInSlot(this.client.textRenderer, armor, x, y);
-                if (HUD.INSTANCE.durability.getValue()) {
-                    if (HUD.INSTANCE.font.getValue()) {
-                        FontManager.small.drawString(context.getMatrices(), damage + "%", (double)(x + 1), (double)((float)y - FontManager.small.getFontHeight() / 2.0f), ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), HUD.INSTANCE.shadow.getValue());
-                    } else {
-                        String string = damage + "%";
-                        float f = x + 2;
-                        float f2 = y;
-                        Objects.requireNonNull(this.client.textRenderer);
-                        TextUtil.drawStringScale(context, string, f, f2 - 9.0f / 4.0f, ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), 0.5f, HUD.INSTANCE.shadow.getValue());
-                    }
-                }
-                context.getMatrices().pop();
-            }
-        }
-    }
 
     @Shadow
     private int getHeartRows(int t) {

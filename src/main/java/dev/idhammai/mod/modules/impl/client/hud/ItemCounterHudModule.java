@@ -1,4 +1,4 @@
-package dev.idhammai.mod.modules.impl.client;
+package dev.idhammai.mod.modules.impl.client.hud;
 
 import dev.idhammai.api.utils.player.InventoryUtil;
 import dev.idhammai.mod.modules.HudModule;
