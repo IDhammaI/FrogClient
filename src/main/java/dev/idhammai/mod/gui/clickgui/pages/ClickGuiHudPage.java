@@ -73,6 +73,10 @@ public final class ClickGuiHudPage {
         this.initHudButtons();
     }
 
+    public void resetHudLayout() {
+        this.hudPosInit = false;
+    }
+
     public void mouseScrolled(double verticalAmount) {
         float next = this.hudScroll + (float)(-verticalAmount) * 18.0f;
         if (next < 0.0f) {
@@ -142,6 +146,7 @@ public final class ClickGuiHudPage {
         float my = frame.unitMouseY(mouseY);
         float baseX = frame.baseX(ClickGuiScreen.Page.Hud);
         float screenUnitW = frame.scale == 0.0f ? (float)frame.screenW : (float)frame.screenW / frame.scale;
+        float screenUnitH = frame.scale == 0.0f ? (float)frame.screenH : (float)frame.screenH / frame.scale;
         float panelXf = Math.max(8.0f, (screenUnitW - (float)frame.panelW) / 2.0f);
         float defaultLocalX = panelXf + 10.0f;
         float defaultLocalY = (float)frame.panelY + 10.0f;
@@ -186,7 +191,7 @@ public final class ClickGuiHudPage {
         float openProgress = (float)openProgressD;
         float yTop = y + (float)height - 5.0f;
         float viewTop = y + (float)height - 3.0f;
-        float viewBottom = (float)context.getScaledWindowHeight() - 20.0f + frame.totalOffsetY;
+        float viewBottom = screenUnitH - 20.0f + frame.totalOffsetY;
         float maxViewH = Math.max(0.0f, viewBottom - viewTop);
         double totalTarget = 0.0;
         for (ModuleButton b : this.hudButtons) {
@@ -270,6 +275,7 @@ public final class ClickGuiHudPage {
         float my = frame.unitMouseY(mouseY);
         float baseX = frame.baseX(ClickGuiScreen.Page.Hud);
         float screenUnitW = frame.scale == 0.0f ? (float)frame.screenW : (float)frame.screenW / frame.scale;
+        float screenUnitH = frame.scale == 0.0f ? (float)frame.screenH : (float)frame.screenH / frame.scale;
         float panelXf = Math.max(8.0f, (screenUnitW - (float)frame.panelW) / 2.0f);
         float defaultLocalX = panelXf + 10.0f;
         float defaultLocalY = (float)frame.panelY + 10.0f;
@@ -310,7 +316,7 @@ public final class ClickGuiHudPage {
         double openProgressD = this.hudOpenAnim.get(this.hudOpen ? 1.0 : 0.0, 200L, Easing.CubicInOut);
         float openProgress = (float)openProgressD;
         float viewTop = y + (float)height - 3.0f;
-        float viewBottom = (float)Wrapper.mc.getWindow().getScaledHeight() - 20.0f + frame.totalOffsetY;
+        float viewBottom = screenUnitH - 20.0f + frame.totalOffsetY;
         float maxViewH = Math.max(0.0f, viewBottom - viewTop);
         double totalTarget = 0.0;
         for (ModuleButton b : this.hudButtons) {

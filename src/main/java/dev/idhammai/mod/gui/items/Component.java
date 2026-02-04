@@ -118,7 +118,9 @@ extends Mod {
             Color topColor = ColorUtil.injectAlpha(ClickGui.getInstance().getColor(headerBaseDelay), topAlpha);
             Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
         }
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerH, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
+        if (ClickGui.getInstance().backgroundStyle.getValue() != ClickGui.BackgroundStyle.Transparent) {
+            Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerH, new Color(0, 0, 0, 0), new Color(ClickGui.getInstance().hoverColor.getValue().getRGB()));
+        }
         if (openProgress > 0.01) {
             if (ClickGui.getInstance().backGround.booleanValue) {
                 Render2DUtil.drawRect(context.getMatrices(), x, (float)y + (float)this.height - 5.0f, this.width, (float)(y + this.height) + totalItemHeight - ((float)y + (float)this.height - 5.0f), ColorUtil.injectAlpha(ClickGui.getInstance().backGround.getValue(), ClickGui.getInstance().backgroundAlpha.getValueInt()));

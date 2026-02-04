@@ -18,6 +18,7 @@ build_log.txt
 mappings.tiny
 
 .vscode/
+.trae/
 .classpath
 .project
 .settings/

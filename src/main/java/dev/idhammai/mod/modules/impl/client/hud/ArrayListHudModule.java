@@ -12,8 +12,8 @@ import dev.idhammai.api.utils.render.TextUtil;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
+import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
-import dev.idhammai.mod.modules.settings.impl.ColorSetting;
 import dev.idhammai.mod.modules.settings.impl.EnumSetting;
 import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 import java.awt.Color;
@@ -39,22 +39,12 @@ public class ArrayListHudModule extends HudModule {
     private final SliderSetting fadeLength = this.add(new SliderSetting("FadeLength", 200, 0, 1000));
     private final EnumSetting<Easing> easing = this.add(new EnumSetting<Easing>("Easing", Easing.CircInOut));
 
-    private final EnumSetting<ColorMode> colorMode = this.add(new EnumSetting<ColorMode>("ColorMode", ColorMode.Pulse));
-    private final ColorSetting color = this.add(new ColorSetting("Color", new Color(208, 0, 0), () -> this.colorMode.getValue() == ColorMode.Custom));
-    private final SliderSetting rainbowSpeed = this.add(new SliderSetting("RainbowSpeed", 1.0, 1.0, 10.0, 0.1, () -> this.colorMode.getValue() == ColorMode.Rainbow));
-    private final SliderSetting saturation = this.add(new SliderSetting("Saturation", 220.0, 1.0, 255.0, () -> this.colorMode.getValue() == ColorMode.Rainbow));
-    private final SliderSetting rainbowDelay = this.add(new SliderSetting("Delay", 220, 0, 1000, () -> this.colorMode.getValue() == ColorMode.Rainbow));
-    private final ColorSetting endColor = this.add(new ColorSetting("SecondColor", new Color(255, 0, 0, 255), () -> this.colorMode.getValue() == ColorMode.Pulse).injectBoolean(true));
-    private final SliderSetting pulseSpeed = this.add(new SliderSetting("PulseSpeed", 1.0, 0.0, 5.0, 0.1, () -> this.colorMode.getValue() == ColorMode.Pulse));
-    private final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50, () -> this.colorMode.getValue() == ColorMode.Pulse));
-
     private final BooleanSetting blur = this.add(new BooleanSetting("Blur", false).setParent());
     private final SliderSetting radius = this.add(new SliderSetting("Radius", 10.0, 0.0, 100.0, () -> this.blur.isOpen()));
     private final BooleanSetting backGround = this.add(new BooleanSetting("BackGround", false).setParent());
     private final SliderSetting width = this.add(new SliderSetting("Width", 0.0, 0.0, 15.0, () -> this.backGround.isOpen()));
-    private final ColorSetting bgColor = this.add(new ColorSetting("BGColor", new Color(0, 0, 0, 100), () -> this.backGround.isOpen()));
-    private final ColorSetting rect = this.add(new ColorSetting("Rect", new Color(208, 0, 0)).injectBoolean(false));
-    private final ColorSetting glow = this.add(new ColorSetting("Glow", new Color(208, 0, 100)).injectBoolean(false));
+    private final BooleanSetting rect = this.add(new BooleanSetting("Rect", false));
+    private final BooleanSetting glow = this.add(new BooleanSetting("Glow", false));
 
     private final ArrayList<Entry> entries = new ArrayList<>();
 
@@ -131,7 +121,9 @@ public class ArrayListHudModule extends HudModule {
             float x = this.rightAlign.getValue() ? (float)(startX + maxLineW - lineW) : (float)startX;
 
             double fade = e.renderFade;
-            int c = ColorUtil.injectAlpha(this.getColor(counter += fade), (int)((double)this.color.getValue().getAlpha() * fade));
+            Color baseColor = this.getHudColor(counter += fade);
+            int baseAlpha = baseColor.getAlpha();
+            int c = ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade));
 
             float bgX = x - xPadHalf;
             float bgY = (float)currentY - 1.0f - yPad;
@@ -141,16 +133,16 @@ public class ArrayListHudModule extends HudModule {
                 Frog.BLUR.applyBlur((float)(this.radius.getValue() * fade), bgX, bgY, bgW, lineH);
             }
             if (this.backGround.getValue()) {
-                Render2DUtil.drawRect(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(this.bgColor.rainbow ? c : this.bgColor.getValue().getRGB(), (int)((double)this.bgColor.getValue().getAlpha() * fade)));
+                Render2DUtil.drawRect(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)(100.0 * fade)));
             }
-            if (this.glow.booleanValue) {
-                Render2DUtil.drawGlow(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(this.glow.rainbow ? c : this.glow.getValue().getRGB(), (int)((double)this.glow.getValue().getAlpha() * fade)));
+            if (this.glow.getValue()) {
+                Render2DUtil.drawGlow(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
             }
 
             TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, this.font.getValue(), this.shadow.getValue());
 
-            if (this.rect.booleanValue) {
-                Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, this.rect.rainbow ? c : ColorUtil.injectAlpha(this.rect.getValue(), (int)((double)this.rect.getValue().getAlpha() * fade)).getRGB());
+            if (this.rect.getValue()) {
+                Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
             }
 
             currentY += ((double)fontHeight + this.interval.getValue()) * fade;
@@ -192,31 +184,9 @@ public class ArrayListHudModule extends HudModule {
         return 9;
     }
 
-    public int getColor(double counter) {
-        if (this.colorMode.getValue() != ColorMode.Custom) {
-            return this.rainbow(counter).getRGB();
-        }
-        return this.color.getValue().getRGB();
-    }
-
-    private Color rainbow(double delay) {
-        if (this.colorMode.getValue() == ColorMode.Pulse) {
-            if (this.endColor.booleanValue) {
-                return ColorUtil.pulseColor(this.color.getValue(), this.endColor.getValue(), delay, this.pulseCounter.getValueInt(), this.pulseSpeed.getValue());
-            }
-            return ColorUtil.pulseColor(this.color.getValue(), delay, this.pulseCounter.getValueInt(), this.pulseSpeed.getValue());
-        }
-        if (this.colorMode.getValue() == ColorMode.Rainbow) {
-            double rainbowState = Math.ceil(((double)System.currentTimeMillis() * this.rainbowSpeed.getValue() + delay * (double)this.rainbowDelay.getValueInt()) / 20.0);
-            return Color.getHSBColor((float)(rainbowState % 360.0 / 360.0), this.saturation.getValueFloat() / 255.0f, 1.0f);
-        }
-        return this.color.getValue();
-    }
-
-    private enum ColorMode {
-        Custom,
-        Pulse,
-        Rainbow
+    private Color getHudColor(double counter) {
+        ClickGui gui = ClickGui.getInstance();
+        return gui == null ? Color.WHITE : gui.getColor(counter);
     }
 
     private class InitHandler {

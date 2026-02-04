@@ -14,9 +14,8 @@ package dev.idhammai.mod.modules.impl.client.hud;
 import dev.idhammai.Frog;
 import dev.idhammai.core.impl.FontManager;
 import dev.idhammai.mod.modules.HudModule;
+import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.settings.impl.BooleanSetting;
-import dev.idhammai.mod.modules.settings.impl.ColorSetting;
-import java.awt.Color;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,8 +33,7 @@ extends HudModule {
     private final DecimalFormat df = new DecimalFormat("0.0");
     private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
     private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
-    private final ColorSetting color = this.add(new ColorSetting("Color", new Color(255, 255, 255)));
-    private final ColorSetting friend = this.add(new ColorSetting("Friend").injectBoolean(true));
+    private final BooleanSetting friend = this.add(new BooleanSetting("Friend", true));
     private final BooleanSetting doubleBlank = this.add(new BooleanSetting("Double", false));
     private final BooleanSetting health = this.add(new BooleanSetting("Health", true));
     private final BooleanSetting pops = this.add(new BooleanSetting("Pops", true));
@@ -70,6 +68,7 @@ extends HudModule {
         ArrayList<AbstractClientPlayerEntity> players = new ArrayList<AbstractClientPlayerEntity>(TextRadar.mc.world.getPlayers());
         players.sort(Comparator.comparingDouble(player -> TextRadar.mc.player.distanceTo((Entity)player)));
 
+        double counter = 20.0;
         for (PlayerEntity playerEntity : players) {
             int color;
             boolean isFriend;
@@ -137,11 +136,12 @@ extends HudModule {
                 stringBuilder.append("-");
                 stringBuilder.append(totemPopped);
             }
-            if ((isFriend = Frog.FRIEND.isFriend(playerEntity)) && !this.friend.booleanValue) {
+            if ((isFriend = Frog.FRIEND.isFriend(playerEntity)) && !this.friend.getValue()) {
                 continue;
             }
 
-            color = isFriend ? this.friend.getValue().getRGB() : this.color.getValue().getRGB();
+            counter += 10.0;
+            color = isFriend ? this.getFriendColor(counter) : this.getHudColor(counter);
             String s = stringBuilder.toString();
             int w = this.font.getValue() ? (int)FontManager.ui.getWidth(s) : TextRadar.mc.textRenderer.getWidth(s);
             maxW = Math.max(maxW, w);
@@ -191,6 +191,16 @@ extends HudModule {
             return Formatting.RED;
         }
         return Formatting.DARK_RED;
+    }
+
+    private int getHudColor(double delay) {
+        ClickGui gui = ClickGui.getInstance();
+        return gui == null ? -1 : gui.getColor(delay).getRGB();
+    }
+
+    private int getFriendColor(double delay) {
+        ClickGui gui = ClickGui.getInstance();
+        return gui == null ? -1 : gui.getActiveColor(delay).getRGB();
     }
 
     public static Formatting getPopColor(int totems) {

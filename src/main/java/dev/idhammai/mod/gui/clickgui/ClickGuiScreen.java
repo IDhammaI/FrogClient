@@ -136,6 +136,7 @@ extends Screen {
                 this.layoutCorrected = false;
                 this.lastLayoutScreenW = sw;
                 this.lastLayoutScreenH = sh;
+                this.hudPage.resetHudLayout();
             }
         }
         if (!this.layoutCorrected && Wrapper.mc != null && Wrapper.mc.getWindow() != null) {
@@ -578,6 +579,9 @@ extends Screen {
         this.configPage.stopNameListening();
         if (page == Page.Config) {
             this.configPage.onOpen();
+        }
+        if (page == Page.Hud) {
+            this.hudPage.resetHudLayout();
         }
     }
 
