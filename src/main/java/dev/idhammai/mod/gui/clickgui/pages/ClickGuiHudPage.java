@@ -170,7 +170,9 @@ public final class ClickGuiHudPage {
             Color topColor = ColorUtil.injectAlpha(gui.getColor((double)headerY / 10.0), topAlpha);
             Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerHf, topColor);
         }
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerHf, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+        if (gui.backgroundStyle.getValue() != ClickGui.BackgroundStyle.Transparent) {
+            Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerHf, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+        }
         boolean customFont = FontManager.isCustomFontEnabled();
         boolean shadow = FontManager.isShadowEnabled();
         boolean chinese = ClientSetting.INSTANCE != null && ClientSetting.INSTANCE.chinese.getValue();
@@ -213,7 +215,9 @@ public final class ClickGuiHudPage {
         if (gui.backGround.booleanValue) {
             float bgH = ((viewTop + viewH) - yTop) * openProgress;
             Render2DUtil.drawRect(context.getMatrices(), x, yTop, (float)width, bgH, ColorUtil.injectAlpha(gui.backGround.getValue(), gui.backgroundAlpha.getValueInt()));
-            Render2DUtil.drawRectWithOutline(context.getMatrices(), x, yTop, (float)width, bgH, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+            if (gui.backgroundStyle.getValue() != ClickGui.BackgroundStyle.Transparent) {
+                Render2DUtil.drawRectWithOutline(context.getMatrices(), x, yTop, (float)width, bgH, new Color(0, 0, 0, 0), new Color(gui.hoverColor.getValue().getRGB()));
+            }
         }
         int scX1 = (int)x - 1;
         int scY1 = (int)viewTop - 1;
