@@ -364,10 +364,35 @@ public final class ClickGuiHudPage {
             if (!this.isHudComponentModule(m)) continue;
             modules.add(m);
         }
-        modules.sort(Comparator.comparing(Mod::getName));
+        modules.sort(Comparator.comparingInt(ClickGuiHudPage::getHudListGroup)
+                .thenComparingInt(ClickGuiHudPage::getHudListPriority)
+                .thenComparing(Mod::getName));
         for (Module m : modules) {
             this.hudButtons.add(new ModuleButton(m));
         }
+    }
+
+    private static int getHudListGroup(Mod m) {
+        String name = m.getName();
+        if (name.equals("ArrayList") || name.equals("Coords") || name.equals("Info") || name.equals("WaterMark") || name.equals("Armor")) {
+            return 0;
+        }
+        if (name.startsWith("Items")) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private static int getHudListPriority(Mod m) {
+        return switch (m.getName()) {
+            case "ArrayList" -> 0;
+            case "Coords" -> 1;
+            case "Info" -> 2;
+            case "WaterMark" -> 3;
+            case "Armor" -> 4;
+            case "TextRadar" -> 5;
+            default -> 999;
+        };
     }
 
     private boolean isHudComponentModule(Module module) {
@@ -394,8 +419,8 @@ public final class ClickGuiHudPage {
             this.groupDragging = false;
             this.groupDragEntries.clear();
             this.elementDragging = hm;
-            this.elementDragDx = mouseX - hm.getHudX();
-            this.elementDragDy = mouseY - hm.getHudY();
+            this.elementDragDx = mouseX - hm.getHudBoundX();
+            this.elementDragDy = mouseY - hm.getHudBoundY();
             return true;
         }
         return false;
@@ -422,13 +447,13 @@ public final class ClickGuiHudPage {
             int dx = mouseX - this.groupDragStartMouseX;
             int dy = mouseY - this.groupDragStartMouseY;
             for (GroupDragEntry e : this.groupDragEntries) {
-                e.module.setHudPos(e.startX + dx, e.startY + dy);
+                e.module.setHudPosFromBounds(e.startX + dx, e.startY + dy);
             }
             return;
         }
         int nx = mouseX - this.elementDragDx;
         int ny = mouseY - this.elementDragDy;
-        this.elementDragging.setHudPos(nx, ny);
+        this.elementDragging.setHudPosFromBounds(nx, ny);
     }
 
     private void beginSelection(int mouseX, int mouseY) {
@@ -471,7 +496,7 @@ public final class ClickGuiHudPage {
             if (!hm.isOn()) {
                 continue;
             }
-            this.groupDragEntries.add(new GroupDragEntry(hm, hm.getHudX(), hm.getHudY()));
+            this.groupDragEntries.add(new GroupDragEntry(hm, hm.getHudBoundX(), hm.getHudBoundY()));
         }
         this.elementDragging = null;
         this.hudDragging = false;
@@ -839,14 +864,14 @@ public final class ClickGuiHudPage {
         if (this.selectedHud.isEmpty()) {
             return;
         }
-        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudY).thenComparingInt(HudModule::getHudX));
+        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudBoundY).thenComparingInt(HudModule::getHudBoundX));
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         int maxW = 0;
         int maxH = 0;
         for (HudModule hm : this.selectedHud) {
-            minX = Math.min(minX, hm.getHudX());
-            minY = Math.min(minY, hm.getHudY());
+            minX = Math.min(minX, hm.getHudBoundX());
+            minY = Math.min(minY, hm.getHudBoundY());
             maxW = Math.max(maxW, Math.max(1, hm.getHudBoundW()));
             maxH = Math.max(maxH, Math.max(1, hm.getHudBoundH()));
         }
@@ -861,7 +886,7 @@ public final class ClickGuiHudPage {
             int row = i / cols;
             int x = minX + col * cellW;
             int y = minY + row * cellH;
-            this.selectedHud.get(i).setHudPos(x, y);
+            this.selectedHud.get(i).setHudPosFromBounds(x, y);
         }
     }
 
@@ -869,15 +894,15 @@ public final class ClickGuiHudPage {
         if (this.selectedHud.isEmpty()) {
             return;
         }
-        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudX));
+        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudBoundX));
         int minY = Integer.MAX_VALUE;
         for (HudModule hm : this.selectedHud) {
-            minY = Math.min(minY, hm.getHudY());
+            minY = Math.min(minY, hm.getHudBoundY());
         }
         int pad = 2;
-        int x = this.selectedHud.get(0).getHudX();
+        int x = this.selectedHud.get(0).getHudBoundX();
         for (HudModule hm : this.selectedHud) {
-            hm.setHudPos(x, minY);
+            hm.setHudPosFromBounds(x, minY);
             int w = Math.max(1, hm.getHudBoundW());
             x += w + pad;
         }
@@ -887,15 +912,15 @@ public final class ClickGuiHudPage {
         if (this.selectedHud.isEmpty()) {
             return;
         }
-        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudY));
+        this.selectedHud.sort(Comparator.comparingInt(HudModule::getHudBoundY));
         int minX = Integer.MAX_VALUE;
         for (HudModule hm : this.selectedHud) {
-            minX = Math.min(minX, hm.getHudX());
+            minX = Math.min(minX, hm.getHudBoundX());
         }
         int pad = 2;
-        int y = this.selectedHud.get(0).getHudY();
+        int y = this.selectedHud.get(0).getHudBoundY();
         for (HudModule hm : this.selectedHud) {
-            hm.setHudPos(minX, y);
+            hm.setHudPosFromBounds(minX, y);
             int h = Math.max(1, hm.getHudBoundH());
             y += h + pad;
         }
@@ -907,10 +932,10 @@ public final class ClickGuiHudPage {
         }
         int minX = Integer.MAX_VALUE;
         for (HudModule hm : this.selectedHud) {
-            minX = Math.min(minX, hm.getHudX());
+            minX = Math.min(minX, hm.getHudBoundX());
         }
         for (HudModule hm : this.selectedHud) {
-            hm.setHudX(minX);
+            hm.setHudPosFromBounds(minX, hm.getHudBoundY());
         }
     }
 
@@ -920,10 +945,10 @@ public final class ClickGuiHudPage {
         }
         int minY = Integer.MAX_VALUE;
         for (HudModule hm : this.selectedHud) {
-            minY = Math.min(minY, hm.getHudY());
+            minY = Math.min(minY, hm.getHudBoundY());
         }
         for (HudModule hm : this.selectedHud) {
-            hm.setHudY(minY);
+            hm.setHudPosFromBounds(hm.getHudBoundX(), minY);
         }
     }
 }

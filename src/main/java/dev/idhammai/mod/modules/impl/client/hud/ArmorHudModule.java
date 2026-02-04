@@ -20,7 +20,7 @@ public class ArmorHudModule extends HudModule {
     private final Color maxColor = new Color(0, 227, 0);
 
     public ArmorHudModule() {
-        super("Armor", "护甲", 0, 0);
+        super("Armor", "护甲", 0, 70);
         INSTANCE = this;
     }
 
@@ -31,10 +31,20 @@ public class ArmorHudModule extends HudModule {
             return;
         }
 
-        int px = this.getHudX();
-        int py = this.getHudY();
-
         int slot = 0;
+        for (ItemStack armor : ArmorHudModule.mc.player.getInventory().armor) {
+            ++slot;
+        }
+        int w = Math.max(1, 20 * slot);
+        int topPad = this.durability.getValue() ? 6 : 0;
+        int h = 16 + topPad;
+
+        int boundsX = this.getHudRenderX(w);
+        int boundsY = this.getHudRenderY(h);
+        int px = boundsX;
+        int py = boundsY + topPad;
+
+        slot = 0;
         for (ItemStack armor : ArmorHudModule.mc.player.getInventory().armor) {
             int x = px + slot * 20;
             if (!armor.isEmpty()) {
@@ -58,8 +68,6 @@ public class ArmorHudModule extends HudModule {
             ++slot;
         }
 
-        int w = Math.max(1, 20 * slot);
-        int topPad = this.durability.getValue() ? 6 : 0;
-        this.setHudBounds(px, py - topPad, w, 16 + topPad);
+        this.setHudBounds(boundsX, boundsY, w, h);
     }
 }

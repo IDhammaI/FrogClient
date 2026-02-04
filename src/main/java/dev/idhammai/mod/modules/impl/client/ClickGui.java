@@ -67,7 +67,7 @@ extends Module {
     public final BooleanSetting scrollAnim = this.add(new BooleanSetting("ScrollAnim", true).setParent());
     public final SliderSetting scrollAnimLength = this.add(new SliderSetting("ScrollAnimLength", 220, 1, 1000, this.scrollAnim::isOpen));
     public final EnumSetting<Easing> scrollAnimEasing = this.add(new EnumSetting<Easing>("ScrollAnimEasing", Easing.SineOut, this.scrollAnim::isOpen));
-    public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", true).setParent());
+    public final BooleanSetting mouseMove = this.add(new BooleanSetting("MouseMove", false).setParent());
     public final SliderSetting mouseMoveStrength = this.add(new SliderSetting("MouseMoveStrength", 16.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
     public final SliderSetting mouseMoveSmooth = this.add(new SliderSetting("MouseMoveSmooth", 10.0, 0.0, 30.0, 0.5, this.mouseMove::isOpen));
     public final BooleanSetting walkShake = this.add(new BooleanSetting("WalkShake", true).setParent());
@@ -79,7 +79,7 @@ extends Module {
     public final EnumSetting<BlurType> blurType = this.add(new EnumSetting<BlurType>("BlurType", BlurType.Radial, this.blur::isOpen));
     public final SliderSetting radius = this.add(new SliderSetting("Radius", 5.0, 0.0, 100.0, this.blur::isOpen));
     public final BooleanSetting snow = this.add(new BooleanSetting("Snow", true).setParent());
-    public final EnumSetting<SnowShape> snowShape = this.add(new EnumSetting<SnowShape>("SnowShape", SnowShape.Snowflake, this.snow::isOpen));
+    public final EnumSetting<SnowShape> snowShape = this.add(new EnumSetting<SnowShape>("SnowShape", SnowShape.Circle, this.snow::isOpen));
     public final SliderSetting snowAmount = this.add(new SliderSetting("SnowAmount", 120, 0, 600, this.snow::isOpen));
     public final SliderSetting snowSpeed = this.add(new SliderSetting("SnowSpeed", 38.0, 1.0, 160.0, 1.0, this.snow::isOpen));
     public final SliderSetting snowSize = this.add(new SliderSetting("SnowSize", 1.8, 0.5, 5.0, 0.1, this.snow::isOpen));
@@ -87,7 +87,7 @@ extends Module {
     public final SliderSetting snowWind = this.add(new SliderSetting("SnowWind", 10.0, -80.0, 80.0, 1.0, this.snow::isOpen));
     public final BooleanSetting tips = this.add(new BooleanSetting("Tips", true));
     public final BooleanSetting elements = this.add(new BooleanSetting("Elements", false).setParent().injectTask(this::keyCodec));
-    public final BooleanSetting line = this.add(new BooleanSetting("Line", true, this.elements::isOpen));
+    public final BooleanSetting line = this.add(new BooleanSetting("Line", false, this.elements::isOpen));
     public final ColorSetting gear = this.add(new ColorSetting("Gear", -1, this.elements::isOpen).injectBoolean(false));
     public final EnumSetting<ExpandIcon> expandIcon = this.add(new EnumSetting<ExpandIcon>("ExpandIcon", ExpandIcon.PlusMinus, this.elements::isOpen));
     public final BooleanSetting recenterLayoutButton = this.add(new BooleanSetting("RecenterLayout", false, this.elements::isOpen).injectTask(this::recenterLayoutCodec));
@@ -106,8 +106,8 @@ extends Module {
     public final ColorSetting defaultTextColor = this.add(new ColorSetting("DefaultTextColor", new Color(220, 220, 220), this.colors::isOpen));
     public final ColorSetting enableTextColor = this.add(new ColorSetting("EnableTextColor", new Color(255, 255, 255), this.colors::isOpen));
     public final ColorSetting backGround = this.add(new ColorSetting("BackGround", new Color(30, 30, 30, 236), this.colors::isOpen).injectBoolean(true));
-    public final ColorSetting tint = this.add(new ColorSetting("Tint", new Color(255, 0, 0, 80)).defaultRainbow(true).injectBoolean(true));
-    public final ColorSetting endColor = this.add(new ColorSetting("End", new Color(255, 0, 0, 50), () -> this.tint.booleanValue));
+    public final ColorSetting tint = this.add(new ColorSetting("Tint", new Color(0, 20, 255, 90)).defaultRainbow(false).injectBoolean(false));
+    public final ColorSetting endColor = this.add(new ColorSetting("End", new Color(0, 200, 255, 50), () -> this.tint.booleanValue));
     public double alphaValue;
     private final Animation animation = new Animation();
     public static String key;
@@ -405,6 +405,7 @@ extends Module {
         if (mode == BackgroundStyle.Dark) {
             this.backGround.setValue(new Color(30, 30, 30, 236));
             this.backGround.booleanValue = true;
+            this.defaultColor.setValue(new Color(30, 30, 30, 236));
             this.backgroundAlpha.setValue(236.0);
             return;
         }

@@ -50,20 +50,34 @@ extends HudModule {
 
     @Override
     public void onRender2D(DrawContext drawContext, float tickDelta) {
-        int startX = this.getHudX();
-        int startY = this.getHudY();
-        int currentY = startY;
+        if (TextRadar.mc.player == null || TextRadar.mc.world == null) {
+            this.clearHudBounds();
+            return;
+        }
+
         int maxW = 0;
-        int lines = 0;
+        int lineH;
+        if (this.font.getValue()) {
+            lineH = (int)FontManager.ui.getFontHeight();
+        } else {
+            Objects.requireNonNull(TextRadar.mc.textRenderer);
+            lineH = 9;
+        }
+
+        ArrayList<String> linesText = new ArrayList<>();
+        ArrayList<Integer> linesColor = new ArrayList<>();
+
         ArrayList<AbstractClientPlayerEntity> players = new ArrayList<AbstractClientPlayerEntity>(TextRadar.mc.world.getPlayers());
         players.sort(Comparator.comparingDouble(player -> TextRadar.mc.player.distanceTo((Entity)player)));
+
         for (PlayerEntity playerEntity : players) {
-            int n;
             int color;
             boolean isFriend;
             int totemPopped;
             String blank;
-            if (playerEntity == TextRadar.mc.player) continue;
+            if (playerEntity == TextRadar.mc.player) {
+                continue;
+            }
             StringBuilder stringBuilder = new StringBuilder();
             String string = blank = this.doubleBlank.getValue() ? "  " : " ";
             if (this.health.getValue()) {
@@ -123,30 +137,40 @@ extends HudModule {
                 stringBuilder.append("-");
                 stringBuilder.append(totemPopped);
             }
-            if ((isFriend = Frog.FRIEND.isFriend(playerEntity)) && !this.friend.booleanValue) continue;
-            int n2 = color = isFriend ? this.friend.getValue().getRGB() : this.color.getValue().getRGB();
+            if ((isFriend = Frog.FRIEND.isFriend(playerEntity)) && !this.friend.booleanValue) {
+                continue;
+            }
+
+            color = isFriend ? this.friend.getValue().getRGB() : this.color.getValue().getRGB();
             String s = stringBuilder.toString();
             int w = this.font.getValue() ? (int)FontManager.ui.getWidth(s) : TextRadar.mc.textRenderer.getWidth(s);
             maxW = Math.max(maxW, w);
+            linesText.add(s);
+            linesColor.add(color);
+        }
+
+        if (linesText.isEmpty()) {
+            this.clearHudBounds();
+            return;
+        }
+
+        int totalH = Math.max(1, linesText.size() * lineH);
+        int startX = this.getHudRenderX(Math.max(1, maxW));
+        int startY = this.getHudRenderY(totalH);
+
+        int currentY = startY;
+        for (int i = 0; i < linesText.size(); ++i) {
+            String s = linesText.get(i);
+            int color = linesColor.get(i);
             if (this.font.getValue()) {
                 FontManager.ui.drawString(drawContext.getMatrices(), s, (double)startX, (double)currentY, color, this.shadow.getValue());
             } else {
                 drawContext.drawText(TextRadar.mc.textRenderer, s, startX, currentY, color, this.shadow.getValue());
             }
-            if (this.font.getValue()) {
-                n = (int)FontManager.ui.getFontHeight();
-            } else {
-                Objects.requireNonNull(TextRadar.mc.textRenderer);
-                n = 9;
-            }
-            currentY += n;
-            ++lines;
+            currentY += lineH;
         }
-        if (lines <= 0) {
-            this.clearHudBounds();
-            return;
-        }
-        this.setHudBounds(startX, startY, Math.max(1, maxW), Math.max(1, currentY - startY));
+
+        this.setHudBounds(startX, startY, Math.max(1, maxW), Math.max(1, totalH));
     }
 
     public static Formatting getHealthColor(PlayerEntity player) {

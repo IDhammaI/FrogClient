@@ -22,7 +22,7 @@ public class CoordsHudModule extends HudModule {
     private final SliderSetting pulseCounter = this.add(new SliderSetting("Counter", 10, 1, 50));
 
     public CoordsHudModule() {
-        super("Coords", "坐标", 2, 2);
+        super("Coords", "","坐标", 2, 2, PosMode.Corner, Corner.LeftBottom);
         INSTANCE = this;
     }
 
@@ -38,15 +38,6 @@ public class CoordsHudModule extends HudModule {
             text = text.toLowerCase();
         }
 
-        int x = this.getHudX();
-        int y = this.getHudY();
-
-        if (this.pulse.booleanValue) {
-            TextUtil.drawStringPulse(context, text, x, y, this.color.getValue(), this.pulse.getValue(), this.pulseSpeed.getValue(), this.pulseCounter.getValueInt(), this.font.getValue(), this.shadow.getValue());
-        } else {
-            TextUtil.drawString(context, text, x, y, this.color.getValue().getRGB(), this.font.getValue(), this.shadow.getValue());
-        }
-
         int w = this.font.getValue() ? (int)Math.ceil(FontManager.ui.getWidth(text)) : CoordsHudModule.mc.textRenderer.getWidth(text);
         int h;
         if (this.font.getValue()) {
@@ -55,6 +46,16 @@ public class CoordsHudModule extends HudModule {
             Objects.requireNonNull(CoordsHudModule.mc.textRenderer);
             h = 9;
         }
+
+        int x = this.getHudRenderX(w);
+        int y = this.getHudRenderY(h);
+
+        if (this.pulse.booleanValue) {
+            TextUtil.drawStringPulse(context, text, x, y, this.color.getValue(), this.pulse.getValue(), this.pulseSpeed.getValue(), this.pulseCounter.getValueInt(), this.font.getValue(), this.shadow.getValue());
+        } else {
+            TextUtil.drawString(context, text, x, y, this.color.getValue().getRGB(), this.font.getValue(), this.shadow.getValue());
+        }
+
         this.setHudBounds(x, y, Math.max(1, w), Math.max(1, h));
     }
 

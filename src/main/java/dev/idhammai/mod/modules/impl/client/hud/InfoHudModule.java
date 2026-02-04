@@ -3,7 +3,6 @@ package dev.idhammai.mod.modules.impl.client.hud;
 import dev.idhammai.Frog;
 import dev.idhammai.api.events.eventbus.EventListener;
 import dev.idhammai.api.events.impl.ClientTickEvent;
-import dev.idhammai.api.utils.Wrapper;
 import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
@@ -26,13 +25,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.BooleanSupplier;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -95,7 +92,7 @@ public class InfoHudModule extends HudModule {
     private final ArrayList<Info> infoList = new ArrayList<>();
 
     public InfoHudModule() {
-        super("Info", "信息", 0, 0);
+        super("Info", "","信息", 2, 2, PosMode.Corner, Corner.RightBottom);
         INSTANCE = this;
 
         for (StatusEffect potionEffect : Registries.STATUS_EFFECT) {
@@ -166,8 +163,6 @@ public class InfoHudModule extends HudModule {
             return;
         }
 
-        int startX = this.getHudX();
-        double startY = (double)this.getHudY() + this.yOffset.getValue();
         int fontHeight = this.getFontHeight();
 
         double maxLineW = 0.0;
@@ -190,20 +185,58 @@ public class InfoHudModule extends HudModule {
         float yPad = this.interval.getValueFloat() / 2.0f;
 
         boolean fromUp = this.renderingUp.getValue();
-        double counter = 20.0;
-        double currentY = startY;
+        double rectExtra = this.rect.booleanValue ? 1.0 : 0.0;
 
         boolean any = false;
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
+        double currentYRel = 0.0;
+        double minYRel = Double.POSITIVE_INFINITY;
+        double maxYRel = Double.NEGATIVE_INFINITY;
+        double stepBase = (double)fontHeight + this.interval.getValue();
 
         for (Info e : this.infoList) {
             if (e.renderFade <= 0.04) {
                 continue;
             }
             any = true;
+            double bgYRel = currentYRel - 1.0 - (double)yPad;
+            minYRel = Math.min(minYRel, bgYRel);
+            maxYRel = Math.max(maxYRel, bgYRel + (double)lineH);
+            currentYRel += (fromUp ? 1.0 : -1.0) * stepBase * e.renderFade;
+        }
+
+        if (!any) {
+            this.clearHudBounds();
+            return;
+        }
+
+        int boundsW = Math.max(1, (int)Math.ceil(maxLineW + (double)extraW + rectExtra));
+        int boundsH = Math.max(1, (int)Math.ceil(maxYRel - minYRel));
+
+        int startX;
+        double startY;
+        int boundsX;
+        int boundsY;
+
+        if (this.posMode.is(PosMode.Pixel) || InfoHudModule.mc.getWindow() == null) {
+            startX = this.getHudX();
+            startY = (double)this.getHudY() + this.yOffset.getValue();
+            boundsX = (int)Math.floor((double)startX - (double)xPadHalf);
+            boundsY = (int)Math.floor(startY + minYRel);
+        } else {
+            boundsX = this.getHudRenderX(boundsW);
+            int baseBoundsY = this.getHudRenderY(boundsH);
+            boundsY = (int)Math.floor((double)baseBoundsY + this.yOffset.getValue());
+            startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
+            startY = (double)boundsY - minYRel;
+        }
+
+        double counter = 20.0;
+        double currentY = startY;
+
+        for (Info e : this.infoList) {
+            if (e.renderFade <= 0.04) {
+                continue;
+            }
 
             double lineW = e.renderWidth;
             float x = this.rightAlign.getValue() ? (float)((double)startX + maxLineW - lineW) : (float)startX;
@@ -231,25 +264,11 @@ public class InfoHudModule extends HudModule {
                 Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, this.rect.rainbow ? c : ColorUtil.injectAlpha(this.rect.getValue(), (int)((double)this.rect.getValue().getAlpha() * fade)).getRGB());
             }
 
-            minX = Math.min(minX, (double)bgX);
-            minY = Math.min(minY, (double)bgY);
-            maxX = Math.max(maxX, (double)(bgX + bgW + (this.rect.booleanValue ? 1.0f : 0.0f)));
-            maxY = Math.max(maxY, (double)(bgY + lineH));
-
             double step = ((double)fontHeight + this.interval.getValue()) * fade;
             currentY += fromUp ? step : -step;
         }
 
-        if (!any) {
-            this.clearHudBounds();
-            return;
-        }
-
-        int bx = (int)Math.floor(minX);
-        int by = (int)Math.floor(minY);
-        int bw = (int)Math.ceil(maxX - minX);
-        int bh = (int)Math.ceil(maxY - minY);
-        this.setHudBounds(bx, by, Math.max(1, bw), Math.max(1, bh));
+        this.setHudBounds(boundsX, boundsY, boundsW, boundsH);
     }
 
     @EventListener(priority = -999)

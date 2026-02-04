@@ -59,7 +59,7 @@ public class ArrayListHudModule extends HudModule {
     private final ArrayList<Entry> entries = new ArrayList<>();
 
     public ArrayListHudModule() {
-        super("ArrayList", "模块列表", 350, 20);
+        super("ArrayList", "", "模块列表", 2, 2, PosMode.Corner, Corner.RightTop);
         INSTANCE = this;
         Frog.EVENT_BUS.subscribe(new InitHandler());
     }
@@ -71,8 +71,6 @@ public class ArrayListHudModule extends HudModule {
             return;
         }
 
-        int startX = this.getHudX();
-        int startY = this.getHudY();
         int fontHeight = this.getFontHeight();
 
         double maxLineW = 0.0;
@@ -89,14 +87,40 @@ public class ArrayListHudModule extends HudModule {
             return;
         }
 
-        double counter = 20.0;
-        double currentY = startY;
-        double usedH = 0.0;
-
         float extraW = this.width.getValueFloat();
         float xPadHalf = extraW / 2.0f;
         float lineH = (float)fontHeight + this.interval.getValueFloat();
         float yPad = this.interval.getValueFloat() / 2.0f;
+
+        double usedH = 0.0;
+        for (Entry e : this.entries) {
+            if (e.renderFade <= 0.04) {
+                continue;
+            }
+            usedH += ((double)fontHeight + this.interval.getValue()) * e.renderFade;
+        }
+
+        int boundsW = Math.max(1, (int)Math.ceil(maxLineW + (double)extraW + (double)xPadHalf));
+        int boundsH = Math.max(1, (int)Math.ceil(Math.max(1.0, usedH + (double)fontHeight)));
+
+        int boundsX;
+        int boundsY;
+        int startX;
+        int startY;
+        if (this.posMode.is(PosMode.Pixel) || ArrayListHudModule.mc.getWindow() == null) {
+            startX = this.getHudX();
+            startY = this.getHudY();
+            boundsX = (int)Math.floor((double)startX - (double)xPadHalf);
+            boundsY = startY;
+        } else {
+            boundsX = this.getHudRenderX(boundsW);
+            boundsY = this.getHudRenderY(boundsH);
+            startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
+            startY = boundsY;
+        }
+
+        double counter = 20.0;
+        double currentY = startY;
 
         for (Entry e : this.entries) {
             if (e.renderFade <= 0.04) {
@@ -129,16 +153,10 @@ public class ArrayListHudModule extends HudModule {
                 Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, this.rect.rainbow ? c : ColorUtil.injectAlpha(this.rect.getValue(), (int)((double)this.rect.getValue().getAlpha() * fade)).getRGB());
             }
 
-            double step = ((double)fontHeight + this.interval.getValue()) * fade;
-            currentY += step;
-            usedH += step;
+            currentY += ((double)fontHeight + this.interval.getValue()) * fade;
         }
 
-        int boundsX = (int)Math.floor((double)startX - (double)xPadHalf);
-        int boundsY = startY;
-        int boundsW = (int)Math.ceil(maxLineW + (double)extraW + (double)xPadHalf);
-        int boundsH = (int)Math.ceil(Math.max(1.0, usedH + (double)fontHeight));
-        this.setHudBounds(boundsX, boundsY, Math.max(1, boundsW), Math.max(1, boundsH));
+        this.setHudBounds(boundsX, boundsY, boundsW, boundsH);
     }
 
     @EventListener(priority = -999)

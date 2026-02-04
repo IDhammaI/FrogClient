@@ -255,7 +255,7 @@ extends Screen {
         int panelH = Math.min(context.getScaledWindowHeight() - panelY - 6, maxY - minY + margin * 2 + 24);
         boolean focused = mouseX >= panelX && mouseX <= panelX + panelW && mouseY >= panelY && mouseY <= panelY + panelH;
         int alpha = focused ? (int)Math.round(242.25) : (int)Math.round(226.95000000000002);
-        if (ClickGui.getInstance().blur.getValue()) {
+        if (ClickGui.getInstance().blur.getValue() && this.page != Page.Hud) {
             float blurRadius = 1.0f + (ClickGui.getInstance().radius.getValueFloat() - 1.0f) * (float)ClickGui.getInstance().alphaValue;
             Frog.BLUR.applyBlur(blurRadius, 0.0f, 0.0f, (float)context.getScaledWindowWidth(), (float)context.getScaledWindowHeight(), (float)ClickGui.getInstance().blurType.getValue().ordinal());
         }

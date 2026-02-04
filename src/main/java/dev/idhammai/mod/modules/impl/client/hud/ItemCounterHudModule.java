@@ -34,8 +34,8 @@ public class ItemCounterHudModule extends HudModule {
             return;
         }
         this.stack.setCount(count);
-        int px = this.getHudX();
-        int py = this.getHudY();
+        int px = this.getHudRenderX(16);
+        int py = this.getHudRenderY(16);
         this.setHudBounds(px, py, 16, 16);
         drawContext.drawItem(this.stack, px, py);
         if (this.font.getValue()) {
