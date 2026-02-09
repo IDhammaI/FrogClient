@@ -14,8 +14,6 @@ import net.minecraft.item.ItemStack;
 public class ArmorHudModule extends HudModule {
     public static ArmorHudModule INSTANCE;
     private final BooleanSetting durability = this.add(new BooleanSetting("Durability", true));
-    private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
-    private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     private final Color minColor = new Color(196, 0, 0);
     private final Color maxColor = new Color(0, 227, 0);
 
@@ -53,14 +51,14 @@ public class ArmorHudModule extends HudModule {
                 context.drawItem(armor, x, py);
                 context.drawItemInSlot(ArmorHudModule.mc.textRenderer, armor, x, py);
                 if (this.durability.getValue()) {
-                    if (this.font.getValue()) {
-                        FontManager.small.drawString(context.getMatrices(), damage + "%", (double)(x + 1), (double)((float)py - FontManager.small.getFontHeight() / 2.0f), ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), this.shadow.getValue());
+                    if (HudSetting.useFont()) {
+                        FontManager.small.drawString(context.getMatrices(), damage + "%", (double)(x + 1), (double)((float)py - FontManager.small.getFontHeight() / 2.0f), ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), HudSetting.useShadow());
                     } else {
                         String s = damage + "%";
                         float fx = x + 2;
                         float fy = py;
                         Objects.requireNonNull(ArmorHudModule.mc.textRenderer);
-                        TextUtil.drawStringScale(context, s, fx, fy - 9.0f / 4.0f, ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), 0.5f, this.shadow.getValue());
+                        TextUtil.drawStringScale(context, s, fx, fy - 9.0f / 4.0f, ColorUtil.fadeColor(this.minColor, this.maxColor, (float)damage / 100.0f).getRGB(), 0.5f, HudSetting.useShadow());
                     }
                 }
                 context.getMatrices().pop();

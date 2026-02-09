@@ -8,6 +8,7 @@ import dev.idhammai.mod.gui.items.buttons.ModuleButton;
 import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
+import dev.idhammai.mod.modules.impl.client.hud.HudSetting;
 import java.util.ArrayList;
 import java.util.Comparator;
 import net.minecraft.client.gui.DrawContext;
@@ -98,6 +99,6 @@ public final class ClickGuiModulePage {
     }
 
     private boolean isHudComponentModule(Module module) {
-        return module instanceof HudModule;
+        return module instanceof HudModule || module instanceof HudSetting;
     }
 }

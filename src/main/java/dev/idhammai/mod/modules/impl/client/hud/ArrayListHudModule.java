@@ -25,8 +25,6 @@ import net.minecraft.client.gui.DrawContext;
 public class ArrayListHudModule extends HudModule {
     public static ArrayListHudModule INSTANCE;
 
-    private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
-    private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     private final BooleanSetting lowerCase = this.add(new BooleanSetting("LowerCase", false));
     private final BooleanSetting listSort = this.add(new BooleanSetting("ListSort", true));
     private final BooleanSetting rightAlign = this.add(new BooleanSetting("RightAlign", true));
@@ -132,7 +130,7 @@ public class ArrayListHudModule extends HudModule {
                 Render2DUtil.drawGlow(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
             }
 
-            TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, this.font.getValue(), this.shadow.getValue());
+            TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, HudSetting.useFont(), HudSetting.useShadow());
 
             if (this.rect.getValue()) {
                 Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
@@ -163,14 +161,14 @@ public class ArrayListHudModule extends HudModule {
         if (s == null) {
             return 0;
         }
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             return (int)FontManager.ui.getWidth(s);
         }
         return ArrayListHudModule.mc.textRenderer.getWidth(s);
     }
 
     private int getFontHeight() {
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             return (int)FontManager.ui.getFontHeight();
         }
         Objects.requireNonNull(ArrayListHudModule.mc.textRenderer);

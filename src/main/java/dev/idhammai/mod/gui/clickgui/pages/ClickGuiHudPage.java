@@ -17,6 +17,7 @@ import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
+import dev.idhammai.mod.modules.impl.client.hud.HudSetting;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -240,7 +241,7 @@ public final class ClickGuiHudPage {
 
     private static int getHudListGroup(Mod m) {
         String name = m.getName();
-        if (name.equals("ArrayList") || name.equals("Coords") || name.equals("Info") || name.equals("WaterMark") || name.equals("Armor")) {
+        if (name.equals("HUDSetting") || name.equals("ArrayList") || name.equals("Coords") || name.equals("Info") || name.equals("WaterMark") || name.equals("Armor")) {
             return 0;
         }
         if (name.startsWith("Items")) {
@@ -251,6 +252,7 @@ public final class ClickGuiHudPage {
 
     private static int getHudListPriority(Mod m) {
         return switch (m.getName()) {
+            case "HUDSetting" -> -1;
             case "ArrayList" -> 0;
             case "Coords" -> 1;
             case "Info" -> 2;
@@ -262,7 +264,7 @@ public final class ClickGuiHudPage {
     }
 
     private boolean isHudComponentModule(Module module) {
-        return module instanceof HudModule;
+        return module instanceof HudModule || module instanceof HudSetting;
     }
 
     private boolean tryBeginDragHudElement(int mouseX, int mouseY) {

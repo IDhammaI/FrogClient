@@ -31,8 +31,6 @@ public class TextRadar
 extends HudModule {
     public static TextRadar INSTANCE;
     private final DecimalFormat df = new DecimalFormat("0.0");
-    private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
-    private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     private final BooleanSetting friend = this.add(new BooleanSetting("Friend", true));
     private final BooleanSetting doubleBlank = this.add(new BooleanSetting("Double", false));
     private final BooleanSetting health = this.add(new BooleanSetting("Health", true));
@@ -55,7 +53,7 @@ extends HudModule {
 
         int maxW = 0;
         int lineH;
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             lineH = (int)FontManager.ui.getFontHeight();
         } else {
             Objects.requireNonNull(TextRadar.mc.textRenderer);
@@ -143,7 +141,7 @@ extends HudModule {
             counter += 10.0;
             color = isFriend ? this.getFriendColor(counter) : this.getHudColor(counter);
             String s = stringBuilder.toString();
-            int w = this.font.getValue() ? (int)FontManager.ui.getWidth(s) : TextRadar.mc.textRenderer.getWidth(s);
+            int w = HudSetting.useFont() ? (int)FontManager.ui.getWidth(s) : TextRadar.mc.textRenderer.getWidth(s);
             maxW = Math.max(maxW, w);
             linesText.add(s);
             linesColor.add(color);
@@ -162,10 +160,10 @@ extends HudModule {
         for (int i = 0; i < linesText.size(); ++i) {
             String s = linesText.get(i);
             int color = linesColor.get(i);
-            if (this.font.getValue()) {
-                FontManager.ui.drawString(drawContext.getMatrices(), s, (double)startX, (double)currentY, color, this.shadow.getValue());
+            if (HudSetting.useFont()) {
+                FontManager.ui.drawString(drawContext.getMatrices(), s, (double)startX, (double)currentY, color, HudSetting.useShadow());
             } else {
-                drawContext.drawText(TextRadar.mc.textRenderer, s, startX, currentY, color, this.shadow.getValue());
+                drawContext.drawText(TextRadar.mc.textRenderer, s, startX, currentY, color, HudSetting.useShadow());
             }
             currentY += lineH;
         }

@@ -11,8 +11,6 @@ import net.minecraft.world.World;
 
 public class CoordsHudModule extends HudModule {
     public static CoordsHudModule INSTANCE;
-    private final BooleanSetting font = this.add(new BooleanSetting("Font", true));
-    private final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true));
     private final BooleanSetting lowerCase = this.add(new BooleanSetting("LowerCase", false));
 
     public CoordsHudModule() {
@@ -32,9 +30,9 @@ public class CoordsHudModule extends HudModule {
             text = text.toLowerCase();
         }
 
-        int w = this.font.getValue() ? (int)Math.ceil(FontManager.ui.getWidth(text)) : CoordsHudModule.mc.textRenderer.getWidth(text);
+        int w = HudSetting.useFont() ? (int)Math.ceil(FontManager.ui.getWidth(text)) : CoordsHudModule.mc.textRenderer.getWidth(text);
         int h;
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             h = (int)Math.ceil(FontManager.ui.getFontHeight());
         } else {
             Objects.requireNonNull(CoordsHudModule.mc.textRenderer);
@@ -45,7 +43,7 @@ public class CoordsHudModule extends HudModule {
         int y = this.getHudRenderY(h);
 
         int color = this.getHudColor(0.0);
-        TextUtil.drawString(context, text, x, y, color, this.font.getValue(), this.shadow.getValue());
+        TextUtil.drawString(context, text, x, y, color, HudSetting.useFont(), HudSetting.useShadow());
 
         this.setHudBounds(x, y, Math.max(1, w), Math.max(1, h));
     }

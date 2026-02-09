@@ -9,6 +9,7 @@ import dev.idhammai.core.impl.CommandManager;
 import dev.idhammai.core.impl.ConfigManager;
 import dev.idhammai.core.impl.FPSManager;
 import dev.idhammai.core.impl.FriendManager;
+import dev.idhammai.core.impl.HudItemManager;
 import dev.idhammai.core.impl.HoleManager;
 import dev.idhammai.core.impl.ModuleManager;
 import dev.idhammai.core.impl.PlayerManager;
@@ -35,6 +36,7 @@ public class Frog implements ModInitializer {
     public static PlayerManager PLAYER;
     public static TradeManager TRADE;
     public static CleanerManager CLEANER;
+    public static HudItemManager HUD_ITEM;
     public static XrayManager XRAY;
     public static ModuleManager MODULE;
     public static CommandManager COMMAND;
@@ -63,6 +65,7 @@ public class Frog implements ModInitializer {
         FRIEND.save();
         XRAY.save();
         TRADE.save();
+        HUD_ITEM.save();
         System.out.println("[Frog Client] Saved");
     }
 
@@ -85,6 +88,7 @@ public class Frog implements ModInitializer {
         XRAY = new XrayManager();
         CLEANER = new CleanerManager();
         TRADE = new TradeManager();
+        HUD_ITEM = new HudItemManager();
         ROTATION = new RotationManager();
         BREAK = new BreakManager();
         PLAYER = new PlayerManager();

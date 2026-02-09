@@ -28,6 +28,7 @@ import dev.idhammai.api.utils.render.Render2DUtil;
 import dev.idhammai.core.Manager;
 import dev.idhammai.core.impl.CleanerManager;
 import dev.idhammai.core.impl.FontManager;
+import dev.idhammai.core.impl.HudItemManager;
 import dev.idhammai.core.impl.TradeManager;
 import dev.idhammai.core.impl.XrayManager;
 import dev.idhammai.mod.gui.items.buttons.StringButton;
@@ -144,6 +145,7 @@ extends WindowBase {
         for (ItemPlate itemPlate : copy) {
             XrayManager m;
             CleanerManager m2;
+            HudItemManager m4;
             TradeManager m3;
             Manager manager;
             if ((float)((int)(itemPlate.offset + this.getY() + 50.0f)) + this.getScrollOffset() > this.getY() + this.getHeight()) continue;
@@ -168,6 +170,14 @@ extends WindowBase {
                     continue;
                 }
                 manager = this.manager;
+                if (manager instanceof HudItemManager) {
+                    m4 = (HudItemManager)manager;
+                    if (m4.inList(name)) continue;
+                    m4.add(name);
+                    this.refreshItemPlates();
+                    continue;
+                }
+                manager = this.manager;
                 if (!(manager instanceof XrayManager) || (m = (XrayManager)manager).inWhitelist(name)) continue;
                 m.add(name);
                 this.refreshItemPlates();
@@ -182,6 +192,9 @@ extends WindowBase {
                 if (manager instanceof CleanerManager) {
                     m2 = (CleanerManager)manager;
                     m2.remove(name);
+                } else if (manager instanceof HudItemManager) {
+                    m4 = (HudItemManager)manager;
+                    m4.remove(name);
                 } else {
                     manager = this.manager;
                     if (manager instanceof XrayManager) {
@@ -253,6 +266,14 @@ extends WindowBase {
                 continue;
             }
             manager = this.manager;
+            if (manager instanceof HudItemManager) {
+                HudItemManager m4 = (HudItemManager)manager;
+                if (!m4.inList(item.getTranslationKey())) continue;
+                this.itemPlates.add(new ItemPlate(id, id * 20, item.asItem(), item.getTranslationKey()));
+                ++id;
+                continue;
+            }
+            manager = this.manager;
             if (!(manager instanceof XrayManager) || !(m = (XrayManager)manager).inWhitelist(item.getTranslationKey())) continue;
             this.itemPlates.add(new ItemPlate(id, id * 20, item.asItem(), item.getTranslationKey()));
             ++id;
@@ -273,4 +294,3 @@ extends WindowBase {
     private record ItemPlate(float id, float offset, Item item, String key) {
     }
 }
-

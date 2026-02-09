@@ -41,8 +41,6 @@ public class InfoHudModule extends HudModule {
     public final EnumSetting<Page> page = this.add(new EnumSetting<Page>("Page", Page.General));
 
     public final BooleanSetting renderingUp = this.add(new BooleanSetting("RenderingUp", false, () -> this.page.is(Page.General)));
-    public final BooleanSetting font = this.add(new BooleanSetting("Font", true, () -> this.page.is(Page.General)));
-    public final BooleanSetting shadow = this.add(new BooleanSetting("Shadow", true, () -> this.page.is(Page.General)));
     public final BooleanSetting lowerCase = this.add(new BooleanSetting("LowerCase", false, () -> this.page.is(Page.General)));
     public final BooleanSetting sort = this.add(new BooleanSetting("Sort", false, () -> this.page.is(Page.General)));
     public final BooleanSetting rightAlign = this.add(new BooleanSetting("RightAlign", true, () -> this.page.is(Page.General)));
@@ -238,7 +236,7 @@ public class InfoHudModule extends HudModule {
                 Render2DUtil.drawGlow(context.getMatrices(), bgX, bgY, bgW, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
             }
 
-            TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, this.font.getValue(), this.shadow.getValue());
+            TextUtil.drawString(context, e.string, (double)x, currentY + (double)this.textOffset.getValueFloat(), c, HudSetting.useFont(), HudSetting.useShadow());
 
             if (this.rect.getValue()) {
                 Render2DUtil.drawRect(context.getMatrices(), bgX + bgW, bgY, 1.0f, lineH, ColorUtil.injectAlpha(baseColor.getRGB(), (int)((double)baseAlpha * fade)));
@@ -282,7 +280,7 @@ public class InfoHudModule extends HudModule {
         if (this.lowerCase.getValue()) {
             s = s.toLowerCase();
         }
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             return (int)FontManager.ui.getWidth(s);
         }
         return InfoHudModule.mc.textRenderer.getWidth(s);
@@ -294,7 +292,7 @@ public class InfoHudModule extends HudModule {
     }
 
     private int getFontHeight() {
-        if (this.font.getValue()) {
+        if (HudSetting.useFont()) {
             return (int)FontManager.ui.getFontHeight();
         }
         Objects.requireNonNull(InfoHudModule.mc.textRenderer);
