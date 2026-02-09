@@ -18,6 +18,8 @@ import dev.idhammai.mod.modules.Module;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import dev.idhammai.mod.modules.impl.client.hud.HudSetting;
+import dev.idhammai.mod.gui.windows.WindowBase;
+import dev.idhammai.mod.gui.windows.WindowsScreen;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -49,6 +51,11 @@ public final class ClickGuiHudPage {
     private int layoutMenuY;
     private final Animation layoutButtonAnim = new Animation();
     private final Animation layoutMenuAnim = new Animation();
+    private WindowBase editWindow;
+    private boolean editWindowHover;
+    private boolean editWindowPosInit;
+    private float editWindowLocalX;
+    private float editWindowLocalY;
 
     private static final class GroupDragEntry {
         private final HudModule module;
@@ -70,6 +77,14 @@ public final class ClickGuiHudPage {
         this.initHudButtons();
     }
 
+    public void openHudWindow(WindowBase window) {
+        this.editWindow = window;
+        if (this.editWindow != null) {
+            this.editWindow.setVisible(true);
+            this.editWindowPosInit = false;
+        }
+    }
+
     public void resetHudLayout() {
         this.hudPosInit = false;
     }
@@ -77,6 +92,12 @@ public final class ClickGuiHudPage {
     public void mouseScrolled(double verticalAmount) {
         if (Wrapper.mc == null || Wrapper.mc.getWindow() == null) {
             return;
+        }
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            this.editWindow.mouseScrolled((int)verticalAmount);
+            if (this.editWindowHover) {
+                return;
+            }
         }
         if (this.hudComponent == null) {
             return;
@@ -98,6 +119,9 @@ public final class ClickGuiHudPage {
     }
 
     public void mouseReleased(int mouseX, int mouseY, int releaseButton) {
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            this.editWindow.mouseReleased(mouseX, mouseY, releaseButton);
+        }
         if (releaseButton == 0) {
             this.elementDragging = null;
             this.groupDragging = false;
@@ -109,6 +133,10 @@ public final class ClickGuiHudPage {
     }
 
     public void keyPressed(int keyCode) {
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            this.editWindow.keyPressed(keyCode, 0, 0);
+            return;
+        }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if (this.layoutMenuOpen) {
                 this.closeLayoutMenu();
@@ -147,6 +175,10 @@ public final class ClickGuiHudPage {
     }
 
     public void charTyped(char chr, int modifiers) {
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            this.editWindow.charTyped(chr, modifiers);
+            return;
+        }
         if (this.hudComponent != null) {
             this.hudComponent.onKeyTyped(chr, modifiers);
         }
@@ -156,6 +188,10 @@ public final class ClickGuiHudPage {
         ClickGui gui = ClickGui.getInstance();
         if (gui == null) {
             return;
+        }
+        if (this.editWindow != null && !this.editWindow.isVisible()) {
+            this.editWindow = null;
+            this.editWindowPosInit = false;
         }
         this.dragHudElements(mouseX, mouseY);
         this.updateSelection(mouseX, mouseY);
@@ -167,19 +203,21 @@ public final class ClickGuiHudPage {
         if (this.hudComponent == null) {
             return;
         }
+        this.hudComponent.setMouseMoveOffset(frame.totalOffsetX, frame.totalOffsetY);
+        this.hudComponent.setPageOffsetX(baseX);
         if (!this.hudPosInit) {
             this.hudLocalX = defaultLocalX;
             this.hudLocalY = defaultLocalY;
-            this.hudComponent.setX((int)(baseX + this.hudLocalX + frame.totalOffsetX));
-            this.hudComponent.setY((int)(this.hudLocalY + frame.totalOffsetY));
+            this.hudComponent.setX((int)this.hudLocalX);
+            this.hudComponent.setY((int)this.hudLocalY);
             this.hudPosInit = true;
         }
         if (this.hudComponent.drag) {
             this.hudLocalX = (float)this.hudComponent.getX() - baseX - frame.totalOffsetX;
             this.hudLocalY = (float)this.hudComponent.getY() - frame.totalOffsetY;
         } else {
-            this.hudComponent.setX((int)(baseX + this.hudLocalX + frame.totalOffsetX));
-            this.hudComponent.setY((int)(this.hudLocalY + frame.totalOffsetY));
+            this.hudComponent.setX((int)this.hudLocalX);
+            this.hudComponent.setY((int)this.hudLocalY);
         }
         this.hudComponent.drawScreen(context, mouseX, mouseY, delta);
         context.getMatrices().push();
@@ -187,6 +225,17 @@ public final class ClickGuiHudPage {
         this.renderSelectionOverlay(context, frame, mouseX, mouseY);
         this.renderLayoutMenu(context, frame, mouseX, mouseY);
         context.getMatrices().pop();
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            int umx = (int)frame.unitMouseX(mouseX);
+            int umy = (int)frame.unitMouseY(mouseY);
+            context.getMatrices().push();
+            context.getMatrices().translate(0.0f, 0.0f, 1100.0f);
+            this.syncEditWindowPosition(frame);
+            this.editWindowHover = this.isWindowHover(this.editWindow, umx, umy);
+            this.editWindow.render(context, umx, umy);
+            this.updateEditWindowLocal(frame);
+            context.getMatrices().pop();
+        }
     }
 
     public boolean mouseClicked(int mouseX, int mouseY, int mouseButton, ClickGuiFrame frame) {
@@ -196,6 +245,15 @@ public final class ClickGuiHudPage {
         ClickGui gui = ClickGui.getInstance();
         if (gui == null) {
             return false;
+        }
+        if (this.editWindow != null && this.editWindow.isVisible()) {
+            this.syncEditWindowPosition(frame);
+            int umx = (int)frame.unitMouseX(mouseX);
+            int umy = (int)frame.unitMouseY(mouseY);
+            this.editWindow.mouseClicked(umx, umy, mouseButton);
+            if (this.isWindowHover(this.editWindow, umx, umy) || WindowsScreen.draggingWindow == this.editWindow) {
+                return true;
+            }
         }
         float mx = frame.unitMouseX(mouseX);
         float my = frame.unitMouseY(mouseY);
@@ -222,6 +280,38 @@ public final class ClickGuiHudPage {
             return true;
         }
         return false;
+    }
+
+    private boolean isWindowHover(WindowBase window, int mouseX, int mouseY) {
+        return Render2DUtil.isHovered(mouseX, mouseY, window.getX(), window.getY(), window.getWidth(), window.getHeight());
+    }
+
+    private void syncEditWindowPosition(ClickGuiFrame frame) {
+        if (this.editWindow == null) {
+            return;
+        }
+        float baseX = frame.baseX(ClickGuiScreen.Page.Hud);
+        if (!this.editWindowPosInit) {
+            this.editWindowLocalX = this.editWindow.getX() - baseX - frame.totalOffsetX;
+            this.editWindowLocalY = this.editWindow.getY() - frame.totalOffsetY;
+            this.editWindowPosInit = true;
+        }
+        if (WindowsScreen.draggingWindow != this.editWindow) {
+            float x = baseX + this.editWindowLocalX + frame.totalOffsetX;
+            float y = this.editWindowLocalY + frame.totalOffsetY;
+            this.editWindow.setPosition(x, y);
+        }
+    }
+
+    private void updateEditWindowLocal(ClickGuiFrame frame) {
+        if (this.editWindow == null) {
+            return;
+        }
+        if (WindowsScreen.draggingWindow == this.editWindow) {
+            float baseX = frame.baseX(ClickGuiScreen.Page.Hud);
+            this.editWindowLocalX = this.editWindow.getX() - baseX - frame.totalOffsetX;
+            this.editWindowLocalY = this.editWindow.getY() - frame.totalOffsetY;
+        }
     }
 
     private void initHudButtons() {

@@ -46,41 +46,96 @@ public class WindowBase {
         this.icon = icon;
     }
 
-    protected void render(DrawContext context, int mouseX, int mouseY) {
+    public void render(DrawContext context, int mouseX, int mouseY) {
+        if (this.dragging && WindowsScreen.draggingWindow == this) {
+            this.x = mouseX - this.dragX;
+            this.y = mouseY - this.dragY;
+        } else if (this.scaling && WindowsScreen.lastClickedWindow == this) {
+            float nextWidth = mouseX - this.dragX;
+            float nextHeight = mouseY - this.dragY;
+            this.width = Math.max(120.0f, nextWidth);
+            this.height = Math.max(80.0f, nextHeight);
+        }
         this.prevScrollOffset = AnimateUtil.fast(this.prevScrollOffset, this.scrollOffset, 12.0f);
+        ClickGui gui = ClickGui.getInstance();
         Color color2 = new Color(-983868581, true);
         RenderSystem.enableBlend();
-        Render2DUtil.drawRect(context.getMatrices(), this.x, this.y, this.width + 10.0f, this.height, -1072689136);
-        Render2DUtil.drawRect(context.getMatrices(), this.x + 0.5f, this.y, this.width + 9.0f, 16.0f, new Color(0x5F000000, true));
-        Color accent = ClickGui.getInstance().getColor(((double)this.x + (double)this.y) / 20.0);
-        Render2DUtil.horizontalGradient(context.getMatrices(), this.x + 2.0f, this.y + 16.0f, this.x + 2.0f + this.width / 2.0f - 2.0f, this.y + 16.5f, ColorUtil.injectAlpha(accent, 0), accent);
-        Render2DUtil.horizontalGradient(context.getMatrices(), this.x + 2.0f + this.width / 2.0f - 2.0f, this.y + 16.0f, this.x + 2.0f + this.width - 4.0f, this.y + 16.5f, accent, ColorUtil.injectAlpha(accent, 0));
-        FontManager.ui.drawString(context.getMatrices(), this.name, (double)(this.x + 4.0f), (double)(this.y + 5.5f), -1);
-        boolean hover1 = Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width - 4.0f, this.y + 3.0f, 10.0, 10.0);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x + this.width - 4.0f, this.y + 3.0f, 10.0f, 10.0f, hover1 ? new Color(-982026377, true) : new Color(-984131753, true), color2);
-        float ratio = (this.getHeight() - 35.0f) / this.maxElementsHeight;
-        boolean hover2 = Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width, this.y + 19.0f, 6.0, this.getHeight() - 34.0f);
-        Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x + this.width, this.y + 19.0f, 6.0f, this.getHeight() - 34.0f, hover2 ? new Color(1595085587, true) : new Color(0x5F000000, true), color2);
-        Render2DUtil.drawRect(context.getMatrices(), this.x + this.width, Math.max(this.y + 19.0f - this.scrollOffset * ratio, this.y + 19.0f), 6.0f, Math.min((this.getHeight() - 34.0f) * ratio, this.getHeight() - 34.0f), new Color(-1590611663, true));
-        Render2DUtil.drawLine(context.getMatrices(), this.x + this.width - 2.0f, this.y + 5.0f, this.x + this.width + 4.0f, this.y + 11.0f, -1);
-        Render2DUtil.drawLine(context.getMatrices(), this.x + this.width - 2.0f, this.y + 11.0f, this.x + this.width + 4.0f, this.y + 5.0f, -1);
+        float headerH = gui != null ? gui.categoryBarHeight.getValueInt() : 14.0f;
+        float headerX = this.x;
+        float headerY = this.y;
+        float headerW = this.width;
+        int topAlpha = gui != null ? gui.topAlpha.getValueInt() : 210;
+        if (gui != null && gui.colorMode.getValue() == ClickGui.ColorMode.Spectrum) {
+            Render2DUtil.drawLutRect(context.getMatrices(), headerX, headerY, headerW, headerH, gui.getSpectrumLutId(), gui.getSpectrumLutHeight(), topAlpha);
+        } else {
+            Color topColor = gui != null ? ColorUtil.injectAlpha(gui.getColor(((double)headerY) / 10.0), topAlpha) : new Color(0, 120, 212, topAlpha);
+            Render2DUtil.drawRect(context.getMatrices(), headerX, headerY, headerW, headerH, topColor);
+        }
+        if (gui == null || gui.backgroundStyle.getValue() != ClickGui.BackgroundStyle.Transparent) {
+            int outline = gui != null ? gui.hoverColor.getValue().getRGB() : new Color(50, 50, 50, 200).getRGB();
+            Render2DUtil.drawRectWithOutline(context.getMatrices(), headerX, headerY, headerW, headerH, new Color(0, 0, 0, 0), new Color(outline));
+        }
+        if (gui == null || gui.backGround.booleanValue) {
+            int bgAlpha = gui != null ? gui.backgroundAlpha.getValueInt() : 236;
+            Color bg = gui != null ? ColorUtil.injectAlpha(gui.backGround.getValue(), bgAlpha) : new Color(30, 30, 30, bgAlpha);
+            Render2DUtil.drawRect(context.getMatrices(), this.x, this.y + headerH, this.width, this.height - headerH, bg);
+            int outline = gui != null ? gui.hoverColor.getValue().getRGB() : new Color(50, 50, 50, 200).getRGB();
+            Render2DUtil.drawRectWithOutline(context.getMatrices(), this.x, this.y + headerH, this.width, this.height - headerH, new Color(0, 0, 0, 0), new Color(outline));
+        }
+        float nameFontHeight = FontManager.isCustomFontEnabled() ? FontManager.ui.getFontHeight() : 9.0f;
+        float nameY = headerY + (headerH - nameFontHeight) / 2.0f + (gui != null ? (float)gui.titleOffset.getValueInt() : 0.0f);
+        FontManager.ui.drawString(context.getMatrices(), this.name, (double)(this.x + 6.0f), (double)nameY, -1);
+        float closeY = this.y + (headerH - 10.0f) / 2.0f;
+        boolean hover1 = Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width - 14.0f, closeY, 10.0, 10.0);
+        int closeBg = gui != null ? (hover1 ? gui.hoverColor.getValue().getRGB() : gui.defaultColor.getValue().getRGB()) : (hover1 ? new Color(-982026377, true).getRGB() : new Color(-984131753, true).getRGB());
+        Render2DUtil.rect(context.getMatrices(), this.x + this.width - 14.0f, closeY, this.x + this.width - 4.0f, closeY + 10.0f, closeBg);
+        float scrollTop = this.getScrollTop(headerH);
+        float scrollH = this.getScrollHeight(headerH);
+        float scrollBarW = this.getScrollBarWidth();
+        float trackX = this.x + this.width - scrollBarW;
+        float maxH = Math.max(1.0f, this.maxElementsHeight);
+        float ratio = scrollH / maxH;
+        float thumbH = Math.min(scrollH, scrollH * ratio);
+        float thumbY = scrollTop - this.scrollOffset * ratio;
+        float maxThumbY = scrollTop + scrollH - thumbH;
+        if (thumbY < scrollTop) {
+            thumbY = scrollTop;
+        }
+        if (thumbY > maxThumbY) {
+            thumbY = maxThumbY;
+        }
+        boolean hover2 = Render2DUtil.isHovered(mouseX, mouseY, trackX, scrollTop, scrollBarW, scrollH);
+        Render2DUtil.drawRectWithOutline(context.getMatrices(), trackX, scrollTop, scrollBarW, scrollH, hover2 ? new Color(1595085587, true) : new Color(0x5F000000, true), color2);
+        Render2DUtil.drawRect(context.getMatrices(), trackX, thumbY, scrollBarW, thumbH, new Color(-1590611663, true));
+        float closeLeft = this.x + this.width - 14.0f;
+        float closeTop = closeY;
+        float closeRight = closeLeft + 10.0f;
+        float closeBottom = closeTop + 10.0f;
+        String closeText = "x";
+        float closeTextX = closeLeft + (10.0f - (float)FontManager.ui.getWidth(closeText)) / 2.0f;
+        float closeTextY = closeTop + (10.0f - FontManager.ui.getFontHeight()) / 2.0f;
+        FontManager.ui.drawString(context.getMatrices(), closeText, (double)closeTextX, (double)closeTextY, -1);
         RenderSystem.disableBlend();
         if (this.scrolling) {
-            float diff = ((float)mouseY - this.y - 19.0f) / (this.getHeight() - 34.0f);
-            this.scrollOffset = -(diff * this.maxElementsHeight);
-            this.scrollOffset = MathUtil.clamp(this.scrollOffset, -this.maxElementsHeight + (this.getHeight() - 40.0f), 0.0f);
+            float diff = ((float)mouseY - scrollTop) / scrollH;
+            float scrollRange = this.getScrollRange(scrollH);
+            this.scrollOffset = -(diff * scrollRange);
+            this.scrollOffset = MathUtil.clamp(this.scrollOffset, -scrollRange, 0.0f);
         }
         this.hoveringWindow = Render2DUtil.isHovered(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
         Render2DUtil.drawLine(context.getMatrices(), this.getX() + this.getWidth(), this.getY() + this.getHeight() - 3.0f, this.getX() + this.getWidth() + 7.0f, this.getY() + this.getHeight() - 10.0f, color2.getRGB());
         Render2DUtil.drawLine(context.getMatrices(), this.getX() + this.getWidth() + 5.0f, this.getY() + this.getHeight() - 3.0f, this.getX() + this.getWidth() + 7.0f, this.getY() + this.getHeight() - 5.0f, color2.getRGB());
     }
 
-    protected void mouseClicked(double mouseX, double mouseY, int button) {
-        if (Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width - 4.0f, this.y + 3.0f, 10.0, 10.0)) {
+    public void mouseClicked(double mouseX, double mouseY, int button) {
+        ClickGui gui = ClickGui.getInstance();
+        float headerH = gui != null ? gui.categoryBarHeight.getValueInt() : 14.0f;
+        float closeY = this.y + (headerH - 10.0f) / 2.0f;
+        if (Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width - 14.0f, closeY, 10.0, 10.0)) {
             this.setVisible(false);
             return;
         }
-        if (Render2DUtil.isHovered(mouseX, mouseY, this.x, this.y, this.width, 10.0)) {
+        if (Render2DUtil.isHovered(mouseX, mouseY, this.x, this.y, this.width, headerH)) {
             if (WindowsScreen.draggingWindow == null) {
                 this.dragging = true;
             }
@@ -99,7 +154,11 @@ public class WindowBase {
             this.scaling = true;
             return;
         }
-        if (Render2DUtil.isHovered(mouseX, mouseY, this.x + this.width, this.y + 19.0f, 6.0, this.getHeight() - 34.0f)) {
+        float scrollTop = this.getScrollTop(headerH);
+        float scrollH = this.getScrollHeight(headerH);
+        float scrollBarW = this.getScrollBarWidth();
+        float trackX = this.x + this.width - scrollBarW;
+        if (Render2DUtil.isHovered(mouseX, mouseY, trackX, scrollTop, scrollBarW, scrollH)) {
             WindowsScreen.lastClickedWindow = this;
             this.dragX = (int)(mouseX - (double)this.getWidth());
             this.dragY = (int)(mouseY - (double)this.getHeight());
@@ -107,17 +166,37 @@ public class WindowBase {
         }
     }
 
-    protected void keyPressed(int keyCode, int scanCode, int modifiers) {
+    public void keyPressed(int keyCode, int scanCode, int modifiers) {
     }
 
-    protected void charTyped(char key, int keyCode) {
+    public void charTyped(char key, int keyCode) {
     }
 
-    protected void mouseScrolled(int i) {
+    public void mouseScrolled(int i) {
         if (this.hoveringWindow) {
-            this.scrollOffset += (float)(i * 2);
-            this.scrollOffset = MathUtil.clamp(this.scrollOffset, -this.maxElementsHeight + (this.getHeight() - 40.0f), 0.0f);
+            this.scrollOffset += (float)(i * 16);
+            ClickGui gui = ClickGui.getInstance();
+            float headerH = gui != null ? gui.categoryBarHeight.getValueInt() : 14.0f;
+            float scrollH = this.getScrollHeight(headerH);
+            float scrollRange = this.getScrollRange(scrollH);
+            this.scrollOffset = MathUtil.clamp(this.scrollOffset, -scrollRange, 0.0f);
         }
+    }
+
+    protected float getScrollTop(float headerH) {
+        return this.y + headerH + 3.0f;
+    }
+
+    protected float getScrollHeight(float headerH) {
+        return Math.max(1.0f, this.getHeight() - headerH - 6.0f);
+    }
+
+    protected float getScrollRange(float scrollH) {
+        return Math.max(0.0f, this.maxElementsHeight - scrollH);
+    }
+
+    protected float getScrollBarWidth() {
+        return 6.0f;
     }
 
     public void mouseReleased(double mouseX, double mouseY, int button) {
@@ -127,15 +206,20 @@ public class WindowBase {
         WindowsScreen.draggingWindow = null;
     }
 
-    protected float getX() {
+    public float getX() {
         return this.x;
+    }
+
+    public void setPosition(float x, float y) {
+        this.setX(x);
+        this.setY(y);
     }
 
     protected void setX(float x) {
         this.x = x;
     }
 
-    protected float getY() {
+    public float getY() {
         return this.y;
     }
 
@@ -143,7 +227,7 @@ public class WindowBase {
         this.y = y;
     }
 
-    protected float getWidth() {
+    public float getWidth() {
         return this.width;
     }
 
@@ -151,7 +235,7 @@ public class WindowBase {
         this.width = width;
     }
 
-    protected float getHeight() {
+    public float getHeight() {
         return this.height;
     }
 
@@ -184,4 +268,3 @@ public class WindowBase {
         return this.icon;
     }
 }
-

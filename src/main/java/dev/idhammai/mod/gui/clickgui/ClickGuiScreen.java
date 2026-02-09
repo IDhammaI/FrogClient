@@ -31,6 +31,7 @@ import dev.idhammai.mod.modules.HudModule;
 import dev.idhammai.mod.modules.impl.client.ClickGui;
 import dev.idhammai.mod.modules.impl.client.ClientSetting;
 import dev.idhammai.core.impl.CommandManager;
+import dev.idhammai.mod.gui.windows.WindowBase;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Random;
@@ -569,6 +570,10 @@ extends Screen {
     }
 
     private void setPage(Page page) {
+        this.setPage(page, true);
+    }
+
+    private void setPage(Page page, boolean resetHud) {
         if (page == null) {
             return;
         }
@@ -580,9 +585,14 @@ extends Screen {
         if (page == Page.Config) {
             this.configPage.onOpen();
         }
-        if (page == Page.Hud) {
+        if (page == Page.Hud && resetHud) {
             this.hudPage.resetHudLayout();
         }
+    }
+
+    public void openHudWindow(WindowBase window) {
+        this.hudPage.openHudWindow(window);
+        this.setPage(Page.Hud, false);
     }
 
     public int getFontHeight() {

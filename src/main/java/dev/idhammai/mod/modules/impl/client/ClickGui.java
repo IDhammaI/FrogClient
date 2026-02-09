@@ -20,6 +20,7 @@ import dev.idhammai.api.utils.math.Animation;
 import dev.idhammai.api.utils.math.Easing;
 import dev.idhammai.api.utils.render.ColorUtil;
 import dev.idhammai.mod.gui.clickgui.ClickGuiScreen;
+import dev.idhammai.mod.gui.windows.WindowsScreen;
 import dev.idhammai.mod.gui.items.Component;
 import dev.idhammai.mod.gui.items.Item;
 import dev.idhammai.mod.gui.items.buttons.Button;
@@ -271,7 +272,7 @@ extends Module {
             this.styleApplied = true;
         }
         this.updateColor();
-        if (!(ClickGui.mc.currentScreen instanceof ClickGuiScreen)) {
+        if (!(ClickGui.mc.currentScreen instanceof ClickGuiScreen) && !(ClickGui.mc.currentScreen instanceof WindowsScreen)) {
             this.disable();
         }
     }
