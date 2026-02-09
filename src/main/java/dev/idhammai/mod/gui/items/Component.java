@@ -155,7 +155,7 @@ extends Mod {
         FontManager.icon.drawString(context.getMatrices(), this.category.getIcon(), (double)(headerX + 6.0f), (double)iconY, Button.enableTextColor);
         float nameFontHeight = FontManager.isCustomFontEnabled() ? FontManager.ui.getFontHeight() : 9.0f;
         float nameY = headerY + (barHeight - nameFontHeight) / 2.0f + (float)ClickGui.getInstance().titleOffset.getValueInt();
-        this.drawString(this.category.getDisplayName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
+        this.drawString(this.getName(), (double)(headerX + 20.0f), (double)nameY, Button.enableTextColor);
         if (openProgress > 0.01) {
             int panelX1 = x - 1;
             int panelY1 = (int)((float)y + (float)this.height - 6.0f);
@@ -310,13 +310,25 @@ extends Mod {
         this.pageOffsetX = x;
     }
 
-    private boolean isHovering(int mouseX, int mouseY) {
+    public boolean isHovering(int mouseX, int mouseY) {
         int categoryWidth = ClickGui.getInstance().categoryWidth.getValueInt();
         int hx = Math.round((float)this.getX() + ((float)this.getWidth() - (float)categoryWidth) / 2.0f);
         int hy = this.getY();
         int hw = categoryWidth;
         int hh = this.getHeight() - 5;
         return mouseX >= hx && mouseX <= hx + hw && mouseY >= hy && mouseY <= hy + hh;
+    }
+
+    public boolean isMouseOver(int mouseX, int mouseY) {
+        if (this.isHovering(mouseX, mouseY)) {
+            return true;
+        }
+        if (!this.open) {
+            return false;
+        }
+        float height = this.getTotalItemHeight() - 2.0f;
+        int y = this.getY() + this.getHeight() - 5;
+        return mouseX >= this.getX() && mouseX <= this.getX() + this.getWidth() && (float)mouseY >= (float)y && (float)mouseY <= (float)y + height;
     }
 
     private float getTotalItemHeight() {
