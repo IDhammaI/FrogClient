@@ -16,7 +16,7 @@ public class CoordsHudModule extends HudModule {
     private final BooleanSetting lowerCase = this.add(new BooleanSetting("LowerCase", false));
 
     public CoordsHudModule() {
-        super("Coords", "","坐标", 2, 2, PosMode.Corner, Corner.LeftBottom);
+        super("Coords", "","坐标", 2, 2, Corner.LeftBottom);
         INSTANCE = this;
     }
 

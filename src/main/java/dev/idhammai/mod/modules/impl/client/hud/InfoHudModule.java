@@ -78,7 +78,7 @@ public class InfoHudModule extends HudModule {
     private final ArrayList<Info> infoList = new ArrayList<>();
 
     public InfoHudModule() {
-        super("Info", "","信息", 2, 2, PosMode.Corner, Corner.RightBottom);
+        super("Info", "","信息", 2, 2, Corner.RightBottom);
         INSTANCE = this;
 
         for (StatusEffect potionEffect : Registries.STATUS_EFFECT) {
@@ -202,19 +202,11 @@ public class InfoHudModule extends HudModule {
         double startY;
         int boundsX;
         int boundsY;
-
-        if (this.posMode.is(PosMode.Pixel) || InfoHudModule.mc.getWindow() == null) {
-            startX = this.getHudX();
-            startY = (double)this.getHudY() + this.yOffset.getValue();
-            boundsX = (int)Math.floor((double)startX - (double)xPadHalf);
-            boundsY = (int)Math.floor(startY + minYRel);
-        } else {
-            boundsX = this.getHudRenderX(boundsW);
-            int baseBoundsY = this.getHudRenderY(boundsH);
-            boundsY = (int)Math.floor((double)baseBoundsY + this.yOffset.getValue());
-            startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
-            startY = (double)boundsY - minYRel;
-        }
+        boundsX = this.getHudRenderX(boundsW);
+        int baseBoundsY = this.getHudRenderY(boundsH);
+        boundsY = (int)Math.floor((double)baseBoundsY + this.yOffset.getValue());
+        startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
+        startY = (double)boundsY - minYRel;
 
         double counter = 20.0;
         double currentY = startY;

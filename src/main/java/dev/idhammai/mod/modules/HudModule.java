@@ -4,7 +4,6 @@ import dev.idhammai.mod.modules.settings.impl.EnumSetting;
 import dev.idhammai.mod.modules.settings.impl.SliderSetting;
 
 public abstract class HudModule extends Module {
-    public final EnumSetting<PosMode> posMode;
     public final EnumSetting<Corner> corner;
     protected final SliderSetting x;
     protected final SliderSetting y;
@@ -14,18 +13,17 @@ public abstract class HudModule extends Module {
     private int lastHudH;
 
     public HudModule(String name, String chinese, int defaultX, int defaultY) {
-        this(name, "", chinese, defaultX, defaultY, PosMode.Pixel, Corner.LeftTop);
+        this(name, "", chinese, defaultX, defaultY, Corner.LeftTop);
     }
 
     public HudModule(String name, String description, String chinese, int defaultX, int defaultY) {
-        this(name, description, chinese, defaultX, defaultY, PosMode.Pixel, Corner.LeftTop);
+        this(name, description, chinese, defaultX, defaultY, Corner.LeftTop);
     }
 
-    protected HudModule(String name, String description, String chinese, int defaultX, int defaultY, PosMode defaultPosMode, Corner defaultCorner) {
+    protected HudModule(String name, String description, String chinese, int defaultX, int defaultY, Corner defaultCorner) {
         super(name, description, Category.Client);
         this.setChinese(chinese);
-        this.posMode = this.add(new EnumSetting<PosMode>("PosMode", defaultPosMode));
-        this.corner = this.add(new EnumSetting<Corner>("Corner", defaultCorner, () -> this.posMode.is(PosMode.Corner)));
+        this.corner = this.add(new EnumSetting<Corner>("Corner", defaultCorner));
         this.x = this.add(new SliderSetting("X", defaultX, 0, 1500));
         this.y = this.add(new SliderSetting("Y", defaultY, 0, 1000));
     }
@@ -54,7 +52,7 @@ public abstract class HudModule extends Module {
     }
 
     public final int getHudRenderX(int elementW) {
-        if (this.posMode.is(PosMode.Pixel) || HudModule.mc.getWindow() == null) {
+        if (HudModule.mc.getWindow() == null) {
             return this.getHudX();
         }
         int sw = HudModule.mc.getWindow().getScaledWidth();
@@ -65,7 +63,7 @@ public abstract class HudModule extends Module {
     }
 
     public final int getHudRenderY(int elementH) {
-        if (this.posMode.is(PosMode.Pixel) || HudModule.mc.getWindow() == null) {
+        if (HudModule.mc.getWindow() == null) {
             return this.getHudY();
         }
         int sh = HudModule.mc.getWindow().getScaledHeight();
@@ -76,7 +74,7 @@ public abstract class HudModule extends Module {
     }
 
     public final void setHudPosFromBounds(int boundsX, int boundsY) {
-        if (this.posMode.is(PosMode.Pixel) || HudModule.mc.getWindow() == null) {
+        if (HudModule.mc.getWindow() == null) {
             this.setHudPos(boundsX, boundsY);
             return;
         }
@@ -95,11 +93,6 @@ public abstract class HudModule extends Module {
             return min;
         }
         return Math.min(v, max);
-    }
-
-    public enum PosMode {
-        Pixel,
-        Corner
     }
 
     public enum Corner {

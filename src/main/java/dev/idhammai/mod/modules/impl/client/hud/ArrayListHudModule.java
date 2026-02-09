@@ -49,7 +49,7 @@ public class ArrayListHudModule extends HudModule {
     private final ArrayList<Entry> entries = new ArrayList<>();
 
     public ArrayListHudModule() {
-        super("ArrayList", "", "模块列表", 2, 2, PosMode.Corner, Corner.RightTop);
+        super("ArrayList", "", "模块列表", 2, 2, Corner.RightTop);
         INSTANCE = this;
         Frog.EVENT_BUS.subscribe(new InitHandler());
     }
@@ -97,17 +97,10 @@ public class ArrayListHudModule extends HudModule {
         int boundsY;
         int startX;
         int startY;
-        if (this.posMode.is(PosMode.Pixel) || ArrayListHudModule.mc.getWindow() == null) {
-            startX = this.getHudX();
-            startY = this.getHudY();
-            boundsX = (int)Math.floor((double)startX - (double)xPadHalf);
-            boundsY = startY;
-        } else {
-            boundsX = this.getHudRenderX(boundsW);
-            boundsY = this.getHudRenderY(boundsH);
-            startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
-            startY = boundsY;
-        }
+        boundsX = this.getHudRenderX(boundsW);
+        boundsY = this.getHudRenderY(boundsH);
+        startX = (int)Math.floor((double)boundsX + (double)xPadHalf);
+        startY = boundsY;
 
         double counter = 20.0;
         double currentY = startY;
